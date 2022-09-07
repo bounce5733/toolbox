@@ -1,14 +1,17 @@
 package com.nbcb.toolbox.project.domain;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
 /**
- * Dict
+ * DicType
  *
  * @Author jiangyonghua
- * @Date 2022/9/5 15:20
+ * @Date 2022/9/6 08:58
  * @Version 1.0
  **/
 @Data
@@ -16,18 +19,12 @@ import javax.persistence.*;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "dict")
-public class Dict {
+@Table(name = "dict_type")
+public class DicType {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-
     @Column(length = 32)
     private String code;
 
     private String name;
-
-    @Column(length = 32)
-    private String type;
 }

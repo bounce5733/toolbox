@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>字典管理</title>
+    <link rel="stylesheet" href="../static/css/index.css">
+    <link rel="stylesheet" href="../static/css/element.css">
+  </head>
+  <body>
+    <div id="app" class="app-container">
+      <el-row>
+        <el-form :inline="true" @submit.native.prevent>
+          <el-form-item>
+            <el-input @keyup.enter.native="query" style="width:280px" placeholder="姓名" clearable v-model="queryParams"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="query">查询</el-button>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="openAdd">新增</el-button>
+          </el-form-item>
+        </el-form>
+        <el-table :data="pageinfo.content" highlight-current-row border style="width:100%">
+          <el-table-column prop="name" label="姓名" width="200px"></el-table-column>
+          <el-table-column label="供应商">
+            <template slot-scope="scope">{{dictMap['SUPPLIER'][scope.row.company]}}</template>
+          </el-table-column>
+          <el-table-column label="类别" width="200px">
+            <template slot-scope="scope">{{dictMap['PERSONNEL_TYPE'][scope.row.type]}}</template>
+          </el-table-column>
+          <el-table-column label="级别" width="200px">
+            <template slot-scope="scope">{{dictMap['PERSONNEL_LEVEL'][scope.row.level]}}</template>
+          </el-table-column>
+          <el-table-column prop="phone" label="手机号" width="150px"></el-table-column>
+          <el-table-column label="项目经理" width="80px">
+            <template slot-scope="scope">{{scope.row.isPm === '1' ? '是' : '否'}}</template>
+          </el-table-column>
+          <el-table-column label="管理员" width="80px">
+            <template slot-scope="scope">{{scope.row.isAdmin === '1' ? '是' : '否'}}</template>
+          </el-table-column>
+          <el-table-column align="center" label="操作" width="150">
+            <template slot-scope="scope">
+              <el-button-group>
+                <el-button type="primary" @click="openEdit(scope.row)" size="small">编辑</el-button>
+                <el-button type="danger" @click="remove(scope.row.id)" size="small">删除</el-button>
+              </el-button-group>
+            </template>
+          </el-table-column>
+        </el-table>
+        <div class="pagination-container">
+          <el-pagination background layout="prev, pager, next, total" @current-change="handlePageChange"
+                         :current-page="pageinfo.pageable.pageNumber" :page-size="pageinfo.pageable.pageSize"
+                         :total="pageinfo.totalElements"></el-pagination>
+        </div>
+      </el-row>
+      <el-dialog title="编辑人员" :visible.sync="formVisible">
+        <el-form :model="model" ref="form" :rules="formRules" label-width="100px">
+            <el-row>
+              <el-col :span="12">
+                <el-form-item label="姓名" prop="name">
+                  <el-input v-model="model.name"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="供应商" prop="company">
+                  <el-select v-model="model.company" clearable>
+                    <el-option v-for="(val, key) in dictMap['SUPPLIER']" :label="val" :value="key" :key="key"></el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="12">
+                <el-form-item label="类别" prop="type">
+                  <el-select v-model="model.type">
+                    <el-option v-for="(val, key) in dictMap['PERSONNEL_TYPE']" :label="val" :value="key" :key="key"></el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="级别" prop="level">
+                  <el-select v-model="model.level">
+                    <el-option v-for="(val, key) in dictMap['PERSONNEL_LEVEL']" :label="val" :value="key" :key="key"></el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="12">
+                <el-form-item label="手机号" prop="phone">
+                  <el-input v-model="model.phone" oninput="value=value.replace(/[^\d]/g, '')"></el-input>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="12">
+                <el-form-item label="项目经理" prop="isPm">
+                  <el-switch v-model="model.isPm" active-value="1" inactive-value="0"></el-switch>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="管理员" prop="isAdmin">
+                  <el-switch v-model="model.isAdmin" active-value="1" inactive-value="0"></el-switch>
+                </el-form-item>
+              </el-col>
+            </el-row>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click.native="cancelForm">取消</el-button>
+          <el-button type="primary" @click.native="save">保存</el-button>
+        </div>
+      </el-dialog>
+    </div>
+  </body>
+  <script src="../static/js/vue.js"></script>
+  <script src="../static/js/element.js"></script>
+  <script src="../static/js/axios.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data: function() {
+        return {
+          dictMap: {}, // 系统字典
+          formVisible: false,
+          queryParams: '',
+          pageinfo: {
+            pageable: {
+              pageNumber: 1
+            }
+          },
+          model: {},
+          formRules: {
+            name: [
+              { required: true, trigger: 'blue', message: '名称不能为空'},
+              { max: 256, trigger: 'blur', message: '最大长度256个字符' }
+            ],
+            type: [
+              { required: true, trigger: 'blue', message: '类别不能为空'}
+            ],
+            phone: [
+              { required: true, trigger: 'blur', message: '手机号不能为空'},
+              { max: 11, trigger: 'blur', message: '手机号长度不对'},
+              { min: 11, trigger: 'blur', message: '手机号长度不对'}
+            ]
+          }
+        }
+      },
+      methods: {
+        query: function() {
+          axios.get('/rest/personnel/query/' + (this.pageinfo.pageable.pageNumber) + '?params=' + this.queryParams)
+            .then(res => {
+              this.pageinfo = res.data
+              this.pageinfo.pageable.pageNumber += 1
+          })
+        },
+        loadDict: function() {
+          axios.get('/rest/dict/load').then(res => {
+            this.dictMap = res.data
+          })
+        },
+        openAdd: function() {
+          this.model = {}
+          this.formVisible = true
+        },
+        openEdit: function(record) {
+          this.model = { ...record }
+          this.formVisible = true
+        },
+        cancelForm: function() {
+          this.$refs.form.resetFields()
+          this.model = {}
+          this.formVisible = false
+        },
+        save: function() {
+          this.$refs.form.validate((valid) => {
+            if (valid) {
+              axios.post("/rest/personnel", this.model).then(res => {
+                this.$notify({
+                  title: '成功',
+                  message: '保存成功',
+                  type: 'success'
+                })
+                this.query()
+                this.cancelForm()
+              })
+            }
+          })
+        },
+        remove: function(id) {
+          this.$confirm('确定删除该人员', '提示', { type: 'warning' }).then(() => {
+            axios.delete("/rest/personnel/" + id).then(res => {
+              this.$notify({
+                title: '成功',
+                message: '删除成功',
+                type: 'success'
+              })
+              this.query()
+            })
+          })
+        },
+        handlePageChange: function(pageNumber) {
+          this.pageinfo.pageable.pageNumber = pageNumber
+          this.query()
+        }
+      },
+      mounted() {
+        this.loadDict()
+        this.query()
+      }
+    })
+  </script>
+</html>

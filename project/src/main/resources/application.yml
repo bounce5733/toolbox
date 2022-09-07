@@ -10,6 +10,9 @@ spring:
   h2:
     console:
       enabled: true
+  jpa:
+    show-sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
   thymeleaf:
     cache: false # 开发时关闭缓存，不然没发看到实时页面
     mode: HTML5

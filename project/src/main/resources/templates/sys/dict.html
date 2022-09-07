@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>字典管理</title>
+    <link rel="stylesheet" href="../static/css/index.css">
+    <link rel="stylesheet" href="../static/css/element.css">
+  </head>
+  <body>
+    <div id="app" class="app-container">
+      <el-row :gutter="16">
+        <el-col :span="12">
+          <el-form :inline="true" @submit.native.prevent>
+            <el-form-item>
+              <el-button type="primary" @click="openAddDicType">新增类型</el-button>
+            </el-form-item>
+          </el-form>
+          <el-table :data="dicTypes" @current-change="dicTypeChange" highlight-current-row border height="620" style="width:100%">
+            <el-table-column prop="code" label="编码"></el-table-column>
+            <el-table-column prop="name" label="名称"></el-table-column>
+            <el-table-column align="center" label="操作" width="100">
+              <template slot-scope="scope">
+                <el-button-group>
+                  <el-button type="danger" @click="removeDicType(scope.row.code)" size="small">删除</el-button>
+                </el-button-group>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-col>
+        <el-col :span="12">
+          <el-form :inline="true" @submit.native.prevent>
+            <el-form-item>
+              <el-button type="primary" :disabled="dicType.code === undefined" @click="openAddDict">新增字典</el-button>
+            </el-form-item>
+          </el-form>
+          <el-table :data="dicts" highlight-current-row border height="620" style="width:100%">
+            <el-table-column prop="code" label="代码" width="260"></el-table-column>
+            <el-table-column prop="name" label="名称" width="260"></el-table-column>
+            <el-table-column align="center" label="操作" width="100">
+              <template slot-scope="scope">
+                <el-button-group>
+                  <el-button type="danger" size="small" @click="removeDict(scope.row.id)">删除</el-button>
+                </el-button-group>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-col>
+      </el-row>
+      <el-dialog title="新增类型" width="50%" :visible.sync="dicTypeVisible">
+        <el-form :model="dicType" ref="dicTypeForm" :rules="dicTypeRules" label-width="100px">
+            <el-row>
+              <el-col :span="12">
+                <el-form-item label="编码" prop="code">
+                  <el-input v-model="dicType.code"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="名称" prop="name">
+                  <el-input v-model="dicType.name"></el-input>
+                </el-form-item>
+              </el-col>
+            </el-row>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click.native="cancelDicTypeForm">取消</el-button>
+          <el-button type="primary" @click.native="saveDicType">保存</el-button>
+        </div>
+      </el-dialog>
+      <el-dialog title="新增字典" width="50%" :visible.sync="dictVisible">
+        <el-form :model="dict" ref="dictForm" :rules="dictRules" label-width="100px">
+          <el-row>
+            <el-col :span="12">
+              <el-form-item label="编码" prop="code">
+                <el-input v-model="dict.code"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="名称" prop="name">
+                <el-input v-model="dict.name"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click.native="cancelDictForm">取 消</el-button>
+          <el-button type="primary" @click.native="saveDict">保存</el-button>
+        </div>
+      </el-dialog>
+    </div>
+  </body>
+  <script src="../static/js/vue.js"></script>
+  <script src="../static/js/element.js"></script>
+  <script src="../static/js/axios.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data: function() {
+        // 验证字典类型编码
+        const validateTypeCode = (rule, value, callback) => {
+          if (this.dicType.code === undefined || this.dicType.code.trim().length === 0) {
+            return callback(new Error('字典类型编码不能为空'))
+          }
+          // 校验编码规则
+          const regexp = /^[A-Z]+$/
+          const codeVal = this.dicType.code.trim()
+          const isChar = regexp.test(codeVal.replace(/_/g, ''))
+          if (!isChar) {
+            return callback(new Error('字典编码必须由大写字母或下划线组成'))
+          }
+          // 校验唯一
+          let isUnion = true
+          this.dicTypes.forEach(item => {
+            if (item.code === codeVal) {
+              isUnion = false
+            }
+          })
+          if (!isUnion) {
+            return callback(new Error('字典类型编码不唯一'))
+          }
+          callback()
+        }
+        // 验证字典编码
+        const validateDictCode = (rule, value, callback) => {
+          if (this.dict.code === undefined || this.dict.code.trim().length === 0) {
+            return callback(new Error('字典编码不能为空'))
+          }
+          // 校验编码规则
+          const regexp = /^[A-Z]+$/
+          const codeVal = this.dict.code.trim()
+          const isChar = regexp.test(codeVal.replace(/_/g, ''))
+          if (!isChar) {
+            return callback(new Error('字典编码必须由大写字母或下划线组成'))
+          }
+          callback()
+        }
+        return {
+          dicTypeVisible: false,
+          dicTypes: [],
+          dicType: {},
+          dicTypeRules: {
+            code: [
+              { required: true, trigger: 'blue', validator: validateTypeCode},
+              { max: 32, trigger: 'blur', message: '最大长度32个字符' }
+            ],
+            name: [
+              { required: true, trigger: 'blue', message: '名称不能为空'},
+              { max: 256, trigger: 'blur', message: '最大长度256个字符' }
+            ]
+          },
+          dictVisible: false,
+          dict: {},
+          dicts: [],
+          dictRules: {
+            code: [
+              { required: true, trigger: 'blue', validator: validateDictCode},
+              { max: 32, trigger: 'blur', message: '最大长度32个字符' }
+            ],
+            name: [
+              { required: true, trigger: 'blue', message: '名称不能为空'},
+              { max: 256, trigger: 'blur', message: '最大长度256个字符' }
+            ]
+          }
+        }
+      },
+      methods: {
+        loadType: function() {
+          axios.get("/rest/dict/type").then(res => {
+            this.dicTypes = res.data
+          })
+        },
+        openAddDicType: function() {
+          this.dicType = {}
+          this.dicTypeVisible = true
+        },
+        cancelDicTypeForm: function() {
+          this.$refs.dicTypeForm.resetFields()
+          this.dicType = {}
+          this.dicTypeVisible = false
+        },
+        saveDicType: function() {
+          this.$refs.dicTypeForm.validate((valid) => {
+            if (valid) {
+              axios.post("/rest/dict/type", this.dicType).then(res => {
+                this.$notify({
+                  title: '成功',
+                  message: '保存成功',
+                  type: 'success'
+                })
+                this.loadType()
+                this.cancelDicTypeForm()
+              })
+            }
+          })
+        },
+        removeDicType: function(code) {
+          this.$confirm('确定删除该字典类型及其所有字典数据', '提示', { type: 'warning' }).then(() => {
+           axios.delete("/rest/dict/type/" + code).then(res => {
+              this.$notify({
+                title: '成功',
+                message: '删除成功',
+                type: 'success'
+              })
+              this.loadType()
+              this.dicType = {}
+              this.getDictByType()
+            })
+          })
+        },
+        dicTypeChange: function(row) {
+          if (row === null) {
+            return
+          } else {
+            this.dicType.code = row.code
+            this.getDictByType()
+          }
+        },
+        openAddDict: function() {
+          this.dict = { type: this.dicType.code }
+          this.dictVisible = true
+        },
+        cancelDictForm: function() {
+          this.$refs.dictForm.resetFields()
+          this.dict = {}
+          this.dictVisible = false
+        },
+        saveDict: function() {
+          this.$refs.dictForm.validate((valid) => {
+            if (valid) {
+              axios.post("/rest/dict", this.dict).then(res => {
+                this.$notify({
+                  title: '成功',
+                  message: '保存成功',
+                  type: 'success'
+                })
+                this.getDictByType()
+                this.cancelDictForm()
+              })
+            }
+          })
+        },
+        removeDict: function(id) {
+          this.$confirm('确定删除该字典条目', '提示', { type: 'warning' }).then(() => {
+            axios.delete("/rest/dict/" + id).then(res => {
+              this.$notify({
+                title: '成功',
+                message: '删除成功',
+                type: 'success'
+              })
+              this.getDictByType()
+            })
+          })
+        },
+        getDictByType: function() {
+          if (this.dicType.code) {
+            axios.get("/rest/dict/type/" + this.dicType.code).then(res => {
+              this.dicts = res.data
+            })
+          } else {
+            this.dicts = []
+          }
+        }
+      },
+      mounted() {
+        this.loadType()
+      }
+    })
+  </script>
+</html>
