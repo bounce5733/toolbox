@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>合同配置</title>
+    <title>项目配置</title>
     <link rel="stylesheet" href="../static/css/index.css">
     <link rel="stylesheet" href="../static/css/element.css">
   </head>
@@ -22,17 +22,18 @@
         </el-form>
         <el-table :data="pageinfo.content" highlight-current-row border style="width:100%">
           <el-table-column prop="name" label="名称" width="200px"></el-table-column>
-          <el-table-column label="供应商">
-            <template slot-scope="scope">{{dictMap['SUPPLIER'][scope.row.company]}}</template>
+          <el-table-column label="阶段" width="200px">
+            <template slot-scope="scope">{{dictMap['PROJECT_STAGE'][scope.row.stage]}}</template>
           </el-table-column>
-          <el-table-column label="类型" width="200px">
-            <template slot-scope="scope">{{dictMap['CONTRACT_TYPE'][scope.row.type]}}</template>
+          <el-table-column label="板块" width="200px">
+            <template slot-scope="scope">{{dictMap['DOMAIN'][scope.row.domain]}}</template>
           </el-table-column>
-          <el-table-column label="状态" width="200px">
-            <template slot-scope="scope">{{dictMap['CONTRACT_STATUS'][scope.row.status]}}</template>
+          <el-table-column label="项目经理" prop="pmId" width="150px"></el-table-column>
+          <el-table-column label="上线日期" prop="onlineDate" width="150px"></el-table-column>
+          <el-table-column label="项目组" width="80px">
+            <template slot-scope="scope">{{scope.row.isProjectGroup === '1' ? '是' : '否'}}</template>
           </el-table-column>
-          <el-table-column prop="startDate" label="开始日期" width="150px"></el-table-column>
-          <el-table-column prop="endDate" label="终止日期" width="150px"></el-table-column>
+          <el-table-column label="问题" prop="issue"></el-table-column>
           <el-table-column align="center" label="操作" width="150">
             <template slot-scope="scope">
               <el-button-group>
@@ -48,49 +49,52 @@
                          :total="pageinfo.totalElements"></el-pagination>
         </div>
       </el-row>
-      <el-dialog title="编辑合同" :visible.sync="formVisible">
-        <el-form :model="model" ref="form" :rules="formRules" label-width="100px">
+      <el-dialog title="编辑项目" :visible.sync="formVisible">
+        <el-form :model="data" ref="form" :rules="formRules" label-width="100px">
           <el-row>
             <el-col :span="12">
               <el-form-item label="名称" prop="name">
-                <el-input v-model="model.name"></el-input>
+                <el-input v-model="data.name"></el-input>
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="供应商" prop="company">
-                <el-select v-model="model.company" clearable>
-                  <el-option v-for="(val, key) in dictMap['SUPPLIER']" :label="val" :value="key" :key="key"></el-option>
+              <el-form-item label="项目经理" prop="pmId">
+                <el-input v-model="data.pmId"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item label="阶段" prop="phase">
+                <el-select v-model="data.phase">
+                  <el-option v-for="(val, key) in dictMap['PROJECT_STAGE']" :label="val" :value="key" :key="key"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="板块" prop="domain">
+                <el-select v-model="data.domain">
+                  <el-option v-for="(val, key) in dictMap['DOMAIN']" :label="val" :value="key" :key="key"></el-option>
                 </el-select>
               </el-form-item>
             </el-col>
           </el-row>
           <el-row>
             <el-col :span="12">
-              <el-form-item label="类型" prop="type">
-                <el-select v-model="model.type">
-                  <el-option v-for="(val, key) in dictMap['CONTRACT_TYPE']" :label="val" :value="key" :key="key"></el-option>
-                </el-select>
+              <el-form-item label="上线日期" prop="onlineDate">
+                <el-date-picker type="date" v-model="data.onlineDate" value-format="yyyy/MM/dd"></el-date-picker>
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="状态" prop="status">
-                <el-select v-model="model.status">
-                  <el-option v-for="(val, key) in dictMap['CONTRACT_STATUS']" :label="val" :value="key" :key="key"></el-option>
-                </el-select>
+              <el-form-item label="项目组" prop="isProjectGroup">
+                <el-switch v-model="data.isProjectGroup" active-value="1" inactive-value="0"></el-switch>
               </el-form-item>
             </el-col>
           </el-row>
           <el-row>
-            <el-col :span="12">
-              <el-form-item label="开始日期" prop="endDate">
-                <el-date-picker type="date" v-model="model.startDate" value-format="yyyy/MM/dd"></el-date-picker>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="终止日期" prop="endDate">
-                <el-date-picker type="date" v-model="model.endDate" value-format="yyyy/MM/dd"></el-date-picker>
-              </el-form-item>
-            </el-col>
+            <el-form-item label="问题" prop="issue">
+              <el-input type="textarea" v-model="data.issue"></el-input>
+            </el-form-item>
           </el-row>
         </el-form>
         <div slot="footer" class="dialog-footer">
@@ -116,33 +120,27 @@
               pageNumber: 1
             }
           },
-          model: {},
+          data: {},
           formRules: {
             name: [
               { required: true, trigger: 'blue', message: '名称不能为空'},
               { max: 256, trigger: 'blur', message: '最大长度256个字符' }
             ],
-            company: [
-              { required: true, trigger: 'blue', message: '供应商不能为空'}
+            stage: [
+              { required: true, trigger: 'blue', message: '阶段不能为空'}
             ],
-            type: [
-              { required: true, trigger: 'blue', message: '合同类型不能为空'}
+            domain: [
+              { required: true, trigger: 'blue', message: '板块不能为空'}
             ],
-            status: [
-              { required: true, trigger: 'blue', message: '合同状态不能为空'}
-            ],
-            startDate: [
-              { required: true, trigger: 'blue', message: '开始日期不能为空'}
-            ],
-            endDate: [
-              { required: true, trigger: 'blue', message: '终止日期不能为空'}
+            onlineDate: [
+              { required: true, trigger: 'blue', message: '上线日期不能为空'}
             ]
           }
         }
       },
       methods: {
         query: function() {
-          axios.get('/rest/contract/query/' + (this.pageinfo.pageable.pageNumber) + '?params=' + this.queryParams)
+          axios.get('/rest/project/query/' + (this.pageinfo.pageable.pageNumber) + '?params=' + this.queryParams)
             .then(res => {
               this.pageinfo = res.data
               this.pageinfo.pageable.pageNumber += 1
@@ -154,22 +152,22 @@
           })
         },
         openAdd: function() {
-          this.model = {}
+          this.data = {}
           this.formVisible = true
         },
         openEdit: function(record) {
-          this.model = { ...record }
+          this.data = { ...record }
           this.formVisible = true
         },
         cancelForm: function() {
           this.$refs.form.resetFields()
-          this.model = {}
+          this.data = {}
           this.formVisible = false
         },
         save: function() {
           this.$refs.form.validate((valid) => {
             if (valid) {
-              axios.post("/rest/contract", this.model).then(res => {
+              axios.post("/rest/project", this.data).then(res => {
                 this.$notify({
                   title: '成功',
                   message: '保存成功',
@@ -182,8 +180,8 @@
           })
         },
         remove: function(id) {
-          this.$confirm('确定删除该合同', '提示', { type: 'warning' }).then(() => {
-            axios.delete("/rest/contract/" + id).then(res => {
+          this.$confirm('确定删除该项目', '提示', { type: 'warning' }).then(() => {
+            axios.delete("/rest/project/" + id).then(res => {
               this.$notify({
                 title: '成功',
                 message: '删除成功',

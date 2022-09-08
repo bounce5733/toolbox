@@ -2,13 +2,13 @@ create table TEAM (id int auto_increment primary key, name text not null);
 
 create table SHORTAGE (id int auto_increment primary key, type varchar(32), amount double);
 
-create table RISK (id int auto_increment primary key, project_id int, type varchar(32), risk_desc text);
+create table RISK (id int auto_increment primary key, type varchar(32), desc text);
 
 create table CONTRACT (id int auto_increment primary key, name text not null, type varchar(32),
     start_date char(10), end_date char(10), company varchar(32), status varchar(32));
 
-create table PROJECT (id int auto_increment primary key, name text not null, phase varchar(32), end_date char(10),
-    domain varchar(32), pm_id int, is_project_group char(1), progress varchar(32), delay double);
+create table PROJECT (id int auto_increment primary key, name text not null, phase varchar(32), online_date char(10),
+    domain varchar(32), pm_id int, is_project_group char(1), delay double, issue text);
 
 create table SUBPROJECT (id int auto_increment primary key, project_id int, system varchar(32), team_name text);
 

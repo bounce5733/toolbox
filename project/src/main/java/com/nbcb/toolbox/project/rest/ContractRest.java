@@ -3,9 +3,8 @@ package com.nbcb.toolbox.project.rest;
 import com.nbcb.toolbox.project.Constant;
 import com.nbcb.toolbox.project.domain.Contract;
 import com.nbcb.toolbox.project.repository.ContractRepository;
-import com.nbcb.toolbox.project.service.ContractService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,15 +26,15 @@ public class ContractRest {
     @Autowired
     private ContractRepository contractRepository;
 
-    @Autowired
-    private ContractService contractService;
-
     @GetMapping("/query/{page}")
-    public ResponseEntity<Page<Contract>> getDictByType(@PathVariable("page") int page,
-                                                        @RequestParam("params") String params)
+    public ResponseEntity<Page<Contract>> query(@PathVariable("page") int page, @RequestParam("params") String params)
             throws UnsupportedEncodingException {
-        return new ResponseEntity<>(contractService.query(URLDecoder.decode(params, Constant.ENCODING), page),
-        HttpStatus.OK);
+        Pageable pageParam = PageRequest.of(page - 1, Constant.PAGE_SIZE);
+        ExampleMatcher matcher = ExampleMatcher.matching();
+        matcher = matcher.withMatcher("name", ExampleMatcher.GenericPropertyMatchers.contains());
+        Example<Contract> example = Example.of(Contract.builder().name(URLDecoder.decode(params, Constant.ENCODING))
+                .build(), matcher);
+        return new ResponseEntity<>(contractRepository.findAll(example, pageParam), HttpStatus.OK);
     }
 
     @PostMapping

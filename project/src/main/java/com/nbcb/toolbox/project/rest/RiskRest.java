@@ -1,8 +1,8 @@
 package com.nbcb.toolbox.project.rest;
 
 import com.nbcb.toolbox.project.Constant;
-import com.nbcb.toolbox.project.domain.Personnel;
-import com.nbcb.toolbox.project.repository.PersonnelRepository;
+import com.nbcb.toolbox.project.domain.Risk;
+import com.nbcb.toolbox.project.repository.RiskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
@@ -13,40 +13,39 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
 /**
- * PersonnelRest
+ * RiskRest
  *
  * @Author jiangyonghua
  * @Date 2022/9/6 08:57
  * @Version 1.0
  **/
 @RestController
-@RequestMapping("/rest/personnel")
-public class PersonnelRest {
+@RequestMapping("/rest/risk")
+public class RiskRest {
 
     @Autowired
-    private PersonnelRepository personnelRepository;
+    private RiskRepository riskRepository;
 
     @GetMapping("/query/{page}")
-    public ResponseEntity<Page<Personnel>> getDictByType(@PathVariable("page") int page,
-                                                         @RequestParam("params") String params)
+    public ResponseEntity<Page<Risk>> query(@PathVariable("page") int page, @RequestParam("params") String params)
             throws UnsupportedEncodingException {
         Pageable pageParam = PageRequest.of(page - 1, Constant.PAGE_SIZE);
         ExampleMatcher matcher = ExampleMatcher.matching();
-        matcher = matcher.withMatcher("name", ExampleMatcher.GenericPropertyMatchers.contains());
-        Example<Personnel> example = Example.of(Personnel.builder().name(URLDecoder.decode(params, Constant.ENCODING))
+        matcher = matcher.withMatcher("desc", ExampleMatcher.GenericPropertyMatchers.contains());
+        Example<Risk> example = Example.of(Risk.builder().desc(URLDecoder.decode(params, Constant.ENCODING))
                 .build(), matcher);
-        return new ResponseEntity<>(personnelRepository.findAll(example, pageParam), HttpStatus.OK);
+        return new ResponseEntity<>(riskRepository.findAll(example, pageParam), HttpStatus.OK);
     }
 
     @PostMapping
-    public ResponseEntity<String> save(@RequestBody Personnel personnel) {
-        personnelRepository.save(personnel);
+    public ResponseEntity<String> save(@RequestBody Risk risk) {
+        riskRepository.save(risk);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> remove(@PathVariable("id") int id) {
-        personnelRepository.deleteById(id);
+        riskRepository.deleteById(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

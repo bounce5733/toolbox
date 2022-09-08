@@ -24,9 +24,9 @@ public class PageController {
         return "welcome";
     }
 
-    @RequestMapping("/sys/dict")
+    @RequestMapping("/resource/dict")
     public String dict(Model model) {
-        return "sys/dict";
+        return "resource/dict";
     }
 
     @RequestMapping("/resource/personnel")
@@ -37,5 +37,35 @@ public class PageController {
     @RequestMapping("/resource/contract")
     public String resourceContract(Model model) {
         return "resource/contract";
+    }
+
+    @RequestMapping("/resource/risk")
+    public String resourceRisk(Model model) {
+        return "resource/risk";
+    }
+
+    @RequestMapping("/resource/project")
+    public String resourceProject(Model model) {
+        return "resource/project";
+    }
+
+    @RequestMapping("/assemble/project")
+    public String assembleProject(Model model) {
+        return "assemble/project";
+    }
+
+    @RequestMapping("/assemble/adjust")
+    public String assembleAdjust(Model model) {
+        return "assemble/adjust";
+    }
+
+    @RequestMapping("/analysis/invest")
+    public String analysisInvest(Model model) {
+        return "analysis/invest";
+    }
+
+    @RequestMapping("/analysis/release")
+    public String analysisRelease(Model model) {
+        return "analysis/release";
     }
 }

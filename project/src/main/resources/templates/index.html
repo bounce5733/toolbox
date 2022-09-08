@@ -16,16 +16,18 @@
               <span slot="title">统计分析</span>
             </template>
             <el-menu-item-group>
-              <el-menu-item index="1-1" @click="openPage('../welcome')">资源释放</el-menu-item>
+              <el-menu-item index="1-1" @click="openPage('../analysis/release')">资源释放</el-menu-item>
+              <el-menu-item index="1-2" @click="openPage('../analysis/invest')">资源投入</el-menu-item>
             </el-menu-item-group>
           </el-submenu>
           <el-submenu index="2">
             <template slot="title">
               <i class="el-icon-video-camera-solid"></i>
-              <span slot="title">项目维护</span>
+              <span slot="title">资源装配</span>
             </template>
             <el-menu-item-group>
-              <el-menu-item index="2-1" @click="openPage('../welcome')">项目管理</el-menu-item>
+              <el-menu-item index="2-1" @click="openPage('../assemble/project')">项目装配</el-menu-item>
+              <el-menu-item index="2-2" @click="openPage('../assemble/adjust')">项目调整</el-menu-item>
             </el-menu-item-group>
           </el-submenu>
           <el-submenu index="3">
@@ -34,17 +36,11 @@
               <span slot="title">资源配置</span>
             </template>
             <el-menu-item-group>
-              <el-menu-item index="3-1" @click="openPage('../resource/personnel')">组员管理</el-menu-item>
-              <el-menu-item index="3-2" @click="openPage('../resource/contract')">合同管理</el-menu-item>
-            </el-menu-item-group>
-          </el-submenu>
-          <el-submenu index="4">
-            <template slot="title">
-              <i class="el-icon-menu"></i>
-              <span slot="title">系统管理</span>
-            </template>
-            <el-menu-item-group>
-              <el-menu-item index="4-1" @click="openPage('../sys/dict')">字典管理</el-menu-item>
+              <el-menu-item index="3-1" @click="openPage('../resource/project')">项目配置</el-menu-item>
+              <el-menu-item index="3-2" @click="openPage('../resource/personnel')">组员配置</el-menu-item>
+              <el-menu-item index="3-3" @click="openPage('../resource/contract')">合同配置</el-menu-item>
+              <el-menu-item index="3-4" @click="openPage('../resource/risk')">风险配置</el-menu-item>
+              <el-menu-item index="3-5" @click="openPage('../resource/dict')">字典配置</el-menu-item>
             </el-menu-item-group>
           </el-submenu>
         </el-menu>
