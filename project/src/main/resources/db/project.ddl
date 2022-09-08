@@ -8,12 +8,12 @@ create table CONTRACT (id int auto_increment primary key, name text not null, ty
     start_date char(10), end_date char(10), company varchar(32), status varchar(32));
 
 create table PROJECT (id int auto_increment primary key, name text not null, phase varchar(32), online_date char(10),
-    domain varchar(32), pm_id int, is_project_group char(1), delay double, issue text);
+    domain varchar(32), issue text);
 
 create table SUBPROJECT (id int auto_increment primary key, project_id int, system varchar(32), team_name text);
 
-create table SUBPROJECT_PERSONNEL (subproject_id int, personnel_id int, current_ration double, end_date date,
-    next_subproject_id int, prev_subproject_id int, start_date date);
+create table SUBPROJECT_PERSONNEL (id int auto_increment primary key, subproject_id int, personnel_id int,
+    current_ration double, next_subproject_id int, prev_subproject_id int, start_date char(10), end_date char(10));
 
 create table PERSONNEL (id int auto_increment primary key, name text not null, company varchar(32),
     level varchar(32), type varchar(32), is_pm char(1), is_admin char(1), phone text);

@@ -23,16 +23,12 @@
         <el-table :data="pageinfo.content" highlight-current-row border style="width:100%">
           <el-table-column prop="name" label="名称" width="200px"></el-table-column>
           <el-table-column label="阶段" width="200px">
-            <template slot-scope="scope">{{dictMap['PROJECT_STAGE'][scope.row.stage]}}</template>
+            <template slot-scope="scope">{{dictMap['PROJECT_STAGE'][scope.row.phase]}}</template>
           </el-table-column>
           <el-table-column label="板块" width="200px">
             <template slot-scope="scope">{{dictMap['DOMAIN'][scope.row.domain]}}</template>
           </el-table-column>
-          <el-table-column label="项目经理" prop="pmId" width="150px"></el-table-column>
           <el-table-column label="上线日期" prop="onlineDate" width="150px"></el-table-column>
-          <el-table-column label="项目组" width="80px">
-            <template slot-scope="scope">{{scope.row.isProjectGroup === '1' ? '是' : '否'}}</template>
-          </el-table-column>
           <el-table-column label="问题" prop="issue"></el-table-column>
           <el-table-column align="center" label="操作" width="150">
             <template slot-scope="scope">
@@ -58,8 +54,8 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="项目经理" prop="pmId">
-                <el-input v-model="data.pmId"></el-input>
+              <el-form-item label="上线日期" prop="onlineDate">
+                <el-date-picker type="date" v-model="data.onlineDate" value-format="yyyy/MM/dd"></el-date-picker>
               </el-form-item>
             </el-col>
           </el-row>
@@ -76,18 +72,6 @@
                 <el-select v-model="data.domain">
                   <el-option v-for="(val, key) in dictMap['DOMAIN']" :label="val" :value="key" :key="key"></el-option>
                 </el-select>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row>
-            <el-col :span="12">
-              <el-form-item label="上线日期" prop="onlineDate">
-                <el-date-picker type="date" v-model="data.onlineDate" value-format="yyyy/MM/dd"></el-date-picker>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="项目组" prop="isProjectGroup">
-                <el-switch v-model="data.isProjectGroup" active-value="1" inactive-value="0"></el-switch>
               </el-form-item>
             </el-col>
           </el-row>

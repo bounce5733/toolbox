@@ -2,19 +2,180 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>Demo</title>
+    <title>装配</title>
+    <link rel="stylesheet" href="../static/css/index.css">
     <link rel="stylesheet" href="../static/css/element.css">
   </head>
   <body>
-    <div id="app">
-        <h2>根据资源组装项目</h2>
+    <div id="app" class="app-container">
+      <el-row>
+        <el-form :inline="true" @submit.native.prevent>
+          <el-form-item>
+            <el-input @keyup.enter.native="query" style="width:280px" placeholder="名称" clearable v-model="queryParams"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="query">查询</el-button>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="openAdd">新增</el-button>
+          </el-form-item>
+        </el-form>
+        <el-table :data="pageinfo.content" highlight-current-row border style="width:100%">
+          <el-table-column type="expand">
+            <template slot-scope="scope">
+              <el-table :data="subProjects" border style="padding:20px; width:100%">
+                <el-table-column align="center">
+                  <template slot="header" slot-scope="scope">
+                    <el-tag>业务监控系统</el-tag>
+                    <el-button style="float:right" type="primary" size="mini" icon="el-icon-user">新增</el-button>
+                  </template>
+                  <el-table-column label="前序项目" prop="prevSubproject"></el-table-column>
+                  <el-table-column label="姓名" prop="personnelName"></el-table-column>
+                  <el-table-column label="供应商" prop="supplierName"></el-table-column>
+                  <el-table-column label="类别" prop="personnelType"></el-table-column>
+                  <el-table-column label="级别" prop="personnelLevel"></el-table-column>
+                  <el-table-column label="占比" prop="currentRation"></el-table-column>
+                  <el-table-column label="后续项目" prop="nextSubproject"></el-table-column>
+                  <el-table-column label="释放时间" prop="endDate"></el-table-column>
+                </el-table-column>
+              </el-table>
+              <el-table :data="subProjects" border style="padding:20px; width:100%">
+                <el-table-column align="center">
+                  <template slot="header" slot-scope="scope">
+                    <el-tag>实时决策系统</el-tag>
+                  </template>
+                  <el-table-column label="前序项目" prop="prevSubproject"></el-table-column>
+                  <el-table-column label="姓名" prop="personnelName"></el-table-column>
+                  <el-table-column label="供应商" prop="supplierName"></el-table-column>
+                  <el-table-column label="类别" prop="personnelType"></el-table-column>
+                  <el-table-column label="级别" prop="personnelLevel"></el-table-column>
+                  <el-table-column label="占比" prop="currentRation"></el-table-column>
+                  <el-table-column label="后续项目" prop="nextSubproject"></el-table-column>
+                  <el-table-column label="释放时间" prop="endDate"></el-table-column>
+                </el-table-column>
+              </el-table>
+            </template>
+          </el-table-column>
+          <el-table-column prop="name" label="名称" width="200px"></el-table-column>
+          <el-table-column label="阶段" width="200px">
+            <template slot-scope="scope">{{dictMap['PROJECT_STAGE'][scope.row.phase]}}</template>
+          </el-table-column>
+          <el-table-column label="板块" width="200px">
+            <template slot-scope="scope">{{dictMap['DOMAIN'][scope.row.domain]}}</template>
+          </el-table-column>
+          <el-table-column label="上线日期" prop="onlineDate" width="150px"></el-table-column>
+          <el-table-column label="问题" prop="issue"></el-table-column>
+          <el-table-column align="center" label="操作" width="150">
+            <template slot-scope="scope">
+              <el-button-group>
+                <el-button type="primary" size="small">新增子项目</el-button>
+              </el-button-group>
+            </template>
+          </el-table-column>
+        </el-table>
+        <div class="pagination-container">
+          <el-pagination background layout="prev, pager, next, total" @current-change="handlePageChange"
+                         :current-page="pageinfo.pageable.pageNumber" :page-size="pageinfo.pageable.pageSize"
+                         :total="pageinfo.totalElements"></el-pagination>
+        </div>
+      </el-row>
     </div>
   </body>
   <script src="../static/js/vue.js"></script>
   <script src="../static/js/element.js"></script>
+  <script src="../static/js/axios.js"></script>
   <script>
-      new Vue({
-          el: '#app'
-      })
+    new Vue({
+      el: '#app',
+      data: function() {
+        return {
+          dictMap: {}, // 系统字典
+          formVisible: false,
+          queryParams: '',
+          pageinfo: {
+            pageable: {
+              pageNumber: 1
+            }
+          },
+          subProjects: [{
+            prevSubproject: '/',
+            personnelName: '张三',
+            supplierName: '/',
+            personnelType: '行员',
+            personnelLevel: '/',
+            currentRation: '0.5',
+            nextSubproject: '/',
+            endDate: '2022/10/31'
+          }, {
+            prevSubproject: 'X项目',
+            personnelName: '李四',
+            supplierName: 'YYY',
+            personnelType: '项目',
+            personnelLevel: '中',
+            currentRation: '1',
+            nextSubproject: '/',
+            endDate: '2022/10/31'
+          }, {
+            prevSubproject: 'X项目',
+            personnelName: '李四',
+            supplierName: 'YYY',
+            personnelType: '项目',
+            personnelLevel: '中',
+            currentRation: '1',
+            nextSubproject: '/',
+            endDate: '2022/10/31'
+          }, {
+            prevSubproject: 'X项目',
+            personnelName: '李四',
+            supplierName: 'YYY',
+            personnelType: '项目',
+            personnelLevel: '中',
+            currentRation: '1',
+            nextSubproject: '/',
+            endDate: '2022/10/31'
+          }, {
+            prevSubproject: 'X项目',
+            personnelName: '李四',
+            supplierName: 'YYY',
+            personnelType: '项目',
+            personnelLevel: '中',
+            currentRation: '1',
+            nextSubproject: '/',
+            endDate: '2022/10/31'
+          }, {
+            prevSubproject: 'X项目',
+            personnelName: '李四',
+            supplierName: 'YYY',
+            personnelType: '项目',
+            personnelLevel: '中',
+            currentRation: '1',
+            nextSubproject: '/',
+            endDate: '2022/10/31'
+          }]
+        }
+      },
+      methods: {
+        query: function() {
+          axios.get('/rest/project/query/' + (this.pageinfo.pageable.pageNumber) + '?params=' + this.queryParams)
+            .then(res => {
+              this.pageinfo = res.data
+              this.pageinfo.pageable.pageNumber += 1
+          })
+        },
+        loadDict: function() {
+          axios.get('/rest/dict/load').then(res => {
+            this.dictMap = res.data
+          })
+        },
+        handlePageChange: function(pageNumber) {
+          this.pageinfo.pageable.pageNumber = pageNumber
+          this.query()
+        }
+      },
+      mounted() {
+        this.loadDict()
+        this.query()
+      }
+    })
   </script>
 </html>
