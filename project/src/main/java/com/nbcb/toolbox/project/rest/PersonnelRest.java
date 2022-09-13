@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.List;
 
 /**
  * PersonnelRest
@@ -26,8 +27,13 @@ public class PersonnelRest {
     @Autowired
     private PersonnelRepository personnelRepository;
 
+    @GetMapping("/load")
+    public ResponseEntity<List<Personnel>> load() {
+        return new ResponseEntity<>(personnelRepository.findAll(), HttpStatus.OK);
+    }
+
     @GetMapping("/query/{page}")
-    public ResponseEntity<Page<Personnel>> getDictByType(@PathVariable("page") int page,
+    public ResponseEntity<Page<Personnel>> query(@PathVariable("page") int page,
                                                          @RequestParam("params") String params)
             throws UnsupportedEncodingException {
         Pageable pageParam = PageRequest.of(page - 1, Constant.PAGE_SIZE);

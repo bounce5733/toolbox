@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.List;
 
 /**
  * ContractRest
@@ -35,6 +36,11 @@ public class ContractRest {
         Example<Contract> example = Example.of(Contract.builder().name(URLDecoder.decode(params, Constant.ENCODING))
                 .build(), matcher);
         return new ResponseEntity<>(contractRepository.findAll(example, pageParam), HttpStatus.OK);
+    }
+
+    @GetMapping("/load")
+    public ResponseEntity<List<Contract>> load() {
+        return new ResponseEntity<>(contractRepository.findAll(), HttpStatus.OK);
     }
 
     @PostMapping

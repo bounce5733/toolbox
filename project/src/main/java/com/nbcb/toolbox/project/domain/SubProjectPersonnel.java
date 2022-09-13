@@ -1,9 +1,7 @@
 package com.nbcb.toolbox.project.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.*;
 
 import javax.persistence.*;
 
@@ -14,7 +12,8 @@ import javax.persistence.*;
  * @Date 2022/9/7 09:27
  * @Version 1.0
  **/
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -25,9 +24,6 @@ public class SubProjectPersonnel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
-    @Column(name = "subproject_id")
-    private Integer subProjectId;
 
     @Column(name = "personnel_id")
     private Integer personnelId;
@@ -46,5 +42,8 @@ public class SubProjectPersonnel {
 
     @Column(name = "end_date")
     private String endDate;
+
+    @Column(name = "subproject_id")
+    private Integer subProjectId;
 
 }

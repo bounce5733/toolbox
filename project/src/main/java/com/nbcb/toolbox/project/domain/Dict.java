@@ -11,7 +11,8 @@ import javax.persistence.*;
  * @Date 2022/9/5 15:20
  * @Version 1.0
  **/
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

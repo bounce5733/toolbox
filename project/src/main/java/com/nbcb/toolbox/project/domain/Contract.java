@@ -1,9 +1,6 @@
 package com.nbcb.toolbox.project.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import java.sql.Date;
@@ -15,7 +12,8 @@ import java.sql.Date;
  * @Date 2022/9/7 09:27
  * @Version 1.0
  **/
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
