@@ -3,14 +3,8 @@ package com.nbcb.toolbox.project;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import com.nbcb.toolbox.project.domain.DicType;
-import com.nbcb.toolbox.project.domain.Dict;
-import com.nbcb.toolbox.project.domain.Project;
-import com.nbcb.toolbox.project.domain.SubProject;
-import com.nbcb.toolbox.project.repository.DictRepository;
-import com.nbcb.toolbox.project.repository.DicTypeRepository;
-import com.nbcb.toolbox.project.repository.ProjectRepository;
-import com.nbcb.toolbox.project.repository.SubProjectRepository;
+import com.nbcb.toolbox.project.domain.*;
+import com.nbcb.toolbox.project.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,6 +40,9 @@ public class RepositoryTest {
     @Autowired
     private SubProjectRepository subProjectRepository;
 
+    @Autowired
+    private ResourceRepository resourceRepository;
+
     @Test
     public void saveDictType() {
         DicType type = new DicType();
@@ -71,5 +68,11 @@ public class RepositoryTest {
         subProjectRepository.save(SubProject.builder().system("REMOTE_HAWK").projectId(1).build());
         List<SubProject> subProjects = subProjectRepository.findAll();
         log.info("subProjects:{}", new ObjectMapper().writeValueAsString(subProjects));
+    }
+
+    @Test
+    public void getReousrceBySubProjectId() throws JsonProcessingException {
+        List<Resource> resources = resourceRepository.findAll(Example.of(Resource.builder().subProjectId(3).build()));
+        log.info("resources:{}", new ObjectMapper().writeValueAsString(resources));
     }
 }

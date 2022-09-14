@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>项目新建</title>
+  <link rel="stylesheet" href="../static/css/index.css">
+  <link rel="stylesheet" href="../static/css/element.css">
+</head>
+<body>
+  <div id="app" class="app-container">
+    <el-row>
+      <el-form :inline="true" @submit.native.prevent>
+        <el-form-item>
+          <el-input @keyup.enter.native="query" style="width:280px" placeholder="名称" clearable v-model="queryParams"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="query" icon="el-icon-search">查询</el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="openAdd" icon="el-icon-plus">新增</el-button>
+        </el-form-item>
+      </el-form>
+      <el-table :data="pageinfo.content" highlight-current-row border style="width:100%">
+        <el-table-column type="expand">
+          <template slot-scope="scope">
+            <el-table :data="scope.row.subProjects" size="small" stripe highlight-current-row border style="width:100%">
+              <el-table-column label="所属系统">
+                <template slot-scope="iscope">{{dictMap['SYSTEM'][iscope.row.system]}}</template>
+              </el-table-column>
+              <el-table-column label="所属部门">
+                <template slot-scope="iscope">{{dictMap['DEPT'][iscope.row.dept]}}</template>
+              </el-table-column>
+              <el-table-column label="当前阶段">
+                <template slot-scope="iscope">{{dictMap['PROJECT_STAGE'][iscope.row.phase]}}</template>
+              </el-table-column>
+              <el-table-column label="PM">
+              <template slot-scope="iscope">{{personnelMap[iscope.row.pm] ? personnelMap[iscope.row.pm].name : ''}}</template>
+            </el-table-column>
+              <el-table-column label="PMO">
+                <template slot-scope="iscope">{{personnelMap[iscope.row.pmo] ? personnelMap[iscope.row.pmo].name : ''}}</template>
+              </el-table-column>
+              <el-table-column label="QA">
+                <template slot-scope="iscope">{{personnelMap[iscope.row.qa] ? personnelMap[iscope.row.qa].name : ''}}</template>
+              </el-table-column>
+              <el-table-column label="合同信息" align="center">
+                <template slot-scope="iscope">
+                  <el-tag @click="openContract(iscope.row.contract)">查看合同</el-tag>
+                </template>
+              </el-table-column>
+            </el-table>
+          </template>
+        </el-table-column>
+        <el-table-column prop="code" label="项目编码" width="100px"></el-table-column>
+        <el-table-column prop="name" label="项目名称" width="200px"></el-table-column>
+        <el-table-column label="业务条线" width="200px">
+          <template slot-scope="scope">{{dictMap['DOMAIN'][scope.row.domain]}}</template>
+        </el-table-column>
+        <el-table-column label="上线日期" prop="onlineDate" width="150px"></el-table-column>
+        <el-table-column label="项目问题" prop="issue"></el-table-column>
+        <el-table-column align="center" label="操作" width="250">
+          <template slot-scope="scope">
+            <el-button-group>
+              <el-button type="primary" @click="openAddSubProject(scope.row.id)" icon="el-icon-plus" size="small">子项</el-button>
+              <el-button type="primary" @click="openEdit(scope.row)" size="small" icon="el-icon-edit">编辑</el-button>
+              <el-button type="danger" @click="remove(scope.row.id)" size="small" icon="el-icon-delete">删除</el-button>
+            </el-button-group>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="pagination-container">
+        <el-pagination background layout="prev, pager, next, total" @current-change="handlePageChange"
+                       :current-page="pageinfo.pageable.pageNumber" :page-size="pageinfo.pageable.pageSize"
+                       :total="pageinfo.totalElements"></el-pagination>
+      </div>
+    </el-row>
+    <el-dialog title="编辑项目" :visible.sync="formVisible">
+      <el-form :model="model" ref="form" :rules="formRules" label-width="100px">
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="项目编码" prop="code">
+              <el-input v-model="model.code"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="项目名称" prop="name">
+              <el-input v-model="model.name"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="业务条线" prop="domain">
+              <el-select v-model="model.domain">
+                <el-option v-for="(val, key) in dictMap['DOMAIN']" :label="val" :value="key" :key="key"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="上线日期" prop="onlineDate">
+              <el-date-picker type="date" v-model="model.onlineDate" value-format="yyyy/MM/dd"></el-date-picker>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-form-item label="项目问题" prop="issue">
+            <el-input type="textarea" v-model="model.issue"></el-input>
+          </el-form-item>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click.native="cancelForm">取消</el-button>
+        <el-button type="primary" @click.native="save">保存</el-button>
+      </div>
+    </el-dialog>
+    <el-drawer title="新增子项" :with-header="false" :visible.sync="subProjectDrawerVisible" direction="rtl">
+      <el-row type="flex" justify="space-around">
+        <div class="demo-drawer__content">
+          <el-form :model="subProject" :rules="subProjectFormRules" ref="subProjectForm" label-width="80px">
+            <el-form-item label="所属系统" prop="system">
+              <el-select v-model="subProject.system">
+                <el-option v-for="(val, key) in dictMap['SYSTEM']" :label="val" :value="key" :key="key"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="所属部门" prop="dept">
+              <el-select v-model="subProject.dept">
+                <el-option v-for="(val, key) in dictMap['DEPT']" :label="val" :value="key" :key="key"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="PM" prop="pm">
+              <el-select v-model="subProject.pm" filterable placeholder="请选择">
+                <el-option
+                    v-for="(item, id) in personnelMap"
+                    :key="id"
+                    :label="item.name"
+                    :value="id">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="PMO" prop="pmo">
+              <el-select v-model="subProject.pmo" filterable placeholder="请选择">
+                <el-option
+                    v-for="(item, id) in personnelMap"
+                    :key="id"
+                    :label="item.name"
+                    :value="id">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="QA" prop="qa">
+              <el-select v-model="subProject.qa" filterable placeholder="请选择">
+                <el-option
+                    v-for="(item, id) in personnelMap"
+                    :key="id"
+                    :label="item.name"
+                    :value="id">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="当前阶段" prop="phase">
+              <el-select v-model="subProject.phase">
+                <el-option v-for="(val, key) in dictMap['PROJECT_STAGE']" :label="val" :value="key" :key="key"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="合同" prop="contractId">
+              <el-select v-model="subProject.contractId">
+                <el-option v-for="(item, key) in contractMap" :label="item.name" :value="key" :key="key"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-form>
+        </div>
+      </el-row>
+      <el-row type="flex" justify="space-around">
+        <div class="demo-drawer__footer">
+          <el-button @click="cancelSubProjectForm">取 消</el-button>
+          <el-button type="primary" @click="saveSubProject">确 定</el-button>
+        </div>
+      </el-row>
+    </el-drawer>
+    <el-dialog title="合同信息" :visible.sync="contractVisible" width="50%">
+      <el-descriptions border>
+        <el-descriptions-item label="名称">{{contract.name}}</el-descriptions-item>
+        <el-descriptions-item label="公司">{{dictMap['SUPPLIER'][contract.company]}}</el-descriptions-item>
+        <el-descriptions-item label="类型">{{dictMap['CONTRACT_TYPE'][contract.type]}}</el-descriptions-item>
+        <el-descriptions-item label="状态">{{dictMap['CONTRACT_STATUS'][contract.status]}}</el-descriptions-item>
+        <el-descriptions-item label="开始日期">{{contract.startDate}}</el-descriptions-item>
+        <el-descriptions-item label="结束日期">{{contract.endDate}}</el-descriptions-item>
+      </el-descriptions>
+    </el-dialog>
+  </div>
+</body>
+<script src="../static/js/vue.js"></script>
+<script src="../static/js/element.js"></script>
+<script src="../static/js/axios.js"></script>
+<script>
+    new Vue({
+      el: '#app',
+      data: function() {
+        const validateSystem = (rule, value, callback) => {
+            if (this.subProject.system === undefined || this.subProject.system.trim().length === 0) {
+              return callback(new Error('系统不能为空'))
+            }
+            // 检查当前项目是否已经存在该系统子项
+            this.pageinfo.content.forEach(project => {
+              if (this.subProject.projectId === project.id) {
+                project.subProjects.forEach(subProject => {
+                  if (subProject.system === value) {
+                    return callback(new Error('该子系统已经存在'))
+                  }
+                })
+              }
+            })
+            callback()
+          }
+        return {
+          dictMap: {}, // 系统字典
+          personnelMap: {}, // 人员字典
+          contractMap: {}, // 合同字典
+          formVisible: false,
+          queryParams: '',
+          pageinfo: {
+            pageable: {
+              pageNumber: 1
+            }
+          },
+          model: {},
+          formRules: {
+            code: [
+              { required: true, trigger: 'blue', message: '项目编码不能为空'},
+              { max: 32, trigger: 'blur', message: '最大长度32个字符' }
+            ],
+            name: [
+              { required: true, trigger: 'blue', message: '项目名称不能为空'},
+              { max: 256, trigger: 'blur', message: '最大长度256个字符' }
+            ],
+            domain: [
+              { required: true, trigger: 'blue', message: '业务条线不能为空'}
+            ],
+            onlineDate: [
+              { required: true, trigger: 'blue', message: '上线日期不能为空'}
+            ]
+          },
+          // ------------子项目表单------------
+          subProjectDrawerVisible: false,
+          subProjectFormRules: {
+            system : [
+              { required: true, trigger: 'blue', validator: validateSystem }
+            ],
+            dept: [
+              { required: true, trigger: 'blue', message: '所属部门不能为空'}
+            ],
+            phase: [
+              { required: true, trigger: 'blue', message: '当前阶段不能为空'}
+            ],
+            pm: [
+              { required: true, trigger: 'blue', message: 'PM不能为空'}
+            ],
+            pmo: [
+              { required: true, trigger: 'blue', message: 'PMO不能为空'}
+            ],
+            QA: [
+              { required: true, trigger: 'blue', message: 'QA不能为空'}
+            ],
+            contractId : [
+              { required: true, trigger: 'blue', message: '合同不能为空' }
+            ]
+          },
+          subProject: {},
+          // ------------合同弹窗------------
+          contractVisible: false,
+          contract: {}
+        }
+      },
+      methods: {
+        query: function() {
+          axios.get('/rest/project/query/' + (this.pageinfo.pageable.pageNumber) + '?params=' + this.queryParams)
+            .then(res => {
+              this.pageinfo = res.data
+              this.pageinfo.pageable.pageNumber += 1
+          })
+        },
+        loadDict: function() {
+          axios.get('/rest/dict/load').then(res => {
+            this.dictMap = res.data
+          })
+        },
+        loadPersonnel: function() {
+          axios.get('/rest/personnel/load')
+            .then(res => {
+              res.data.forEach(item =>  {
+                this.personnelMap[item.id] = item
+              })
+          })
+        },
+        loadContract: function() {
+          axios.get('/rest/contract/load/')
+            .then(res => {
+              res.data.forEach(item =>  {
+                this.contractMap[item.id] = item
+              })
+          })
+        },
+        openAdd: function() {
+          this.model = {}
+          this.formVisible = true
+        },
+        openEdit: function(record) {
+          this.model = { ...record }
+          this.formVisible = true
+        },
+        cancelForm: function() {
+          this.$refs.form.resetFields()
+          this.model = {}
+          this.formVisible = false
+        },
+        save: function() {
+          this.$refs.form.validate((valid) => {
+            if (valid) {
+              axios.post("/rest/project", this.model).then(res => {
+                this.$notify({
+                  title: '成功',
+                  message: '保存成功',
+                  type: 'success'
+                })
+                this.query()
+                this.cancelForm()
+              })
+            }
+          })
+        },
+        remove: function(id) {
+          this.$confirm('确定删除该项目', '提示', { type: 'warning' }).then(() => {
+            axios.delete("/rest/project/" + id).then(res => {
+              this.$notify({
+                title: '成功',
+                message: '删除成功',
+                type: 'success'
+              })
+              this.query()
+            })
+          })
+        },
+        handlePageChange: function(pageNumber) {
+          this.pageinfo.pageable.pageNumber = pageNumber
+          this.query()
+        },
+        openAddSubProject(projectId) {
+          this.subProject = { projectId: projectId }
+          this.subProjectDrawerVisible = true
+        },
+        saveSubProject() {
+          this.$refs.subProjectForm.validate((valid) => {
+            if (valid) {
+              this.subProject.contract = { id: this.subProject.contractId }
+              delete this.subProject.contractId
+              axios.post("/rest/subproject", this.subProject).then(res => {
+                this.$notify({
+                  title: '成功',
+                  message: '保存成功',
+                  type: 'success'
+                })
+                this.query()
+                this.cancelSubProjectForm()
+              })
+            }
+          })
+        },
+        cancelSubProjectForm() {
+          this.subProject = {}
+          this.$refs.subProjectForm.resetFields()
+          this.subProjectDrawerVisible = false
+        },
+        removeSubProject(id) {
+          this.$confirm('确定删除该子项', '提示', { type: 'warning' }).then(() => {
+            axios.delete("/rest/subproject/" + id).then(res => {
+              this.$notify({
+                title: '成功',
+                message: '删除成功',
+                type: 'success'
+              })
+              this.query()
+            })
+          })
+        },
+        openContract(contract) {
+          this.contractVisible = true
+          this.contract = contract
+        }
+      },
+      mounted() {
+        this.loadDict()
+        this.loadPersonnel()
+        this.loadContract()
+        this.query()
+      }
+    })
+  </script>
+</html>

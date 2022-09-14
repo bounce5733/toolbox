@@ -100,15 +100,9 @@
           if (this.dicType.code === undefined || this.dicType.code.trim().length === 0) {
             return callback(new Error('字典类型编码不能为空'))
           }
-          // 校验编码规则
-          const regexp = /^[A-Z]+$/
-          const codeVal = this.dicType.code.trim()
-          const isChar = regexp.test(codeVal.replace(/_/g, ''))
-          if (!isChar) {
-            return callback(new Error('字典编码必须由大写字母或下划线组成'))
-          }
           // 校验唯一
           let isUnion = true
+          const codeVal = this.dicType.code.trim()
           this.dicTypes.forEach(item => {
             if (item.code === codeVal) {
               isUnion = false
@@ -116,20 +110,6 @@
           })
           if (!isUnion) {
             return callback(new Error('字典类型编码不唯一'))
-          }
-          callback()
-        }
-        // 验证字典编码
-        const validateDictCode = (rule, value, callback) => {
-          if (this.dict.code === undefined || this.dict.code.trim().length === 0) {
-            return callback(new Error('字典编码不能为空'))
-          }
-          // 校验编码规则
-          const regexp = /^[A-Z]+$/
-          const codeVal = this.dict.code.trim()
-          const isChar = regexp.test(codeVal.replace(/_/g, ''))
-          if (!isChar) {
-            return callback(new Error('字典编码必须由大写字母或下划线组成'))
           }
           callback()
         }
@@ -152,7 +132,7 @@
           dicts: [],
           dictRules: {
             code: [
-              { required: true, trigger: 'blue', validator: validateDictCode},
+              { required: true, trigger: 'blue', message: '字典编码不能为空'},
               { max: 32, trigger: 'blur', message: '最大长度32个字符' }
             ],
             name: [

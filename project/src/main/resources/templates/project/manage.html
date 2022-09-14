@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>项目新建</title>
+  <link rel="stylesheet" href="../static/css/index.css">
+  <link rel="stylesheet" href="../static/css/element.css">
+</head>
+<body>
+<div id="app" class="app-container">
+  <el-row>
+    <el-form :inline="true" @submit.native.prevent>
+      <el-form-item>
+        <el-input @keyup.enter.native="query" style="width:280px" placeholder="名称" clearable v-model="queryParams"></el-input>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="query">查询</el-button>
+      </el-form-item>
+    </el-form>
+    <el-table :data="pageinfo.content" highlight-current-row @row-dblclick="openDetail" border style="width:100%">
+      <el-table-column label="项目编码" width="200px">
+        <template slot-scope="scope">{{projectMap[scope.row.id].code}}</template>
+      </el-table-column>
+      <el-table-column label="项目名称">
+        <template slot-scope="scope">{{projectMap[scope.row.id].name}}</template>
+      </el-table-column>
+      <el-table-column label="业务条线" width="250px">
+        <template slot-scope="scope">{{dictMap['DOMAIN'][projectMap[scope.row.id].domain]}}</template>
+      </el-table-column>
+      <el-table-column label="上线日期"width="150px">
+        <template slot-scope="scope">{{projectMap[scope.row.id].onlineDate}}</template>
+      </el-table-column>
+      <el-table-column label="所属部门" width="200px">
+        <template slot-scope="scope">{{dictMap['DEPT'][scope.row.dept]}}</template>
+      </el-table-column>
+      <el-table-column label="当前阶段" width="200px">
+        <template slot-scope="scope">{{dictMap['PROJECT_STAGE'][scope.row.phase]}}</template>
+      </el-table-column>
+    </el-table>
+    <div class="pagination-container">
+      <el-pagination background layout="prev, pager, next, total" @current-change="handlePageChange"
+                     :current-page="pageinfo.pageable.pageNumber" :page-size="pageinfo.pageable.pageSize"
+                     :total="pageinfo.totalElements"></el-pagination>
+    </div>
+  </el-row>
+  <el-dialog title="项目详情" :visible.sync="detailVisible" width="80%" @close="closeDetail">
+    <el-tabs v-model="activeTabName" type="border-card">
+      <el-tab-pane name="basicInfo" label="基本信息">
+        <br>
+        <el-descriptions v-if="projectMap[model.id]" border title="主项目">
+          <el-descriptions-item label="项目编码">{{projectMap[model.id].code}}</el-descriptions-item>
+          <el-descriptions-item label="项目名称">{{projectMap[model.id].name}}</el-descriptions-item>
+          <el-descriptions-item label="业务条线">{{dictMap['DOMAIN'][projectMap[model.id].domain]}}</el-descriptions-item>
+          <el-descriptions-item label="上线日期">{{projectMap[model.id].onlineDate}}</el-descriptions-item>
+          <el-descriptions-item label="项目问题">{{projectMap[model.id].issue}}</el-descriptions-item>
+        </el-descriptions>
+        <br>
+        <el-descriptions border title="子项目">
+          <el-descriptions-item label="所属部门">{{dictMap['DEPT'][model.dept]}}</el-descriptions-item>
+          <el-descriptions-item label="当前阶段">{{dictMap['PROJECT_STAGE'][model.phase]}}</el-descriptions-item>
+          <el-descriptions-item label="PM">{{personnelMap[model.pm] ? personnelMap[model.pm].name : ''}}</el-descriptions-item>
+          <el-descriptions-item label="PMO">{{personnelMap[model.pmo] ? personnelMap[model.pmo].name : ''}}</el-descriptions-item>
+          <el-descriptions-item label="QA">{{personnelMap[model.qa] ? personnelMap[model.qa].name : ''}}</el-descriptions-item>
+        </el-descriptions>
+        <br>
+        <el-descriptions v-if="model.contract" border title="合同信息">
+          <el-descriptions-item label="名称">{{model.contract.name}}</el-descriptions-item>
+          <el-descriptions-item label="公司">{{dictMap['SUPPLIER'][model.contract.company]}}</el-descriptions-item>
+          <el-descriptions-item label="类型">{{dictMap['CONTRACT_TYPE'][model.contract.type]}}</el-descriptions-item>
+          <el-descriptions-item label="状态">{{dictMap['CONTRACT_STATUS'][model.contract.status]}}</el-descriptions-item>
+          <el-descriptions-item label="开始日期">{{model.contract.startDate}}</el-descriptions-item>
+          <el-descriptions-item label="结束日期">{{model.contract.endDate}}</el-descriptions-item>
+        </el-descriptions>
+      </el-tab-pane>
+      <el-tab-pane name="processInfo" label="项目进度"></el-tab-pane>
+      <el-tab-pane name="resourceManage" label="资源管理">
+        <el-table :data="resources" border>
+          <el-table-column align="center">
+            <el-table-column label="前序项目">
+              <template slot-scope="scope">{{projectMap[scope.row.prevSubprojectId] ? projectMap[scope.row.prevSubprojectId].name : '/'}}</template>
+            </el-table-column>
+            <el-table-column label="姓名">
+              <template slot-scope="scope">{{personnelMap[scope.row.personnelId].name}}</template>
+            </el-table-column>
+            <el-table-column label="供应商">
+              <template slot-scope="scope">{{dictMap['SUPPLIER'][personnelMap[scope.row.personnelId].company]}}</template>
+            </el-table-column>
+            <el-table-column label="类别">
+              <template slot-scope="scope">{{dictMap['PERSONNEL_TYPE'][personnelMap[scope.row.personnelId].type]}}</template>
+            </el-table-column>
+            <el-table-column label="级别">
+              <template slot-scope="scope">{{dictMap['PERSONNEL_LEVEL'][personnelMap[scope.row.personnelId].level]}}</template>
+            </el-table-column>
+            <el-table-column label="占比" prop="currentRation"></el-table-column>
+            <el-table-column label="后续项目">
+              <template slot-scope="scope">{{projectMap[scope.row.nextSubprojectId] ? projectMap[scope.row.nextSubprojectId].name : '/'}}</template>
+            </el-table-column>
+            <el-table-column label="释放时间" prop="endDate"></el-table-column>
+            <el-table-column align="center">
+              <template slot="header" slot-scope="scope">
+                <el-button type="primary" @click="openAddResource(model.id)" size="mini" icon="el-icon-plus"></el-button>
+              </template>
+              <template slot-scope="scope">
+                <el-button-group>
+                  <el-button type="danger" @click="removeResource(scope.row.id)" size="small" icon="el-icon-delete"></el-button>
+                </el-button-group>
+              </template>
+            </el-table-column>
+          </el-table-column>
+        </el-table>
+      </el-tab-pane>
+    </el-tabs>
+  </el-dialog>
+  <el-drawer title="新增资源" :with-header="false" :visible.sync="resourceDrawerVisible" direction="rtl">
+    <el-row type="flex" justify="space-around">
+      <div class="demo-drawer__content">
+        <el-form :model="resource" :rules="resourceFormRules" ref="resourceForm" label-width="80px">
+          <el-form-item label="项目人员" prop="personnelId">
+            <el-select v-model="resource.personnelId" filterable placeholder="请选择">
+              <el-option
+                  v-for="(item, id) in personnelMap"
+                  :key="id"
+                  :label="item.name"
+                  :value="id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="当前占比" prop="currentRation">
+            <el-input v-model="resource.currentRation" oninput="value=value.replace(/^\.+|[^\d.]/g, '')" @blur="rationChange"></el-input>
+          </el-form-item>
+          <el-form-item label="进入时间" prop="startDate">
+            <el-date-picker type="date" v-model="resource.startDate" value-format="yyyy/MM/dd"></el-date-picker>
+          </el-form-item>
+          <el-form-item label="释放时间" prop="endDate">
+            <el-date-picker type="date" v-model="resource.endDate" value-format="yyyy/MM/dd"></el-date-picker>
+          </el-form-item>
+          <el-form-item label="前序项目" prop="prevSubprojectId">
+            <el-select v-model="resource.prevSubprojectId" clearable placeholder="请选择">
+              <el-option
+                  v-for="(item, id) in projectMap"
+                  :key="id"
+                  :label="item.name"
+                  :value="id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="后续项目" prop="nextSubprojectId">
+            <el-select v-model="resource.nextSubprojectId" clearable placeholder="请选择">
+              <el-option
+                  v-for="(item, id) in projectMap"
+                  :key="id"
+                  :label="item.name"
+                  :value="id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-form>
+      </div>
+    </el-row>
+    <el-row type="flex" justify="space-around">
+      <div class="demo-drawer__footer">
+        <el-button @click="resourceDrawerVisible = false">取 消</el-button>
+        <el-button type="primary" @click="saveResource">确 定</el-button>
+      </div>
+    </el-row>
+  </el-drawer>
+</div>
+</body>
+<script src="../static/js/vue.js"></script>
+<script src="../static/js/element.js"></script>
+<script src="../static/js/axios.js"></script>
+<script>
+    new Vue({
+      el: '#app',
+      data: function() {
+        return {
+          dictMap: {}, // 系统字典
+          personnelMap: {}, // 人员字典
+          projectMap: {}, // 子项目id->主项目映射
+          detailVisible: false,
+          queryParams: '',
+          pageinfo: {
+            pageable: {
+              pageNumber: 1
+            }
+          },
+          // ------------项目管理弹窗------------
+          activeTabName: 'basicInfo',
+          model: {},
+          // ------------项目资源------------
+          resources: [], // 当前项目资源列表
+          resource: {},
+          resourceDrawerVisible: false,
+          resourceFormRules: {
+            personnelId : [
+              { required: true, trigger: 'blue', message: '项目人员不能为空'}
+            ],
+            currentRation: [
+              { required: true, trigger: 'blue', message: '当前占比不能为空'}
+            ],
+            startDate: [
+              { required: true, trigger: 'blue', message: '进入时间不能为空'}
+            ],
+            endDate: [
+              { required: true, trigger: 'blue', message: '释放时间不能为空'}
+            ]
+          }
+        }
+      },
+      methods: {
+        query: function() {
+          axios.get('/rest/project/load').then(res => {
+              res.data.forEach(project =>  {
+                project.subProjects.forEach(subProject =>  {
+                  this.projectMap[subProject.id] = { code: project.code, name: project.name, domain: project.domain,
+                  issue: project.issue, onlineDate: project.onlineDate, id: project.id }
+                })
+                console.log('this.projectMap:' + JSON.stringify(this.projectMap))
+                axios.get('/rest/subproject/query/' + (this.pageinfo.pageable.pageNumber))
+                  .then(res => {
+                    this.pageinfo = res.data
+                    this.pageinfo.pageable.pageNumber += 1
+                })
+              })
+          })
+        },
+        loadDict: function() {
+          axios.get('/rest/dict/load').then(res => {
+            this.dictMap = res.data
+          })
+        },
+        loadPersonnel: function() {
+          axios.get('/rest/personnel/load')
+            .then(res => {
+              res.data.forEach(item =>  {
+                this.personnelMap[item.id] = item
+              })
+          })
+        },
+        handlePageChange: function(pageNumber) {
+          this.pageinfo.pageable.pageNumber = pageNumber
+          this.query()
+        },
+        openDetail(row) {
+          this.model = row
+          this.resources = row.resources
+          this.detailVisible = true
+        },
+        closeDetail() {
+          this.detailVisible = false
+          this.query()
+        },
+        // ------------资源函数------------
+        openAddResource(subProjectId) {
+          this.resource = { subProjectId: subProjectId }
+          this.resourceDrawerVisible = true
+        },
+        saveResource() {
+          this.$refs.resourceForm.validate((valid) => {
+            if (valid) {
+              axios.post("/rest/resource", this.resource).then(res => {
+                this.$notify({
+                  title: '成功',
+                  message: '保存成功',
+                  type: 'success'
+                })
+                axios.get("/rest/resource/subproject/" + this.resource.subProjectId).then(res => {
+                   this.resources = res.data
+                   this.resourceDrawerVisible = false
+                })
+              })
+            }
+          })
+        },
+        removeResource(id) {
+          this.$confirm('确定删除该资源', '提示', { type: 'warning' }).then(() => {
+            axios.delete("/rest/resource/" + id).then(res => {
+              this.$notify({
+                title: '成功',
+                message: '删除成功',
+                type: 'success'
+              })
+              this.resources.forEach((resource, index) => {
+                if (id === resource.id) {
+                  this.resources.splice(index, 1)
+                }
+              })
+            })
+          })
+        },
+        rationChange(e) {
+          this.resource.currentRation = e.target.value
+        }
+      },
+      mounted() {
+        this.loadDict()
+        this.loadPersonnel()
+        this.query()
+      }
+    })
+  </script>
+</html>

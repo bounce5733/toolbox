@@ -44,19 +44,14 @@ public class PageController {
         return "resource/risk";
     }
 
-    @RequestMapping("/resource/project")
-    public String resourceProject(Model model) {
-        return "resource/project";
+    @RequestMapping("/project/create")
+    public String projectCreate(Model model) {
+        return "project/create";
     }
 
-    @RequestMapping("/assemble/project")
-    public String assembleProject(Model model) {
-        return "assemble/project";
-    }
-
-    @RequestMapping("/assemble/adjust")
-    public String assembleAdjust(Model model) {
-        return "assemble/adjust";
+    @RequestMapping("/project/manage")
+    public String projectManage(Model model) {
+        return "project/manage";
     }
 
     @RequestMapping("/analysis/invest")

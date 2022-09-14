@@ -1,12 +1,11 @@
 package com.nbcb.toolbox.project.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
 
 /**
- * 子项目人员关系
+ * 项目资源
  *
  * @Author jiangyonghua
  * @Date 2022/9/7 09:27
@@ -18,8 +17,8 @@ import javax.persistence.*;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "subproject_personnel")
-public class SubProjectPersonnel {
+@Table(name = "resource")
+public class Resource {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

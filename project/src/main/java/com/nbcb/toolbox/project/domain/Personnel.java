@@ -24,6 +24,9 @@ public class Personnel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(length = 32)
+    private String code;
+
     private String name;
 
     @Column(length = 32)
@@ -35,11 +38,25 @@ public class Personnel {
     @Column(length = 32)
     private String type;
 
-    @Column(name = "is_pm", length = 1)
-    private String isPm;
-
-    @Column(name = "is_admin", length = 1)
-    private String isAdmin;
-
     private String phone;
+
+    @Column(length = 32)
+    private String team;
+
+    @Column(length = 32)
+    private String dept;
+
+    @Column(length = 32)
+    private String position;
+
+    private Integer charge;
+
+    @Column(length = 32)
+    private String status;
+
+    @Column(length = 10)
+    private String startDate;
+
+    @Column(length = 10)
+    private String endDate;
 }

@@ -1,6 +1,5 @@
 package com.nbcb.toolbox.project.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
@@ -32,12 +31,24 @@ public class SubProject {
     @Column(name = "project_id")
     private Integer projectId;
 
+    @Column(length = 32)
+    private String phase;
+
+    @Column(length = 32)
+    private String dept;
+
+    private Integer pm;
+
+    private Integer pmo;
+
+    private Integer qa;
+
     @OneToOne(cascade = CascadeType.DETACH)
     @JoinColumn(name = "contract_id", referencedColumnName = "id")
     private Contract contract;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "subproject_id", referencedColumnName = "id")
-    private Set<SubProjectPersonnel> subProjectPersonnels;
+    private Set<Resource> resources;
 
 }

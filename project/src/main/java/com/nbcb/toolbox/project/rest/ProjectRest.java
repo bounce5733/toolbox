@@ -1,12 +1,9 @@
 package com.nbcb.toolbox.project.rest;
 
 import com.nbcb.toolbox.project.Constant;
-import com.nbcb.toolbox.project.domain.Contract;
 import com.nbcb.toolbox.project.domain.Project;
-import com.nbcb.toolbox.project.domain.SubProject;
-import com.nbcb.toolbox.project.domain.SubProjectPersonnel;
 import com.nbcb.toolbox.project.repository.ProjectRepository;
-import com.nbcb.toolbox.project.repository.SubProjectPersonnelRepository;
+import com.nbcb.toolbox.project.repository.ResourceRepository;
 import com.nbcb.toolbox.project.repository.SubProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -36,7 +33,7 @@ public class ProjectRest {
     private SubProjectRepository subProjectRepository;
 
     @Autowired
-    private SubProjectPersonnelRepository subProjectPersonnelRepository;
+    private ResourceRepository subProjectPersonnelRepository;
 
     @GetMapping("/query/{page}")
     public ResponseEntity<Page<Project>> query(@PathVariable("page") int page, @RequestParam("params") String params)
@@ -63,30 +60,6 @@ public class ProjectRest {
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> remove(@PathVariable("id") int id) {
         projectRepository.deleteById(id);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @PostMapping("/subProject")
-    public ResponseEntity<Object> saveSubProject(@RequestBody SubProject subProject) {
-        subProjectRepository.save(subProject);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @DeleteMapping("/subProject/{id}")
-    public ResponseEntity<Object> removeSubProject(@PathVariable("id") int id) {
-        subProjectRepository.deleteById(id);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @PostMapping("/subProjectPersonnel")
-    public ResponseEntity<Object> saveSubProjectPersonnel(@RequestBody SubProjectPersonnel subProjectPersonnel) {
-        subProjectPersonnelRepository.save(subProjectPersonnel);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @DeleteMapping("/subProjectPersonnel/{id}")
-    public ResponseEntity<Object> removeSubProjectPersonnel(@PathVariable("id") int id) {
-        subProjectPersonnelRepository.deleteById(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

@@ -25,13 +25,13 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(length = 32)
+    private String code;
+
     private String name;
 
     @Column(length = 32)
-    private String phase;
-
-    @Column(length = 32)
-    private String domain; // 板块
+    private String domain; // 业务条线
 
     private String issue;
 
