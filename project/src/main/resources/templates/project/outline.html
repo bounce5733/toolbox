@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>项目概览</title>
+  <link rel="stylesheet" href="../static/css/index.css">
+  <link rel="stylesheet" href="../static/css/element.css">
+</head>
+<body>
+  <div id="app" class="app-container">
+    <el-table :data="projects" :span-method="spanMethod" highlight-current-row border style="width:100%">
+      <el-table-column prop="name" label="项目名称" align="center" width="180"></el-table-column>
+      <el-table-column prop="issue" label="问题" align="center" width="200"></el-table-column>
+      <el-table-column prop="domain" label="板块" align="center" width="180">
+        <template slot-scope="scope"><span>{{dictMap['DOMAIN'][scope.row.domain]}}</span></template>
+      </el-table-column>
+      <el-table-column prop="onlineDate" label="上线时间" align="center" width="180"></el-table-column>
+      <el-table-column v-for="(system, sindex) in systems" :key="sindex" :label="dictMap['SYSTEM'][system]" align="center">
+        <el-table-column v-for="(rheader, rkey) in resourceHeader" :key="rkey" :label="rheader" align="center">
+            <template slot-scope="scope"><span>{{scope.row[system + '_' + rkey]}}</span></template>
+        </el-table-column>
+      </el-table-column>
+    </el-table>
+  </div>
+</body>
+<script src="../static/js/vue.js"></script>
+<script src="../static/js/element.js"></script>
+<script src="../static/js/axios.js"></script>
+<script>
+    new Vue({
+      el: '#app',
+      data: function() {
+        return {
+          dictMap: {}, // 系统字典
+          personnelMap: {}, // 人员字典
+          projectMap: {}, // 子项目id->主项目映射
+          projects: [], // 所有项目按资源组合的扁平化数据
+          systems: new Set(), // 所有项目用到的系统
+          rowspan: { '00': [3, 1], '01': [3, 1], '02': [3, 1], '03': [3, 1] }, // 主项目信息跨行数
+          rowSpanIndex: 0, // 用于主项目信息跨行数标记
+          resourceHeader: { 'startDate': '加入时间', 'prevSubproject': '前序项目', 'personnelName': '姓名', 'supplierName': '供应商', 'personnelType': '类别',
+          'personnelLevel': '级别', 'currentRation': '占比', 'nextSubproject': '后续项目', 'endDate': '释放时间' }
+        }
+      },
+      methods: {
+        async load() {
+          this.loadDict().then(this.loadPersonnel().then(this.loadProject().then(
+            axios.get('/rest/project/load').then(res => {
+              const projectRows = []
+              res.data.forEach((project, pindex) => {
+                const projectRow = {}
+                projectRow['baseinfo'] = { name: project.name, issue: project.issue, domain: project.domain, onlineDate: project.onlineDate }
+                const subProjectRow = {}
+                project.subProjects.forEach(subproject => {
+                  this.systems.add(subproject.system)
+                  subproject.resources.forEach((resource, index) => {
+                    if (!subProjectRow[index]) {
+                      subProjectRow[index] = {}
+                    }
+                    subProjectRow[index][subproject.system + '_' + 'startDate'] = resource.startDate
+                    subProjectRow[index][subproject.system + '_' + 'prevSubproject'] = this.projectMap[resource.prevSubprojectId] ? this.projectMap[resource.prevSubprojectId].name : '/'
+                    subProjectRow[index][subproject.system + '_' + 'personnelName'] = this.personnelMap[resource.personnelId] ? this.personnelMap[resource.personnelId].name : ''
+                    subProjectRow[index][subproject.system + '_' + 'supplierName'] = this.dictMap['SUPPLIER'][this.personnelMap[resource.personnelId].company]
+                    subProjectRow[index][subproject.system + '_' + 'personnelType'] = this.dictMap['PERSONNEL_TYPE'][this.personnelMap[resource.personnelId].type]
+                    subProjectRow[index][subproject.system + '_' + 'personnelLevel'] = this.dictMap['PERSONNEL_LEVEL'][this.personnelMap[resource.personnelId].level]
+                    subProjectRow[index][subproject.system + '_' + 'currentRation'] = resource.currentRation
+                    subProjectRow[index][subproject.system + '_' + 'nextSubproject'] = this.projectMap[resource.nextSubprojectId] ? this.projectMap[resource.nextSubprojectId].name : '/'
+                    subProjectRow[index][subproject.system + '_' + 'endDate'] = resource.endDate
+                  })
+                })
+                console.log('subProjectRow:' + JSON.stringify(subProjectRow))
+                projectRow['subprojects'] = subProjectRow
+                projectRows.push(projectRow)
+              })
+              console.log('projectRows:' + JSON.stringify(projectRows))
+              const spanrowArr = [0]
+              projectRows.forEach(projectRow => {
+                for (const rownum in projectRow.subprojects) {
+                  const row = Object.assign({}, projectRow.baseinfo)
+                  const subrow = Object.assign({}, projectRow.subprojects[rownum])
+                  this.systems.forEach(system => {
+                    if (!subrow[system + '_' + 'startDate']) {
+                      subrow[system + '_' + 'startDate'] = '/'
+                      subrow[system + '_' + 'prevSubproject'] = '/'
+                      subrow[system + '_' + 'personnelName'] = '/'
+                      subrow[system + '_' + 'supplierName'] = '/'
+                      subrow[system + '_' + 'personnelType'] = '/'
+                      subrow[system + '_' + 'personnelLevel'] = '/'
+                      subrow[system + '_' + 'currentRation'] = '/'
+                      subrow[system + '_' + 'nextSubproject'] = '/'
+                      subrow[system + '_' + 'endDate'] = '/'
+                    }
+                  })
+                  this.projects.push(Object.assign(row, subrow))
+                }
+                spanrowArr.push(Object.keys(projectRow.subprojects).length)
+              })
+              // 计算主项目信息跨行数数据（前4列）
+              const rowspanCols = [0, 1, 2, 3]
+              spanrowArr.forEach((rownum, index) => {
+                if (index < spanrowArr.length - 1) {
+                  rowspanCols.forEach(colnum => {
+                    const spankey = rownum + '' + colnum
+                    this.rowspan[spankey] = [spanrowArr[index + 1], 1]
+                  })
+                  for (let i = rownum + 1; i < rownum + spanrowArr[index + 1]; i ++) {
+                    rowspanCols.forEach(colnum => {
+                      const spankey = i + '' + colnum
+                      this.rowspan[spankey] = [0, 0]
+                    })
+                  }
+                }
+              })
+              console.log('this.projects:' + JSON.stringify(this.projects))
+              console.log('this.rowspan:' + JSON.stringify(this.rowspan))
+            })
+          )))
+          
+        },
+        async loadDict() {
+          axios.get('/rest/dict/load').then(res => {
+            this.dictMap = res.data
+          })
+        },
+        async loadPersonnel() {
+          axios.get('/rest/personnel/load').then(res => {
+              res.data.forEach(item =>  {
+                this.personnelMap[item.id] = item
+              })
+          })
+        },
+        async loadProject() {
+          axios.get('/rest/project/load').then(res => {
+            res.data.forEach(project =>  {
+              project.subProjects.forEach(subProject =>  {
+                this.projectMap[subProject.id] = { code: project.code, name: project.name, domain: project.domain,
+                issue: project.issue, onlineDate: project.onlineDate, id: project.id }
+              })
+              console.log('this.projectMap1:' + JSON.stringify(this.projectMap))
+            })
+          })
+        },
+        spanMethod({ row, column, rowIndex, columnIndex }) {
+          const spanVal = this.rowspan[rowIndex + '' + columnIndex]
+          if (spanVal) {
+            return this.rowspan[rowIndex + '' + columnIndex]
+          }
+        }
+      },
+      mounted() {
+        this.load()
+      }
+    })
+  </script>
+</html>

@@ -54,6 +54,11 @@ public class PageController {
         return "project/manage";
     }
 
+    @RequestMapping("/project/outline")
+    public String projectOutline(Model model) {
+        return "project/outline";
+    }
+
     @RequestMapping("/analysis/invest")
     public String analysisInvest(Model model) {
         return "analysis/invest";
