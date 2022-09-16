@@ -36,10 +36,11 @@
           projectMap: {}, // 子项目id->主项目映射
           projects: [], // 所有项目按资源组合的扁平化数据
           systems: new Set(), // 所有项目用到的系统
-          rowspan: { '00': [3, 1], '01': [3, 1], '02': [3, 1], '03': [3, 1] }, // 主项目信息跨行数
+          rowspan: {}, // 主项目信息跨行数
+          contractRowspan: {}, // 合同跨行数
           rowSpanIndex: 0, // 用于主项目信息跨行数标记
           resourceHeader: { 'startDate': '加入时间', 'prevSubproject': '前序项目', 'personnelName': '姓名', 'supplierName': '供应商', 'personnelType': '类别',
-          'personnelLevel': '级别', 'currentRation': '占比', 'nextSubproject': '后续项目', 'endDate': '释放时间' }
+          'personnelLevel': '级别', 'currentRation': '占比', 'nextSubproject': '后续项目', 'endDate': '释放时间', 'contract': '合同' }
         }
       },
       methods: {
@@ -66,6 +67,7 @@
                     subProjectRow[index][subproject.system + '_' + 'currentRation'] = resource.currentRation
                     subProjectRow[index][subproject.system + '_' + 'nextSubproject'] = this.projectMap[resource.nextSubprojectId] ? this.projectMap[resource.nextSubprojectId].name : '/'
                     subProjectRow[index][subproject.system + '_' + 'endDate'] = resource.endDate
+                    subProjectRow[index][subproject.system + '_' + 'contract'] = this.dictMap['CONTRACT_STATUS'][subproject.contract.status]
                   })
                 })
                 console.log('subProjectRow:' + JSON.stringify(subProjectRow))
@@ -89,14 +91,21 @@
                       subrow[system + '_' + 'currentRation'] = '/'
                       subrow[system + '_' + 'nextSubproject'] = '/'
                       subrow[system + '_' + 'endDate'] = '/'
+                      subrow[system + '_' + 'contract'] = '/'
                     }
                   })
                   this.projects.push(Object.assign(row, subrow))
                 }
                 spanrowArr.push(Object.keys(projectRow.subprojects).length)
               })
-              // 计算主项目信息跨行数数据（前4列）
+              // 计算跨行数据列
               const rowspanCols = [0, 1, 2, 3]
+              let contractRowspanIndex = 3
+              const resourceColNum = 10 // 资源列数
+              for (let i = 1; i <= this.systems.size; i++ ) {
+                contractRowspanIndex += resourceColNum
+                rowspanCols.push(contractRowspanIndex)
+              }
               spanrowArr.forEach((rownum, index) => {
                 if (index < spanrowArr.length - 1) {
                   rowspanCols.forEach(colnum => {
@@ -113,6 +122,7 @@
               })
               console.log('this.projects:' + JSON.stringify(this.projects))
               console.log('this.rowspan:' + JSON.stringify(this.rowspan))
+              console.log('this.contractRowspan:' + JSON.stringify(this.contractRowspan))
             })
           )))
           
@@ -141,7 +151,11 @@
           })
         },
         spanMethod({ row, column, rowIndex, columnIndex }) {
-          const spanVal = this.rowspan[rowIndex + '' + columnIndex]
+          let spanVal = this.rowspan[rowIndex + '' + columnIndex]
+          if (spanVal) {
+            return this.rowspan[rowIndex + '' + columnIndex]
+          }
+          spanVal = this.contractRowspan[rowIndex + '' + columnIndex]
           if (spanVal) {
             return this.rowspan[rowIndex + '' + columnIndex]
           }
