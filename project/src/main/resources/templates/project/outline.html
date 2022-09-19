@@ -70,11 +70,9 @@
                     subProjectRow[index][subproject.system + '_' + 'contract'] = this.dictMap['CONTRACT_STATUS'][subproject.contract.status]
                   })
                 })
-                console.log('subProjectRow:' + JSON.stringify(subProjectRow))
                 projectRow['subprojects'] = subProjectRow
                 projectRows.push(projectRow)
               })
-              console.log('projectRows:' + JSON.stringify(projectRows))
               const spanrowArr = [0]
               projectRows.forEach(projectRow => {
                 for (const rownum in projectRow.subprojects) {
@@ -120,9 +118,6 @@
                   }
                 }
               })
-              console.log('this.projects:' + JSON.stringify(this.projects))
-              console.log('this.rowspan:' + JSON.stringify(this.rowspan))
-              console.log('this.contractRowspan:' + JSON.stringify(this.contractRowspan))
             })
           )))
           
@@ -146,7 +141,6 @@
                 this.projectMap[subProject.id] = { code: project.code, name: project.name, domain: project.domain,
                 issue: project.issue, onlineDate: project.onlineDate, id: project.id }
               })
-              console.log('this.projectMap1:' + JSON.stringify(this.projectMap))
             })
           })
         },

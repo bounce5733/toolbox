@@ -2,7 +2,6 @@ package com.nbcb.toolbox.project;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import com.nbcb.toolbox.project.domain.*;
 import com.nbcb.toolbox.project.repository.*;
 import lombok.extern.slf4j.Slf4j;
@@ -11,10 +10,13 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * TODO
@@ -74,5 +76,14 @@ public class RepositoryTest {
     public void getReousrceBySubProjectId() throws JsonProcessingException {
         List<Resource> resources = resourceRepository.findAll(Example.of(Resource.builder().subProjectId(3).build()));
         log.info("resources:{}", new ObjectMapper().writeValueAsString(resources));
+    }
+
+    @Test
+    public void findResourceByCustomParams() throws JsonProcessingException {
+        Pageable pageParam = PageRequest.of(0, Constant.PAGE_SIZE);
+        Page<Map<String, Object>> resources = resourceRepository.findResourceByCustomParams("1", "2",
+                null, "2022/09", null, 2, pageParam);
+        log.info("resources:{}", new ObjectMapper().writeValueAsString(resources));
+
     }
 }
