@@ -26,9 +26,9 @@ public interface ResourceRepository extends JpaRepository<Resource, Integer> {
             " JOIN dict ld ON s.type = ld.code AND ld.type = 'PERSONNEL_LEVEL'" +
             " JOIN dict dd ON p.domain = dd.code AND dd.type = 'DOMAIN'" +
             " JOIN dict tmd ON s.team = tmd.code AND tmd.type = 'TEAM'" +
-            " JOIN project p ON sp.project_id = p.id WHERE" +
-            " (s.dept = :dept OR :dept IS NULL) AND (s.team = :team OR :team IS NULL)" +
-            " AND (s.id = :id OR :id IS NULL)" +
+            " JOIN project p ON sp.project_id = p.id WHERE sp.is_close = '0'" +
+            " AND (s.dept = :dept OR :dept IS NULL) AND (s.team = :team OR :team IS NULL)" +
+            " AND (s.name LIKE CONCAT('%', :personnelName, '%') OR :personnelName IS NULL)" +
             " AND (r.end_date LIKE CONCAT(:endMonth, '%') OR :endMonth IS NULL)" +
             " AND (p.domain = :domain OR :domain IS NULL)" +
             " AND (CASE :hasNextSubproject WHEN 1 THEN r.next_subproject_id IS NOT NULL ELSE r.next_subproject_id" +
@@ -40,16 +40,16 @@ public interface ResourceRepository extends JpaRepository<Resource, Integer> {
                     " JOIN dict ld ON s.type = ld.code AND ld.type = 'PERSONNEL_LEVEL'" +
                     " JOIN dict dd ON p.domain = dd.code AND dd.type = 'DOMAIN'" +
                     " JOIN dict tmd ON s.team = tmd.code AND tmd.type = 'TEAM'" +
-                    " JOIN project p ON sp.project_id = p.id WHERE" +
-                    " (s.dept = :dept OR :dept IS NULL) AND (s.team = :team OR :team IS NULL)" +
-                    " AND (s.id = :id OR :id IS NULL)" +
+                    " JOIN project p ON sp.project_id = p.id WHERE sp.is_close = '0'" +
+                    " AND (s.dept = :dept OR :dept IS NULL) AND (s.team = :team OR :team IS NULL)" +
+                    " AND (s.name LIKE CONCAT('%', :personnelName, '%') OR :personnelName IS NULL)" +
                     " AND (r.end_date LIKE CONCAT(:endMonth, '%') OR :endMonth IS NULL)" +
                     " AND (p.domain = :domain OR :domain IS NULL)" +
                     " AND (CASE :hasNextSubproject WHEN 1 THEN r.next_subproject_id IS NOT NULL ELSE r.next_subproject_id" +
                     " IS NULL END OR :hasNextSubproject IS NULL)",
             nativeQuery = true)
     Page<Map<String, Object>> findResourceByCustomParams(@Param("dept") String dept, @Param("team") String team,
-                                                         @Param("id") Integer id, @Param("endMonth") String endMonth,
+                                                         @Param("personnelName") String personnelName, @Param("endMonth") String endMonth,
                                                          @Param("domain") String domain,
                                                          @Param("hasNextSubproject") Integer hasNextSubproject,
                                                          Pageable pageable);

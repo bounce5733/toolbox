@@ -39,11 +39,6 @@ public class PageController {
         return "resource/contract";
     }
 
-    @RequestMapping("/resource/risk")
-    public String resourceRisk(Model model) {
-        return "resource/risk";
-    }
-
     @RequestMapping("/project/create")
     public String projectCreate(Model model) {
         return "project/create";
@@ -59,13 +54,13 @@ public class PageController {
         return "project/outline";
     }
 
-    @RequestMapping("/analysis/invest")
+    @RequestMapping("/analysis/resourceLoad")
     public String analysisInvest(Model model) {
-        return "analysis/invest";
+        return "analysis/resourceLoad";
     }
 
-    @RequestMapping("/analysis/release")
+    @RequestMapping("/analysis/resourceRelease")
     public String analysisRelease(Model model) {
-        return "analysis/release";
+        return "analysis/resourceRelease";
     }
 }

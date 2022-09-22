@@ -24,6 +24,14 @@ public class Risk {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "subproject_id")
+    private Integer subProjectId;
+
+    @Column(name = "responsible_personnel_id")
+    private Integer responsiblePersonnelId;
+
+    private String measure;
+
     @Column(length = 32)
     private String type;
 

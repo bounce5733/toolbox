@@ -42,9 +42,23 @@
               <el-table-column label="QA">
                 <template slot-scope="iscope">{{personnelMap[iscope.row.qa] ? personnelMap[iscope.row.qa].name : ''}}</template>
               </el-table-column>
-              <el-table-column label="合同信息" align="center">
+              <el-table-column label="合同信息" align="center" width="150px">
                 <template slot-scope="iscope">
                   <el-tag @click="openContract(iscope.row.contract)">查看合同</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="是否关闭" align="center" width="150px">
+                <template slot-scope="iscope">
+                  <el-tag v-if="iscope.row.isClose === '0'">开启</el-tag>
+                  <el-tag type="danger" v-else>关闭</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column align="center" label="操作" width="250">
+                <template slot-scope="scope">
+                  <el-button-group>
+                    <el-button type="primary" @click="openEditSubProject(scope.row)" size="small" icon="el-icon-edit">编辑</el-button>
+                    <el-button type="danger" @click="removeSubProject(scope.row.id)" size="small" icon="el-icon-delete">删除</el-button>
+                  </el-button-group>
                 </template>
               </el-table-column>
             </el-table>
@@ -78,7 +92,7 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="项目编码" prop="code">
-              <el-input v-model="model.code"></el-input>
+              <el-input :disabled="model.id ? true : false" v-model="model.code"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -112,12 +126,12 @@
         <el-button type="primary" @click.native="save">保存</el-button>
       </div>
     </el-dialog>
-    <el-drawer title="新增子项" :with-header="false" :visible.sync="subProjectDrawerVisible" direction="rtl">
+    <el-drawer :visible.sync="subProjectDrawerVisible" direction="rtl">
       <el-row type="flex" justify="space-around">
         <div class="demo-drawer__content">
           <el-form :model="subProject" :rules="subProjectFormRules" ref="subProjectForm" label-width="80px">
             <el-form-item label="所属系统" prop="system">
-              <el-select v-model="subProject.system">
+              <el-select :disabled="subProject.id ? true : false" v-model="subProject.system">
                 <el-option v-for="(val, key) in dictMap['SYSTEM']" :label="val" :value="key" :key="key"></el-option>
               </el-select>
             </el-form-item>
@@ -127,32 +141,32 @@
               </el-select>
             </el-form-item>
             <el-form-item label="PM" prop="pm">
-              <el-select v-model="subProject.pm" filterable placeholder="请选择">
+              <el-select v-model="subProject.pm" placeholder="请选择">
                 <el-option
-                    v-for="(item, id) in personnelMap"
-                    :key="id"
+                    v-for="(item, key) in personnelMap"
+                    :key="key"
                     :label="item.name"
-                    :value="id">
+                    :value="item.id">
                 </el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="PMO" prop="pmo">
-              <el-select v-model="subProject.pmo" filterable placeholder="请选择">
+              <el-select v-model="subProject.pmo" placeholder="请选择">
                 <el-option
-                    v-for="(item, id) in personnelMap"
-                    :key="id"
+                    v-for="(item, key) in personnelMap"
+                    :key="key"
                     :label="item.name"
-                    :value="id">
+                    :value="item.id">
                 </el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="QA" prop="qa">
-              <el-select v-model="subProject.qa" filterable placeholder="请选择">
+              <el-select v-model="subProject.qa" placeholder="请选择">
                 <el-option
-                    v-for="(item, id) in personnelMap"
-                    :key="id"
+                    v-for="(item, key) in personnelMap"
+                    :key="key"
                     :label="item.name"
-                    :value="id">
+                    :value="item.id">
                 </el-option>
               </el-select>
             </el-form-item>
@@ -162,8 +176,8 @@
               </el-select>
             </el-form-item>
             <el-form-item label="合同" prop="contractId">
-              <el-select v-model="subProject.contractId">
-                <el-option v-for="(item, key) in contractMap" :label="item.name" :value="key" :key="key"></el-option>
+              <el-select v-model="subProject.contract.id">
+                <el-option v-for="(item, key) in contractMap" :label="item.name" :value="item.id" :key="key"></el-option>
               </el-select>
             </el-form-item>
           </el-form>
@@ -195,22 +209,42 @@
     new Vue({
       el: '#app',
       data: function() {
-        const validateSystem = (rule, value, callback) => {
-            if (this.subProject.system === undefined || this.subProject.system.trim().length === 0) {
-              return callback(new Error('系统不能为空'))
-            }
-            // 检查当前项目是否已经存在该系统子项
-            this.pageinfo.content.forEach(project => {
-              if (this.subProject.projectId === project.id) {
-                project.subProjects.forEach(subProject => {
-                  if (subProject.system === value) {
-                    return callback(new Error('该子系统已经存在'))
-                  }
-                })
-              }
-            })
-            callback()
+        const validateProjectCode = (rule, value, callback) => {
+          if (this.model.id) callback() // 编辑不用检查项目编码
+          if (value === undefined || value.trim().length === 0) {
+            return callback(new Error('项目编码不能为空'))
           }
+          // 检查当前项目编码是否已经存在
+          this.pageinfo.content.forEach(project => {
+            if (value === project.code) {
+              return callback(new Error('该项目编码已经存在'))
+            }
+          })
+          callback()
+        }
+        const validateSystem = (rule, value, callback) => {
+          if (this.subProject.id) callback() // 编辑不用检查系统
+          if (this.subProject.system === undefined || this.subProject.system.trim().length === 0) {
+            return callback(new Error('系统不能为空'))
+          }
+          // 检查当前项目是否已经存在该系统子项
+          this.pageinfo.content.forEach(project => {
+            if (this.subProject.projectId === project.id) {
+              project.subProjects.forEach(subProject => {
+                if (subProject.system === value) {
+                  return callback(new Error('该子系统已经存在'))
+                }
+              })
+            }
+          })
+          callback()
+        }
+        const validateContract = (rule, value, callback) => {
+          if (!this.subProject.contract.id) {
+            return callback(new Error('合同不能为空'))
+          }
+          callback()
+        }
         return {
           dictMap: {}, // 系统字典
           personnelMap: {}, // 人员字典
@@ -225,12 +259,12 @@
           model: {},
           formRules: {
             code: [
-              { required: true, trigger: 'blue', message: '项目编码不能为空'},
+              { required: true, trigger: 'blue', validator: validateProjectCode},
               { max: 32, trigger: 'blur', message: '最大长度32个字符' }
             ],
             name: [
               { required: true, trigger: 'blue', message: '项目名称不能为空'},
-              { max: 256, trigger: 'blur', message: '最大长度256个字符' }
+              { max: 256, trigger: 'blur', message: '最大长度255个字符' }
             ],
             domain: [
               { required: true, trigger: 'blue', message: '业务条线不能为空'}
@@ -257,14 +291,14 @@
             pmo: [
               { required: true, trigger: 'blue', message: 'PMO不能为空'}
             ],
-            QA: [
+            qa: [
               { required: true, trigger: 'blue', message: 'QA不能为空'}
             ],
             contractId : [
-              { required: true, trigger: 'blue', message: '合同不能为空' }
+              { required: true, trigger: 'blue', validator: validateContract }
             ]
           },
-          subProject: {},
+          subProject: { contract: {} },
           // ------------合同弹窗------------
           contractVisible: false,
           contract: {}
@@ -328,7 +362,7 @@
           })
         },
         remove: function(id) {
-          this.$confirm('确定删除该项目', '提示', { type: 'warning' }).then(() => {
+          this.$confirm('确定删除该项目及所有子项', '提示', { type: 'warning' }).then(() => {
             axios.delete("/rest/project/" + id).then(res => {
               this.$notify({
                 title: '成功',
@@ -337,21 +371,23 @@
               })
               this.query()
             })
-          })
+          }).catch(() => {})
         },
         handlePageChange: function(pageNumber) {
           this.pageinfo.pageable.pageNumber = pageNumber
           this.query()
         },
         openAddSubProject(projectId) {
-          this.subProject = { projectId: projectId }
+          this.subProject = { projectId: projectId, contract: {} }
+          this.subProjectDrawerVisible = true
+        },
+        openEditSubProject(subProject) {
+          this.subProject = { ...subProject }
           this.subProjectDrawerVisible = true
         },
         saveSubProject() {
           this.$refs.subProjectForm.validate((valid) => {
             if (valid) {
-              this.subProject.contract = { id: this.subProject.contractId }
-              delete this.subProject.contractId
               axios.post("/rest/subproject", this.subProject).then(res => {
                 this.$notify({
                   title: '成功',
@@ -365,12 +401,12 @@
           })
         },
         cancelSubProjectForm() {
-          this.subProject = {}
+          this.subProject = { contract: {} }
           this.$refs.subProjectForm.resetFields()
           this.subProjectDrawerVisible = false
         },
         removeSubProject(id) {
-          this.$confirm('确定删除该子项', '提示', { type: 'warning' }).then(() => {
+          this.$confirm('确定删除该子项及所有资源', '提示', { type: 'warning' }).then(() => {
             axios.delete("/rest/subproject/" + id).then(res => {
               this.$notify({
                 title: '成功',
@@ -379,7 +415,7 @@
               })
               this.query()
             })
-          })
+          }).catch(() => {})
         },
         openContract(contract) {
           this.contractVisible = true

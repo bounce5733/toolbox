@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>资源释放</title>
+    <title>资源释放情况</title>
+    <link rel="stylesheet" href="../static/css/index.css">
     <link rel="stylesheet" href="../static/css/element.css">
   </head>
   <body>
@@ -19,11 +20,6 @@
               <el-option v-for="(val, key) in dictMap['TEAM']" :label="val" :value="key" :key="key"></el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="人员">
-            <el-select v-model="params.personnelId" clearable>
-              <el-option v-for="(item, key) in personnelMap" :label="item.name" :value="key" :key="key"></el-option>
-            </el-select>
-          </el-form-item>
           <el-form-item label="条线">
             <el-select v-model="params.domain" clearable>
               <el-option v-for="(val, key) in dictMap['DOMAIN']" :label="val" :value="key" :key="key"></el-option>
@@ -32,12 +28,15 @@
           <el-form-item label="释放月份">
             <el-date-picker v-model="params.endMonth" type="month" clearable value-format="yyyy/MM"></el-date-picker>
           </el-form-item>
-        </el-row>
-        <el-row>
           <el-form-item label="后续项目">
             <el-select v-model="params.hasNextSubproject" clearable>
               <el-option v-for="(val, key) in nextSubProjectMap" :label="val" :value="key" :key="key"></el-option>
             </el-select>
+          </el-form-item>
+        </el-row>
+        <el-row>
+          <el-form-item label="姓名">
+            <el-input @keyup.enter.native="query" placeholder="请输入" clearable v-model="params.personnelName"></el-input>
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="query" icon="el-icon-search">查询</el-button>
@@ -67,65 +66,63 @@
   <script src="../static/js/element.js"></script>
   <script src="../static/js/axios.js"></script>
   <script>
-      new Vue({
-          el: '#app',
-          data: function() {
-            return {
-              dictMap: {}, // 系统字典
-              personnelMap: {}, // 人员字典
-              projectMap: {}, // 子项目id->主项目映射
-              nextSubProjectMap: { 1: '是', 0: '否' }, // 后续下面选择框数据
-              pageinfo: {
-                pageable: {
-                  pageNumber: 1
-                }
-              },
-              params: {}
+    new Vue({
+      el: '#app',
+      data: function() {
+        return {
+          dictMap: {}, // 系统字典
+          personnelMap: {}, // 人员字典
+          projectMap: {}, // 子项目id->主项目映射
+          nextSubProjectMap: { 1: '是', 0: '否' }, // 后续下面选择框数据
+          pageinfo: {
+            pageable: {
+              pageNumber: 1
             }
           },
-          methods: {
-            async query() {
-              this.loadProject().then(axios.post('/rest/resource/query/' + this.pageinfo.pageable.pageNumber, this.params)
-                .then(res => {
-                  this.pageinfo = res.data
-                  this.pageinfo.pageable.pageNumber += 1
-                  console.log('this.pageinfo:' + JSON.stringify(this.pageinfo))
-                  console.log('this.projectMap:' + JSON.stringify(this.projectMap))
+          params: {}
+        }
+      },
+      methods: {
+        async query() {
+          this.loadProject().then(axios.post('/rest/resource/query/' + this.pageinfo.pageable.pageNumber, this.params)
+            .then(res => {
+              this.pageinfo = res.data
+              this.pageinfo.pageable.pageNumber += 1
+          })
+        )},
+        handlePageChange(pageNumber) {
+          this.pageinfo.pageable.pageNumber = pageNumber
+          this.query()
+        },
+        loadDict() {
+          axios.get('/rest/dict/load').then(res => {
+            this.dictMap = res.data
+          })
+        },
+        loadPersonnel() {
+          axios.get('/rest/personnel/load')
+            .then(res => {
+              res.data.forEach(item =>  {
+                this.personnelMap[item.id] = item
               })
-            )},
-            handlePageChange(pageNumber) {
-              this.pageinfo.pageable.pageNumber = pageNumber
-              this.query()
-            },
-            loadDict() {
-              axios.get('/rest/dict/load').then(res => {
-                this.dictMap = res.data
+          })
+        },
+        async loadProject() {
+          axios.get('/rest/project/load').then(res => {
+            res.data.forEach(project =>  {
+              project.subProjects.forEach(subProject =>  {
+                this.projectMap[subProject.id] = { code: project.code, name: project.name, domain: project.domain,
+                issue: project.issue, onlineDate: project.onlineDate, id: project.id }
               })
-            },
-            loadPersonnel() {
-              axios.get('/rest/personnel/load')
-                .then(res => {
-                  res.data.forEach(item =>  {
-                    this.personnelMap[item.id] = item
-                  })
-              })
-            },
-            async loadProject() {
-              axios.get('/rest/project/load').then(res => {
-                res.data.forEach(project =>  {
-                  project.subProjects.forEach(subProject =>  {
-                    this.projectMap[subProject.id] = { code: project.code, name: project.name, domain: project.domain,
-                    issue: project.issue, onlineDate: project.onlineDate, id: project.id }
-                  })
-                })
-              })
-            }
-          },
-          mounted() {
-            this.loadDict()
-            this.loadPersonnel()
-            this.query()
-          }
-      })
+            })
+          })
+        }
+      },
+      mounted() {
+        this.loadDict()
+        this.loadPersonnel()
+        this.query()
+      }
+    })
   </script>
 </html>

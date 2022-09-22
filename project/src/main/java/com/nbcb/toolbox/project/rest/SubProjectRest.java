@@ -5,6 +5,7 @@ import com.nbcb.toolbox.project.domain.SubProject;
 import com.nbcb.toolbox.project.domain.Resource;
 import com.nbcb.toolbox.project.repository.ResourceRepository;
 import com.nbcb.toolbox.project.repository.SubProjectRepository;
+import com.nbcb.toolbox.project.util.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -48,9 +49,25 @@ public class SubProjectRest {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @GetMapping("/close/{id}/{status}")
+    public ResponseEntity<Object> close(@PathVariable("id") int id, @PathVariable("status") String status) {
+        SubProject subProject = subProjectRepository.findById(id).get();
+        subProject.setIsClose(status);
+        subProjectRepository.save(subProject);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @PostMapping("/subProjectPersonnel")
     public ResponseEntity<Object> saveSubProjectPersonnel(@RequestBody Resource subProjectPersonnel) {
         subProjectPersonnelRepository.save(subProjectPersonnel);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PatchMapping("/phase/{id}/{phase}")
+    public ResponseEntity<Object> updatePhase(@PathVariable("id") int id, @PathVariable("phase") String phase) {
+        SubProject subProject = subProjectRepository.findById(id).get();
+        subProject.setPhase(phase);
+        subProjectRepository.save(subProject);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

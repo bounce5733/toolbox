@@ -24,6 +24,9 @@
       <el-table-column label="项目名称">
         <template slot-scope="scope">{{projectMap[scope.row.id].name}}</template>
       </el-table-column>
+      <el-table-column label="所属系统" width="200px">
+        <template slot-scope="scope">{{dictMap['SYSTEM'][scope.row.system]}}</template>
+      </el-table-column>
       <el-table-column label="业务条线" width="250px">
         <template slot-scope="scope">{{dictMap['DOMAIN'][projectMap[scope.row.id].domain]}}</template>
       </el-table-column>
@@ -33,8 +36,17 @@
       <el-table-column label="所属部门" width="200px">
         <template slot-scope="scope">{{dictMap['DEPT'][scope.row.dept]}}</template>
       </el-table-column>
-      <el-table-column label="当前阶段" width="200px">
-        <template slot-scope="scope">{{dictMap['PROJECT_STAGE'][scope.row.phase]}}</template>
+      <el-table-column label="当前阶段" width="150px" align="center">
+        <template slot-scope="scope">
+          <el-select v-model="scope.row.phase" @change="phaseChange" @focus="selSubProject(scope.row.id)">
+            <el-option v-for="(val, key) in dictMap['PROJECT_STAGE']" :label="val" :value="key" :key="key"></el-option>
+          </el-select>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" align="center">
+        <template slot-scope="scope">
+          <el-button type="danger" @click="closeProject(scope.row.id, scope.row.isClose)" size="small" icon="el-icon-open">{{scope.row.isClose === '0' ? '关闭' : '打开'}}</el-button>
+        </template>
       </el-table-column>
     </el-table>
     <div class="pagination-container">
@@ -56,6 +68,7 @@
         </el-descriptions>
         <br>
         <el-descriptions border title="子项目">
+          <el-descriptions-item label="所属系统">{{dictMap['SYSTEM'][model.system]}}</el-descriptions-item>
           <el-descriptions-item label="所属部门">{{dictMap['DEPT'][model.dept]}}</el-descriptions-item>
           <el-descriptions-item label="当前阶段">{{dictMap['PROJECT_STAGE'][model.phase]}}</el-descriptions-item>
           <el-descriptions-item label="PM">{{personnelMap[model.pm] ? personnelMap[model.pm].name : ''}}</el-descriptions-item>
@@ -75,33 +88,34 @@
       <el-tab-pane name="processInfo" label="项目进度"></el-tab-pane>
       <el-tab-pane name="resourceManage" label="资源管理">
         <el-table :data="resources" border>
-          <el-table-column align="center">
             <el-table-column label="前序项目">
-              <template slot-scope="scope">{{projectMap[scope.row.prevSubprojectId] ? projectMap[scope.row.prevSubprojectId].name : '/'}}</template>
+              <template slot-scope="scope">{{scope.row.prevSubprojectId ? projectMap[scope.row.prevSubprojectId].name  + '-' + dictMap['SYSTEM'][projectMap[scope.row.prevSubprojectId].system] : '/'}}</template>
             </el-table-column>
-            <el-table-column label="姓名">
+            <el-table-column label="姓名" width="120px">
               <template slot-scope="scope">{{personnelMap[scope.row.personnelId].name}}</template>
             </el-table-column>
             <el-table-column label="供应商">
               <template slot-scope="scope">{{dictMap['SUPPLIER'][personnelMap[scope.row.personnelId].company]}}</template>
             </el-table-column>
-            <el-table-column label="类别">
+            <el-table-column label="类别" width="100px">
               <template slot-scope="scope">{{dictMap['PERSONNEL_TYPE'][personnelMap[scope.row.personnelId].type]}}</template>
             </el-table-column>
-            <el-table-column label="级别">
+            <el-table-column label="级别" width="100px">
               <template slot-scope="scope">{{dictMap['PERSONNEL_LEVEL'][personnelMap[scope.row.personnelId].level]}}</template>
             </el-table-column>
             <el-table-column label="占比" prop="currentRation"></el-table-column>
             <el-table-column label="后续项目">
-              <template slot-scope="scope">{{projectMap[scope.row.nextSubprojectId] ? projectMap[scope.row.nextSubprojectId].name : '/'}}</template>
+              <template slot-scope="scope">{{scope.row.nextSubprojectId ? projectMap[scope.row.nextSubprojectId].name + '-' + dictMap['SYSTEM'][projectMap[scope.row.nextSubprojectId].system] : '/'}}</template>
             </el-table-column>
-            <el-table-column label="释放时间" prop="endDate"></el-table-column>
-            <el-table-column align="center">
+            <el-table-column label="进入时间" prop="startDate" width="120px"></el-table-column>
+            <el-table-column label="释放时间" prop="endDate" width="120px"></el-table-column>
+            <el-table-column align="center" width="120px">
               <template slot="header" slot-scope="scope">
                 <el-button type="primary" @click="openAddResource(model.id)" size="mini" icon="el-icon-plus"></el-button>
               </template>
               <template slot-scope="scope">
                 <el-button-group>
+                  <el-button type="primary" @click="openEditResource(scope.row)" size="small" icon="el-icon-edit"></el-button>
                   <el-button type="danger" @click="removeResource(scope.row.id)" size="small" icon="el-icon-delete"></el-button>
                 </el-button-group>
               </template>
@@ -109,19 +123,54 @@
           </el-table-column>
         </el-table>
       </el-tab-pane>
+      <el-tab-pane name="riskManage" label="风险管理">
+        <el-table :data="risks" border>
+          <el-table-column label="类别" width="160px">
+            <template slot-scope="scope">{{dictMap['RISK_TYPE'][scope.row.type]}}</template>
+          </el-table-column>
+          <el-table-column label="责任人" width="160px">
+            <template slot-scope="scope">{{personnelMap[scope.row.responsiblePersonnelId].name}}</template>
+          </el-table-column>
+          <el-table-column label="措施">
+            <template slot-scope="scope">
+              <el-tooltip class="item" effect="dark" :content="scope.row.measure" placement="top">
+                <span>{{scope.row.measure.length > 16 ? scope.row.measure.substring(0, 16) + '...' : scope.row.measure }}</span>
+              </el-tooltip>
+            </template>
+          </el-table-column>
+          <el-table-column label="描述">
+            <template slot-scope="scope">
+              <el-tooltip class="item" effect="dark" :content="scope.row.desc" placement="top">
+                <span>{{scope.row.desc.length > 16 ? scope.row.desc.substring(0, 16) + '...' : scope.row.desc }}</span>
+            </el-tooltip>
+            </template>
+          </el-table-column>
+          <el-table-column align="center" width="120px">
+            <template slot="header" slot-scope="scope">
+              <el-button type="primary" @click="openAddRisk(model.id)" size="mini" icon="el-icon-plus"></el-button>
+            </template>
+            <template slot-scope="scope">
+              <el-button-group>
+                <el-button type="primary" @click="openEditRisk(scope.row)" size="small" icon="el-icon-edit"></el-button>
+                <el-button type="danger" @click="removeRisk(scope.row.id)" size="small" icon="el-icon-delete"></el-button>
+              </el-button-group>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-tab-pane>
     </el-tabs>
   </el-dialog>
-  <el-drawer title="新增资源" :with-header="false" :visible.sync="resourceDrawerVisible" direction="rtl">
+  <el-drawer :visible.sync="resourceDrawerVisible" direction="rtl">
     <el-row type="flex" justify="space-around">
       <div class="demo-drawer__content">
         <el-form :model="resource" :rules="resourceFormRules" ref="resourceForm" label-width="80px">
           <el-form-item label="项目人员" prop="personnelId">
             <el-select v-model="resource.personnelId" filterable placeholder="请选择">
               <el-option
-                  v-for="(item, id) in personnelMap"
-                  :key="id"
+                  v-for="(item, key) in personnelMap"
+                  :key="key"
                   :label="item.name"
-                  :value="id">
+                  :value="item.id">
               </el-option>
             </el-select>
           </el-form-item>
@@ -137,20 +186,20 @@
           <el-form-item label="前序项目" prop="prevSubprojectId">
             <el-select v-model="resource.prevSubprojectId" clearable placeholder="请选择">
               <el-option
-                  v-for="(item, id) in projectMap"
-                  :key="id"
-                  :label="item.name"
-                  :value="id">
+                  v-for="(item, key) in projectMap"
+                  :key="key"
+                  :label="item.name + '-' + dictMap['SYSTEM'][item.system]"
+                  :value="item.id">
               </el-option>
             </el-select>
           </el-form-item>
           <el-form-item label="后续项目" prop="nextSubprojectId">
             <el-select v-model="resource.nextSubprojectId" clearable placeholder="请选择">
               <el-option
-                  v-for="(item, id) in projectMap"
-                  :key="id"
-                  :label="item.name"
-                  :value="id">
+                  v-for="(item, key) in projectMap"
+                  :key="key"
+                  :label="item.name + '-' + dictMap['SYSTEM'][item.system]"
+                  :value="item.id">
               </el-option>
             </el-select>
           </el-form-item>
@@ -161,6 +210,41 @@
       <div class="demo-drawer__footer">
         <el-button @click="resourceDrawerVisible = false">取 消</el-button>
         <el-button type="primary" @click="saveResource">确 定</el-button>
+      </div>
+    </el-row>
+  </el-drawer>
+  <el-drawer :visible.sync="riskDrawerVisible" direction="rtl">
+    <el-row type="flex" justify="space-around">
+      <div class="demo-drawer__content">
+        <el-form :model="risk" :rules="riskFormRules" ref="riskForm" label-width="80px">
+          <el-form-item label="类型" prop="type">
+            <el-select v-model="risk.type" clearable placeholder="请选择">
+              <el-option v-for="(val, key) in dictMap['RISK_TYPE']" :label="val" :value="key" :key="key"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="责任人" prop="responsiblePersonnelId">
+            <el-select v-model="risk.responsiblePersonnelId" filterable placeholder="请选择">
+              <el-option
+                  v-for="(item, key) in personnelMap"
+                  :key="key"
+                  :label="item.name"
+                  :value="item.id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="措施" prop="measure">
+            <el-input type="textarea" v-model="risk.measure"></el-input>
+          </el-form-item>
+          <el-form-item label="描述" prop="desc">
+            <el-input type="textarea" v-model="risk.desc"></el-input>
+          </el-form-item>
+        </el-form>
+      </div>
+    </el-row>
+    <el-row type="flex" justify="space-around">
+      <div class="demo-drawer__footer">
+        <el-button @click="riskDrawerVisible = false">取 消</el-button>
+        <el-button type="primary" @click="saveRisk">确 定</el-button>
       </div>
     </el-row>
   </el-drawer>
@@ -184,6 +268,7 @@
               pageNumber: 1
             }
           },
+          curSubProjectId: '', // 当前表格选中id
           // ------------项目管理弹窗------------
           activeTabName: 'basicInfo',
           model: {},
@@ -204,6 +289,24 @@
             endDate: [
               { required: true, trigger: 'blue', message: '释放时间不能为空'}
             ]
+          },
+          // ------------项目风险------------
+          risks: [], // 当前项目资源列表
+          risk: {},
+          riskDrawerVisible: false,
+          riskFormRules: {
+            type : [
+              { required: true, trigger: 'blue', message: '风险类型不能为空'}
+            ],
+            responsiblePersonnelId: [
+              { required: true, trigger: 'blue', message: '责任人不能为空'}
+            ],
+            measure: [
+              { max: 256, trigger: 'blur', message: '最大长度255个字符' }
+            ],
+            desc: [
+              { max: 256, trigger: 'blur', message: '最大长度255个字符' }
+            ]
           }
         }
       },
@@ -212,10 +315,9 @@
           axios.get('/rest/project/load').then(res => {
               res.data.forEach(project =>  {
                 project.subProjects.forEach(subProject =>  {
-                  this.projectMap[subProject.id] = { code: project.code, name: project.name, domain: project.domain,
-                  issue: project.issue, onlineDate: project.onlineDate, id: project.id }
+                  this.projectMap[subProject.id] = { id: subProject.id, code: project.code, name: project.name, domain: project.domain,
+                  issue: project.issue, onlineDate: project.onlineDate, system: subProject.system }
                 })
-                console.log('this.projectMap:' + JSON.stringify(this.projectMap))
                 axios.get('/rest/subproject/query/' + (this.pageinfo.pageable.pageNumber))
                   .then(res => {
                     this.pageinfo = res.data
@@ -244,15 +346,47 @@
         openDetail(row) {
           this.model = row
           this.resources = row.resources
+          this.risks = row.risks
           this.detailVisible = true
         },
         closeDetail() {
           this.detailVisible = false
           this.query()
         },
-        // ------------资源函数------------
+        selSubProject(id) {
+          this.curSubProjectId = id
+        },
+        phaseChange(val) {
+          axios.patch('/rest/subproject/phase/' + this.curSubProjectId + '/' + val).then(res => {
+            this.$notify({
+              title: '成功',
+              message: '修改成功',
+              type: 'success'
+            })
+            this.query()
+          })
+        },
+        closeProject(id, status) {
+          const tipmsg = status === '0' ? '关闭' : '打开'
+          const reverseStatus = status === '0' ? '1' : '0'
+          this.$confirm('确定要' + tipmsg + '该子项', '提示', { type: 'warning' }).then(() => {
+            axios.get("/rest/subproject/close/" + id + "/" + reverseStatus).then(res => {
+              this.$notify({
+                title: '成功',
+                message: '成功' + tipmsg,
+                type: 'success'
+              })
+              this.query()
+            })
+          }).catch(() => {})
+        },
+        // ------------项目资源------------
         openAddResource(subProjectId) {
           this.resource = { subProjectId: subProjectId }
+          this.resourceDrawerVisible = true
+        },
+        openEditResource(resource) {
+          this.resource = { ...resource }
           this.resourceDrawerVisible = true
         },
         saveResource() {
@@ -286,10 +420,52 @@
                 }
               })
             })
-          })
+          }).catch(() => {})
         },
         rationChange(e) {
           this.resource.currentRation = e.target.value
+        },
+        // ------------项目风险------------
+        openAddRisk(subProjectId) {
+          this.risk = { subProjectId: subProjectId }
+          this.riskDrawerVisible = true
+        },
+        openEditRisk(risk) {
+          this.risk = { ...risk }
+          this.riskDrawerVisible = true
+        },
+        saveRisk() {
+          this.$refs.riskForm.validate((valid) => {
+            if (valid) {
+              axios.post("/rest/risk", this.risk).then(res => {
+                this.$notify({
+                  title: '成功',
+                  message: '保存成功',
+                  type: 'success'
+                })
+                axios.get("/rest/risk/subproject/" + this.risk.subProjectId).then(res => {
+                   this.risks = res.data
+                   this.riskDrawerVisible = false
+                })
+              })
+            }
+          })
+        },
+        removeRisk(id) {
+          this.$confirm('确定删除该风险', '提示', { type: 'warning' }).then(() => {
+            axios.delete("/rest/risk/" + id).then(res => {
+              this.$notify({
+                title: '成功',
+                message: '删除成功',
+                type: 'success'
+              })
+              this.risks.forEach((risk, index) => {
+                if (id === risk.id) {
+                  this.risks.splice(index, 1)
+                }
+              })
+            })
+          }).catch(() => {})
         }
       },
       mounted() {

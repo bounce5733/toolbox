@@ -37,7 +37,6 @@
           projects: [], // 所有项目按资源组合的扁平化数据
           systems: new Set(), // 所有项目用到的系统
           rowspan: {}, // 主项目信息跨行数
-          contractRowspan: {}, // 合同跨行数
           rowSpanIndex: 0, // 用于主项目信息跨行数标记
           resourceHeader: { 'startDate': '加入时间', 'prevSubproject': '前序项目', 'personnelName': '姓名', 'supplierName': '供应商', 'personnelType': '类别',
           'personnelLevel': '级别', 'currentRation': '占比', 'nextSubproject': '后续项目', 'endDate': '释放时间', 'contract': '合同' }
@@ -53,27 +52,29 @@
                 projectRow['baseinfo'] = { name: project.name, issue: project.issue, domain: project.domain, onlineDate: project.onlineDate }
                 const subProjectRow = {}
                 project.subProjects.forEach(subproject => {
-                  this.systems.add(subproject.system)
-                  subproject.resources.forEach((resource, index) => {
-                    if (!subProjectRow[index]) {
-                      subProjectRow[index] = {}
-                    }
-                    subProjectRow[index][subproject.system + '_' + 'startDate'] = resource.startDate
-                    subProjectRow[index][subproject.system + '_' + 'prevSubproject'] = this.projectMap[resource.prevSubprojectId] ? this.projectMap[resource.prevSubprojectId].name : '/'
-                    subProjectRow[index][subproject.system + '_' + 'personnelName'] = this.personnelMap[resource.personnelId] ? this.personnelMap[resource.personnelId].name : ''
-                    subProjectRow[index][subproject.system + '_' + 'supplierName'] = this.dictMap['SUPPLIER'][this.personnelMap[resource.personnelId].company]
-                    subProjectRow[index][subproject.system + '_' + 'personnelType'] = this.dictMap['PERSONNEL_TYPE'][this.personnelMap[resource.personnelId].type]
-                    subProjectRow[index][subproject.system + '_' + 'personnelLevel'] = this.dictMap['PERSONNEL_LEVEL'][this.personnelMap[resource.personnelId].level]
-                    subProjectRow[index][subproject.system + '_' + 'currentRation'] = resource.currentRation
-                    subProjectRow[index][subproject.system + '_' + 'nextSubproject'] = this.projectMap[resource.nextSubprojectId] ? this.projectMap[resource.nextSubprojectId].name : '/'
-                    subProjectRow[index][subproject.system + '_' + 'endDate'] = resource.endDate
-                    subProjectRow[index][subproject.system + '_' + 'contract'] = this.dictMap['CONTRACT_STATUS'][subproject.contract.status]
-                  })
+                  if (subproject.isClose === '0') {
+                    this.systems.add(subproject.system)
+                    subproject.resources.forEach((resource, index) => {
+                      if (!subProjectRow[index]) {
+                        subProjectRow[index] = {}
+                      }
+                      subProjectRow[index][subproject.system + '_' + 'startDate'] = resource.startDate
+                      subProjectRow[index][subproject.system + '_' + 'prevSubproject'] = this.projectMap[resource.prevSubprojectId] ? this.projectMap[resource.prevSubprojectId].name : '/'
+                      subProjectRow[index][subproject.system + '_' + 'personnelName'] = this.personnelMap[resource.personnelId] ? this.personnelMap[resource.personnelId].name : ''
+                      subProjectRow[index][subproject.system + '_' + 'supplierName'] = this.personnelMap[resource.personnelId] ? this.dictMap['SUPPLIER'][this.personnelMap[resource.personnelId].company] : '/'
+                      subProjectRow[index][subproject.system + '_' + 'personnelType'] = this.personnelMap[resource.personnelId] ? this.dictMap['PERSONNEL_TYPE'][this.personnelMap[resource.personnelId].type] : '/'
+                      subProjectRow[index][subproject.system + '_' + 'personnelLevel'] = this.personnelMap[resource.personnelId] ? this.dictMap['PERSONNEL_LEVEL'][this.personnelMap[resource.personnelId].level] : '/'
+                      subProjectRow[index][subproject.system + '_' + 'currentRation'] = resource.currentRation
+                      subProjectRow[index][subproject.system + '_' + 'nextSubproject'] = this.projectMap[resource.nextSubprojectId] ? this.projectMap[resource.nextSubprojectId].name : '/'
+                      subProjectRow[index][subproject.system + '_' + 'endDate'] = resource.endDate
+                      subProjectRow[index][subproject.system + '_' + 'contract'] = this.dictMap['CONTRACT_STATUS'][subproject.contract.status]
+                    })
+                  }
                 })
                 projectRow['subprojects'] = subProjectRow
                 projectRows.push(projectRow)
               })
-              const spanrowArr = [0]
+              const spanrowArr = []
               projectRows.forEach(projectRow => {
                 for (const rownum in projectRow.subprojects) {
                   const row = Object.assign({}, projectRow.baseinfo)
@@ -95,7 +96,9 @@
                   this.projects.push(Object.assign(row, subrow))
                 }
                 spanrowArr.push(Object.keys(projectRow.subprojects).length)
+                console.log('spanrowArr:' + JSON.stringify(spanrowArr))
               })
+              console.log('this.projects:' + JSON.stringify(this.projects))
               // 计算跨行数据列
               const rowspanCols = [0, 1, 2, 3]
               let contractRowspanIndex = 3
@@ -104,20 +107,22 @@
                 contractRowspanIndex += resourceColNum
                 rowspanCols.push(contractRowspanIndex)
               }
+              let spanRownum = 0 // 跨行行标
               spanrowArr.forEach((rownum, index) => {
-                if (index < spanrowArr.length - 1) {
+                rowspanCols.forEach(colnum => {
+                  const spankey = spanRownum + '' + colnum
+                  this.rowspan[spankey] = [rownum, 1]
+                  console.log('[spankey]' + spankey + '[val]' + [spanrowArr[index + 1], 1])
+                })
+                for (let i = spanRownum + 1; i < spanRownum + rownum; i ++) {
                   rowspanCols.forEach(colnum => {
-                    const spankey = rownum + '' + colnum
-                    this.rowspan[spankey] = [spanrowArr[index + 1], 1]
+                    const spankey = i + '' + colnum
+                    this.rowspan[spankey] = [0, 0]
                   })
-                  for (let i = rownum + 1; i < rownum + spanrowArr[index + 1]; i ++) {
-                    rowspanCols.forEach(colnum => {
-                      const spankey = i + '' + colnum
-                      this.rowspan[spankey] = [0, 0]
-                    })
-                  }
                 }
+                spanRownum += rownum
               })
+              console.log('this.rowspan:' + JSON.stringify(this.rowspan))
             })
           )))
           
@@ -146,10 +151,6 @@
         },
         spanMethod({ row, column, rowIndex, columnIndex }) {
           let spanVal = this.rowspan[rowIndex + '' + columnIndex]
-          if (spanVal) {
-            return this.rowspan[rowIndex + '' + columnIndex]
-          }
-          spanVal = this.contractRowspan[rowIndex + '' + columnIndex]
           if (spanVal) {
             return this.rowspan[rowIndex + '' + columnIndex]
           }

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.List;
 
 /**
  * RiskRest
@@ -38,7 +39,7 @@ public class RiskRest {
     }
 
     @PostMapping
-    public ResponseEntity<String> save(@RequestBody Risk risk) {
+    public ResponseEntity<Object> save(@RequestBody Risk risk) {
         riskRepository.save(risk);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -47,6 +48,12 @@ public class RiskRest {
     public ResponseEntity<Object> remove(@PathVariable("id") int id) {
         riskRepository.deleteById(id);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping("/subproject/{id}")
+    public ResponseEntity<List<Risk>> getRisks(@PathVariable("id") int id) {
+        List<Risk> resources = riskRepository.findAll(Example.of(Risk.builder().subProjectId(id).build()));
+        return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
 }

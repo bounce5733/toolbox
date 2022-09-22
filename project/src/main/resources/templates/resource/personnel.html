@@ -148,10 +148,10 @@
               <el-form-item label="负责人" prop="charge">
                 <el-select v-model="model.charge" filterable placeholder="请选择">
                   <el-option
-                      v-for="(item, id) in personnelMap"
-                      :key="id"
+                      v-for="(item, key) in personnelMap"
+                      :key="key"
                       :label="item.name"
-                      :value="id">
+                      :value="item.id">
                   </el-option>
                 </el-select>
               </el-form-item>
@@ -197,7 +197,7 @@
             ],
             name: [
               { required: true, trigger: 'blue', message: '名称不能为空'},
-              { max: 256, trigger: 'blur', message: '最大长度256个字符' }
+              { max: 256, trigger: 'blur', message: '最大长度255个字符' }
             ],
             type: [
               { required: true, trigger: 'blue', message: '类别不能为空'}
@@ -278,7 +278,7 @@
               })
               this.query()
             })
-          })
+          }).catch(() => {})
         },
         handlePageChange: function(pageNumber) {
           this.pageinfo.pageable.pageNumber = pageNumber

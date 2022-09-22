@@ -35,12 +35,12 @@ public class ResourceRest {
         Pageable pageParam = PageRequest.of(page - 1, Constant.PAGE_SIZE);
         String dept = StringUtils.isBlank(params.get("dept")) ? null : params.get("dept");
         String team = StringUtils.isBlank(params.get("team")) ? null : params.get("team");
-        Integer personnelId = StringUtils.isBlank(params.get("personnelId")) ? null : Integer.valueOf(params.get("personnelId"));
+        String personnelName = StringUtils.isBlank(params.get("personnelName")) ? null : params.get("personnelName");
         String endMonth = StringUtils.isBlank(params.get("endMonth")) ? null : params.get("endMonth");
         String domain = StringUtils.isBlank(params.get("domain")) ? null : params.get("domain");
         Integer hasNextSubproject = StringUtils.isBlank(params.get("hasNextSubproject")) ? null :
                 Integer.valueOf(params.get("hasNextSubproject"));
-        Page<Map<String, Object>> pageData = resourceRepository.findResourceByCustomParams(dept, team, personnelId,
+        Page<Map<String, Object>> pageData = resourceRepository.findResourceByCustomParams(dept, team, personnelName,
                 endMonth, domain, hasNextSubproject, pageParam);
         return new ResponseEntity<>(pageData, HttpStatus.OK);
     }

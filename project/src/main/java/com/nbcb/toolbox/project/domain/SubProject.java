@@ -43,6 +43,9 @@ public class SubProject {
 
     private Integer qa;
 
+    @Column(name = "is_close", length = 1)
+    private String isClose;
+
     @OneToOne(cascade = CascadeType.DETACH)
     @JoinColumn(name = "contract_id", referencedColumnName = "id")
     private Contract contract;
@@ -50,5 +53,9 @@ public class SubProject {
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "subproject_id", referencedColumnName = "id")
     private Set<Resource> resources;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "subproject_id", referencedColumnName = "id")
+    private Set<Risk> risks;
 
 }

@@ -120,7 +120,7 @@
           formRules: {
             name: [
               { required: true, trigger: 'blue', message: '名称不能为空'},
-              { max: 256, trigger: 'blur', message: '最大长度256个字符' }
+              { max: 256, trigger: 'blur', message: '最大长度255个字符' }
             ],
             company: [
               { required: true, trigger: 'blue', message: '供应商不能为空'}
@@ -191,7 +191,7 @@
               })
               this.query()
             })
-          })
+          }).catch(() => {})
         },
         handlePageChange: function(pageNumber) {
           this.pageinfo.pageable.pageNumber = pageNumber

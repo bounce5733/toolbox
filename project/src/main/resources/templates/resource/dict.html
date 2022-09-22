@@ -124,7 +124,7 @@
             ],
             name: [
               { required: true, trigger: 'blue', message: '名称不能为空'},
-              { max: 256, trigger: 'blur', message: '最大长度256个字符' }
+              { max: 256, trigger: 'blur', message: '最大长度255个字符' }
             ]
           },
           dictVisible: false,
@@ -137,7 +137,7 @@
             ],
             name: [
               { required: true, trigger: 'blue', message: '名称不能为空'},
-              { max: 256, trigger: 'blur', message: '最大长度256个字符' }
+              { max: 256, trigger: 'blur', message: '最大长度255个字符' }
             ]
           }
         }
@@ -184,7 +184,7 @@
               this.dicType = {}
               this.getDictByType()
             })
-          })
+          }).catch(() => {})
         },
         dicTypeChange: function(row) {
           if (row === null) {
@@ -228,7 +228,7 @@
               })
               this.getDictByType()
             })
-          })
+          }).catch(() => {})
         },
         getDictByType: function() {
           if (this.dicType.code) {

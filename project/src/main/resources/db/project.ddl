@@ -2,7 +2,8 @@ create table TEAM (id int auto_increment primary key, name text not null);
 
 create table SHORTAGE (id int auto_increment primary key, type varchar(32), amount double);
 
-create table RISK (id int auto_increment primary key, type varchar(32), desc text);
+create table RISK (id int auto_increment primary key, subproject_id int not null, responsible_personnel_id int,
+    measure text, type varchar(32), desc text);
 
 create table CONTRACT (id int auto_increment primary key, subproject_id int, name text not null, type varchar(32),
     start_date char(10), end_date char(10), company varchar(32), status varchar(32));
