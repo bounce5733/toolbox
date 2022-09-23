@@ -30,18 +30,14 @@
       <el-table-column label="业务条线" width="250px">
         <template slot-scope="scope">{{dictMap['DOMAIN'][projectMap[scope.row.id].domain]}}</template>
       </el-table-column>
-      <el-table-column label="上线日期"width="150px">
+      <el-table-column label="上线日期" width="150px">
         <template slot-scope="scope">{{projectMap[scope.row.id].onlineDate}}</template>
       </el-table-column>
       <el-table-column label="所属部门" width="200px">
         <template slot-scope="scope">{{dictMap['DEPT'][scope.row.dept]}}</template>
       </el-table-column>
       <el-table-column label="当前阶段" width="150px" align="center">
-        <template slot-scope="scope">
-          <el-select v-model="scope.row.phase" @change="phaseChange" @focus="selSubProject(scope.row.id)">
-            <el-option v-for="(val, key) in dictMap['PROJECT_STAGE']" :label="val" :value="key" :key="key"></el-option>
-          </el-select>
-        </template>
+        <template slot-scope="scope">{{dictMap['PROJECT_STAGE'][scope.row.phase]}}</template>
       </el-table-column>
       <el-table-column label="操作" align="center">
         <template slot-scope="scope">
@@ -85,41 +81,65 @@
           <el-descriptions-item label="结束日期">{{model.contract.endDate}}</el-descriptions-item>
         </el-descriptions>
       </el-tab-pane>
-      <el-tab-pane name="processInfo" label="项目进度"></el-tab-pane>
+      <el-tab-pane name="processInfo" label="项目进度">
+        <el-table :data="processes" border>
+          <el-table-column label="阶段">
+            <template slot-scope="scope">{{dictMap['PROJECT_STAGE'][scope.row.phase]}}</template>
+          </el-table-column>
+          <el-table-column label="计划开始" width="120px" prop="planStartDate"></el-table-column>
+          <el-table-column label="实际开始" width="120px" prop="reallyStartDate"></el-table-column>
+          <el-table-column label="计划结束" width="120px" prop="planEndDate"></el-table-column>
+          <el-table-column label="实际结束" width="120px" prop="reallyEndDate"></el-table-column>
+          <el-table-column label="计划工作量" width="100px" prop="planManDays"></el-table-column>
+          <el-table-column label="投入占比" width="100px" prop="investRate"></el-table-column>
+          <el-table-column label="当前进度" width="100px" prop="currentProcess"></el-table-column>
+          <el-table-column label="滞后天数" :formatter="computeDelayDays" width="100px"></el-table-column>
+          <el-table-column align="center" width="120px">
+            <template slot="header" slot-scope="scope">
+              <el-button type="primary" @click="openAddProcess(model.id)" size="mini" icon="el-icon-plus"></el-button>
+            </template>
+            <template slot-scope="scope">
+              <el-button-group>
+                <el-button type="primary" @click="openEditProcess(scope.row)" size="small" icon="el-icon-edit"></el-button>
+                <el-button type="danger" @click="removeProcess(scope.row.id)" size="small" icon="el-icon-delete"></el-button>
+              </el-button-group>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-tab-pane>
       <el-tab-pane name="resourceManage" label="资源管理">
         <el-table :data="resources" border>
-            <el-table-column label="前序项目">
-              <template slot-scope="scope">{{scope.row.prevSubprojectId ? projectMap[scope.row.prevSubprojectId].name  + '-' + dictMap['SYSTEM'][projectMap[scope.row.prevSubprojectId].system] : '/'}}</template>
-            </el-table-column>
-            <el-table-column label="姓名" width="120px">
-              <template slot-scope="scope">{{personnelMap[scope.row.personnelId].name}}</template>
-            </el-table-column>
-            <el-table-column label="供应商">
-              <template slot-scope="scope">{{dictMap['SUPPLIER'][personnelMap[scope.row.personnelId].company]}}</template>
-            </el-table-column>
-            <el-table-column label="类别" width="100px">
-              <template slot-scope="scope">{{dictMap['PERSONNEL_TYPE'][personnelMap[scope.row.personnelId].type]}}</template>
-            </el-table-column>
-            <el-table-column label="级别" width="100px">
-              <template slot-scope="scope">{{dictMap['PERSONNEL_LEVEL'][personnelMap[scope.row.personnelId].level]}}</template>
-            </el-table-column>
-            <el-table-column label="占比" prop="currentRation"></el-table-column>
-            <el-table-column label="后续项目">
-              <template slot-scope="scope">{{scope.row.nextSubprojectId ? projectMap[scope.row.nextSubprojectId].name + '-' + dictMap['SYSTEM'][projectMap[scope.row.nextSubprojectId].system] : '/'}}</template>
-            </el-table-column>
-            <el-table-column label="进入时间" prop="startDate" width="120px"></el-table-column>
-            <el-table-column label="释放时间" prop="endDate" width="120px"></el-table-column>
-            <el-table-column align="center" width="120px">
-              <template slot="header" slot-scope="scope">
-                <el-button type="primary" @click="openAddResource(model.id)" size="mini" icon="el-icon-plus"></el-button>
-              </template>
-              <template slot-scope="scope">
-                <el-button-group>
-                  <el-button type="primary" @click="openEditResource(scope.row)" size="small" icon="el-icon-edit"></el-button>
-                  <el-button type="danger" @click="removeResource(scope.row.id)" size="small" icon="el-icon-delete"></el-button>
-                </el-button-group>
-              </template>
-            </el-table-column>
+          <el-table-column label="前序项目">
+            <template slot-scope="scope">{{scope.row.prevSubprojectId ? projectMap[scope.row.prevSubprojectId].name  + '-' + dictMap['SYSTEM'][projectMap[scope.row.prevSubprojectId].system] : '/'}}</template>
+          </el-table-column>
+          <el-table-column label="姓名" width="120px">
+            <template slot-scope="scope">{{personnelMap[scope.row.personnelId].name}}</template>
+          </el-table-column>
+          <el-table-column label="供应商">
+            <template slot-scope="scope">{{dictMap['SUPPLIER'][personnelMap[scope.row.personnelId].company]}}</template>
+          </el-table-column>
+          <el-table-column label="类别" width="100px">
+            <template slot-scope="scope">{{dictMap['PERSONNEL_TYPE'][personnelMap[scope.row.personnelId].type]}}</template>
+          </el-table-column>
+          <el-table-column label="级别" width="100px">
+            <template slot-scope="scope">{{dictMap['PERSONNEL_LEVEL'][personnelMap[scope.row.personnelId].level]}}</template>
+          </el-table-column>
+          <el-table-column label="占比" prop="currentRation"></el-table-column>
+          <el-table-column label="后续项目">
+            <template slot-scope="scope">{{scope.row.nextSubprojectId ? projectMap[scope.row.nextSubprojectId].name + '-' + dictMap['SYSTEM'][projectMap[scope.row.nextSubprojectId].system] : '/'}}</template>
+          </el-table-column>
+          <el-table-column label="进入时间" prop="startDate" width="120px"></el-table-column>
+          <el-table-column label="释放时间" prop="endDate" width="120px"></el-table-column>
+          <el-table-column align="center" width="120px">
+            <template slot="header" slot-scope="scope">
+              <el-button type="primary" @click="openAddResource(model.id)" size="mini" icon="el-icon-plus"></el-button>
+            </template>
+            <template slot-scope="scope">
+              <el-button-group>
+                <el-button type="primary" @click="openEditResource(scope.row)" size="small" icon="el-icon-edit"></el-button>
+                <el-button type="danger" @click="removeResource(scope.row.id)" size="small" icon="el-icon-delete"></el-button>
+              </el-button-group>
+            </template>
           </el-table-column>
         </el-table>
       </el-tab-pane>
@@ -160,6 +180,46 @@
       </el-tab-pane>
     </el-tabs>
   </el-dialog>
+  <el-drawer :visible.sync="processDrawerVisible" direction="rtl">
+    <el-row type="flex" justify="space-around">
+      <div class="demo-drawer__content">
+        <el-form :model="process" :rules="processFormRules" ref="processForm" label-width="80px">
+          <el-form-item label="阶段" prop="phase">
+            <el-select v-model="process.phase" :disabled="process.id ? true : false" clearable placeholder="请选择">
+              <el-option v-for="(val, key) in dictMap['PROJECT_STAGE']" :label="val" :value="key" :key="key"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="计划开始" prop="planStartDate">
+            <el-date-picker type="date" v-model="process.planStartDate" value-format="yyyy/MM/dd"></el-date-picker>
+          </el-form-item>
+          <el-form-item label="实际开始" prop="reallyStartDate">
+            <el-date-picker type="date" v-model="process.reallyStartDate" value-format="yyyy/MM/dd"></el-date-picker>
+          </el-form-item>
+          <el-form-item label="计划结束" prop="planEndDate">
+            <el-date-picker type="date" v-model="process.planEndDate" value-format="yyyy/MM/dd"></el-date-picker>
+          </el-form-item>
+          <el-form-item label="实际结束" prop="reallyEndDate">
+            <el-date-picker type="date" v-model="process.reallyEndDate" value-format="yyyy/MM/dd"></el-date-picker>
+          </el-form-item>
+          <el-form-item label="计划工作量" prop="planManDays">
+            <el-input v-model="process.planManDays" oninput="value=value.replace(/[^\d]/g, '')" @blur="planManDaysChange"></el-input>
+          </el-form-item>
+          <el-form-item label="投入占比%" prop="investRate">
+            <el-input v-model="process.investRate" oninput="value=value.replace(/^\.+|[^\d.]/g, '')" @blur="investRateChange"></el-input>
+          </el-form-item>
+          <el-form-item label="当前进度%" prop="currentProcess">
+            <el-input v-model="process.currentProcess" oninput="value=value.replace(/[^\d]/g, '')" @blur="currentProcessChange"></el-input>
+          </el-form-item>
+        </el-form>
+      </div>
+    </el-row>
+    <el-row type="flex" justify="space-around">
+      <div class="demo-drawer__footer">
+        <el-button @click="processDrawerVisible = false">取 消</el-button>
+        <el-button type="primary" @click="saveProcess">确 定</el-button>
+      </div>
+    </el-row>
+  </el-drawer>
   <el-drawer :visible.sync="resourceDrawerVisible" direction="rtl">
     <el-row type="flex" justify="space-around">
       <div class="demo-drawer__content">
@@ -268,10 +328,30 @@
               pageNumber: 1
             }
           },
-          curSubProjectId: '', // 当前表格选中id
           // ------------项目管理弹窗------------
           activeTabName: 'basicInfo',
           model: {},
+          // ------------项目进度------------
+          processes: [], // 当前项目资源列表
+          process: {},
+          processDrawerVisible: false,
+          processFormRules: {
+            phase : [
+              { required: true, trigger: 'blue', message: '项目阶段不能为空'}
+            ],
+            planStartDate: [
+              { required: true, trigger: 'blue', message: '计划开始不能为空'}
+            ],
+            planEndDate: [
+              { required: true, trigger: 'blue', message: '计划结束不能为空'}
+            ],
+            planManDays: [
+              { required: true, trigger: 'blue', message: '计划工作量不能为空'}
+            ],
+            investRate: [
+              { required: true, trigger: 'blue', message: '投入占比不能为空'}
+            ]
+          },
           // ------------项目资源------------
           resources: [], // 当前项目资源列表
           resource: {},
@@ -345,6 +425,7 @@
         },
         openDetail(row) {
           this.model = row
+          this.processes = row.processes
           this.resources = row.resources
           this.risks = row.risks
           this.detailVisible = true
@@ -352,19 +433,6 @@
         closeDetail() {
           this.detailVisible = false
           this.query()
-        },
-        selSubProject(id) {
-          this.curSubProjectId = id
-        },
-        phaseChange(val) {
-          axios.patch('/rest/subproject/phase/' + this.curSubProjectId + '/' + val).then(res => {
-            this.$notify({
-              title: '成功',
-              message: '修改成功',
-              type: 'success'
-            })
-            this.query()
-          })
         },
         closeProject(id, status) {
           const tipmsg = status === '0' ? '关闭' : '打开'
@@ -379,6 +447,64 @@
               this.query()
             })
           }).catch(() => {})
+        },
+        // ------------项目进度------------
+        openAddProcess(subProjectId) {
+          this.process = { subProjectId: subProjectId }
+          this.processDrawerVisible = true
+        },
+        openEditProcess(process) {
+          this.process = { ...process }
+          this.processDrawerVisible = true
+        },
+        saveProcess() {
+          this.$refs.processForm.validate((valid) => {
+            if (valid) {
+              axios.post("/rest/process", this.process).then(res => {
+                this.$notify({
+                  title: '成功',
+                  message: '保存成功',
+                  type: 'success'
+                })
+                axios.get("/rest/process/subproject/" + this.process.subProjectId).then(res => {
+                   this.processes = res.data
+                   this.processDrawerVisible = false
+                })
+              })
+            }
+          })
+        },
+        removeProcess(id) {
+          this.$confirm('确定删除该进度', '提示', { type: 'warning' }).then(() => {
+            axios.delete("/rest/process/" + id).then(res => {
+              this.$notify({
+                title: '成功',
+                message: '删除成功',
+                type: 'success'
+              })
+              this.processes.forEach((process, index) => {
+                if (id === process.id) {
+                  this.processes.splice(index, 1)
+                }
+              })
+            })
+          }).catch(() => {})
+        },
+        investRateChange(e) {
+          this.process.investRate = e.target.value
+        },
+        currentProcessChange(e) {
+          this.process.currentProcess = e.target.value
+        },
+        planManDaysChange(e) {
+          this.process.planManDays = e.target.value
+        },
+        // 计算滞后天数（实际天数 - 计划天数）
+        computeDelayDays(row) {
+          if (!row.reallyStartDate || !row.reallyEndDate) return
+          const planDays = (new Date(row.planEndDate) - new Date(row.planStartDate)) / (1000 * 60 * 60 * 24)
+          const reallyDays = (new Date(row.reallyEndDate) - new Date(row.reallyStartDate)) / (1000 * 60 * 60 * 24)
+          return reallyDays - planDays
         },
         // ------------项目资源------------
         openAddResource(subProjectId) {

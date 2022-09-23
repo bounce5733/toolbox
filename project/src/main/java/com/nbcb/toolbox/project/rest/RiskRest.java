@@ -27,17 +27,6 @@ public class RiskRest {
     @Autowired
     private RiskRepository riskRepository;
 
-    @GetMapping("/query/{page}")
-    public ResponseEntity<Page<Risk>> query(@PathVariable("page") int page, @RequestParam("params") String params)
-            throws UnsupportedEncodingException {
-        Pageable pageParam = PageRequest.of(page - 1, Constant.PAGE_SIZE);
-        ExampleMatcher matcher = ExampleMatcher.matching();
-        matcher = matcher.withMatcher("desc", ExampleMatcher.GenericPropertyMatchers.contains());
-        Example<Risk> example = Example.of(Risk.builder().desc(URLDecoder.decode(params, Constant.ENCODING))
-                .build(), matcher);
-        return new ResponseEntity<>(riskRepository.findAll(example, pageParam), HttpStatus.OK);
-    }
-
     @PostMapping
     public ResponseEntity<Object> save(@RequestBody Risk risk) {
         riskRepository.save(risk);

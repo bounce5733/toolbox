@@ -52,6 +52,10 @@ public class SubProject {
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "subproject_id", referencedColumnName = "id")
+    private Set<Process> processes;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "subproject_id", referencedColumnName = "id")
     private Set<Resource> resources;
 
     @OneToMany(cascade = CascadeType.ALL)

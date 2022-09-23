@@ -63,14 +63,6 @@ public class SubProjectRest {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PatchMapping("/phase/{id}/{phase}")
-    public ResponseEntity<Object> updatePhase(@PathVariable("id") int id, @PathVariable("phase") String phase) {
-        SubProject subProject = subProjectRepository.findById(id).get();
-        subProject.setPhase(phase);
-        subProjectRepository.save(subProject);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
     @DeleteMapping("/subProjectPersonnel/{id}")
     public ResponseEntity<Object> removeSubProjectPersonnel(@PathVariable("id") int id) {
         subProjectPersonnelRepository.deleteById(id);

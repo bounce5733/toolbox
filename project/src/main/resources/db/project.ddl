@@ -11,8 +11,12 @@ create table CONTRACT (id int auto_increment primary key, subproject_id int, nam
 create table PROJECT (id int auto_increment primary key, code varchar(32) not null, name text not null,
     domain varchar(32), issue text, online_date char(10));
 
-create table SUBPROJECT (id int auto_increment primary key, project_id int, system varchar(32),
-    phase varchar(32), dept varchar(32), pm int, pmo int, qa int, contract_id int);
+create table SUBPROJECT (id int auto_increment primary key, project_id int not null, system varchar(32),
+    phase varchar(32) not null, dept varchar(32), pm int, pmo int, qa int, contract_id int);
+
+create table PROCESS (id int auto_increment primary key, subproject_id int not null, phase varchar(32) not null,
+    plan_start_date char(10), plan_end_date char(10), really_start_date char(10), really_end_date char(10),
+    plan_man_days int, invest_rate double, current_process int default 0);
 
 create table RESOURCE (id int auto_increment primary key, subproject_id int, personnel_id int,
     current_ration double, next_subproject_id int, prev_subproject_id int, start_date char(10), end_date char(10));
