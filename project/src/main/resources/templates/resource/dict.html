@@ -173,7 +173,7 @@
           })
         },
         removeDicType: function(code) {
-          this.$confirm('确定删除该字典类型及其所有字典数据', '提示', { type: 'warning' }).then(() => {
+          this.$confirm('删除类型会导致被引用的页面无法呈现，请慎重操作', '提示', { type: 'warning' }).then(() => {
            axios.delete("/rest/dict/type/" + code).then(res => {
               this.$notify({
                 title: '成功',

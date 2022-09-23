@@ -1,3 +1,5 @@
+const DATA_INTEGRITY_ERROR_TIP = "数据完整性异常，请先删除依赖"
+
 function dateToStr(date) {
   if (date instanceof Date) {
     let month = date.getMonth() + 1

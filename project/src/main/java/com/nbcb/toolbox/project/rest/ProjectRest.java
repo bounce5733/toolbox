@@ -5,7 +5,9 @@ import com.nbcb.toolbox.project.domain.Project;
 import com.nbcb.toolbox.project.repository.ProjectRepository;
 import com.nbcb.toolbox.project.repository.ResourceRepository;
 import com.nbcb.toolbox.project.repository.SubProjectRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import java.util.List;
  * @Date 2022/9/6 08:57
  * @Version 1.0
  **/
+@Slf4j
 @RestController
 @RequestMapping("/rest/project")
 public class ProjectRest {
@@ -59,7 +62,12 @@ public class ProjectRest {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> remove(@PathVariable("id") int id) {
-        projectRepository.deleteById(id);
+        try {
+            projectRepository.deleteById(id);
+        } catch (DataIntegrityViolationException e) {
+            log.error(e.getMessage(), e);
+            return new ResponseEntity<>(Constant.DATA_INTEGRITY_ERROR_TIP, HttpStatus.OK);
+        }
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

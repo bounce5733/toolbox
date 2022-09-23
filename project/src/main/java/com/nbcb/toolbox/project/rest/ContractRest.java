@@ -3,7 +3,9 @@ package com.nbcb.toolbox.project.rest;
 import com.nbcb.toolbox.project.Constant;
 import com.nbcb.toolbox.project.domain.Contract;
 import com.nbcb.toolbox.project.repository.ContractRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ import java.util.List;
  * @Date 2022/9/6 08:57
  * @Version 1.0
  **/
+@Slf4j
 @RestController
 @RequestMapping("/rest/contract")
 public class ContractRest {
@@ -51,7 +54,12 @@ public class ContractRest {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> remove(@PathVariable("id") int id) {
-        contractRepository.deleteById(id);
+        try {
+            contractRepository.deleteById(id);
+        } catch (DataIntegrityViolationException e) {
+            log.error(e.getMessage(), e);
+            return new ResponseEntity<>(Constant.DATA_INTEGRITY_ERROR_TIP, HttpStatus.OK);
+        }
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

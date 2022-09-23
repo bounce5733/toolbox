@@ -55,12 +55,17 @@ public class PageController {
     }
 
     @RequestMapping("/analysis/resourceLoad")
-    public String analysisInvest(Model model) {
+    public String analysisResourceLoad(Model model) {
         return "analysis/resourceLoad";
     }
 
     @RequestMapping("/analysis/resourceRelease")
-    public String analysisRelease(Model model) {
+    public String analysisResourceRelease(Model model) {
         return "analysis/resourceRelease";
+    }
+
+    @RequestMapping("/analysis/teamAnalysis")
+    public String analysisTeam(Model model) {
+        return "analysis/teamAnalysis";
     }
 }

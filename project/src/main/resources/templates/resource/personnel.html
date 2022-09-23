@@ -29,10 +29,10 @@
           <el-table-column label="人员级别" width="100px">
             <template slot-scope="scope">{{dictMap['PERSONNEL_LEVEL'][scope.row.level]}}</template>
           </el-table-column>
-          <el-table-column label="所属部门" width="150px">
+          <el-table-column label="所属部门" width="120px">
             <template slot-scope="scope">{{dictMap['DEPT'][scope.row.dept]}}</template>
           </el-table-column>
-          <el-table-column label="所属小组" width="150px">
+          <el-table-column label="所属小组" width="100px">
             <template slot-scope="scope">{{dictMap['TEAM'][scope.row.team]}}</template>
           </el-table-column>
           <el-table-column prop="phone" label="手机号" width="120px"></el-table-column>
@@ -42,11 +42,11 @@
           <el-table-column label="供应商">
             <template slot-scope="scope">{{dictMap['SUPPLIER'][scope.row.company]}}</template>
           </el-table-column>
-          <el-table-column label="负责人"width="100px">
+          <el-table-column label="负责人" width="100px">
             <template slot-scope="scope">{{personnelMap[scope.row.charge] ? personnelMap[scope.row.charge].name : ''}}</template>
           </el-table-column>
-          <el-table-column label="开始日期" prop="startDate" width="150px"></el-table-column>
-          <el-table-column label="结束日期" prop="endDate" width="150px"></el-table-column>
+          <el-table-column label="开始日期" prop="startDate" width="120px"></el-table-column>
+          <el-table-column label="结束日期" prop="endDate" width="120px"></el-table-column>
           <el-table-column align="center" label="操作" width="150">
             <template slot-scope="scope">
               <el-button-group>
@@ -175,6 +175,7 @@
   <script src="../static/js/vue.js"></script>
   <script src="../static/js/element.js"></script>
   <script src="../static/js/axios.js"></script>
+  <script src="../static/js/util.js"></script>
   <script>
     new Vue({
       el: '#app',
@@ -215,6 +216,9 @@
               { required: true, trigger: 'blur', message: '手机号不能为空'},
               { max: 11, trigger: 'blur', message: '手机号长度不对'},
               { min: 11, trigger: 'blur', message: '手机号长度不对'}
+            ],
+            team: [
+              { required: true, trigger: 'blue', message: '所属小组不能为空'}
             ]
           }
         }
@@ -271,12 +275,20 @@
         remove: function(id) {
           this.$confirm('确定删除该人员', '提示', { type: 'warning' }).then(() => {
             axios.delete("/rest/personnel/" + id).then(res => {
-              this.$notify({
-                title: '成功',
-                message: '删除成功',
-                type: 'success'
-              })
-              this.query()
+              if (res.data === DATA_INTEGRITY_ERROR_TIP) {
+                this.$notify({
+                  title: '警告',
+                  message: DATA_INTEGRITY_ERROR_TIP,
+                  type: 'warning'
+                })
+              } else {
+                this.$notify({
+                  title: '成功',
+                  message: '删除成功',
+                  type: 'success'
+                })
+                this.query()
+              }
             })
           }).catch(() => {})
         },

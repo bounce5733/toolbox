@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>资源负载情况</title>
+    <title>小组分析</title>
     <link rel="stylesheet" href="../static/css/index.css">
     <link rel="stylesheet" href="../static/css/element.css">
   </head>
@@ -31,7 +31,7 @@
             </el-table-column>
             <el-table-column label="释放时间" prop="endDate"></el-table-column>
             <el-table-column label="后续项目">
-              <template slot-scope="scope">{{projectMap[scope.row.nextSubprojectId] ? rojectMap[scope.row.nextSubprojectId].name : '/'}}</template>
+              <template slot-scope="scope">{{projectMap[scope.row.nextSubprojectId] ? projectMap[scope.row.nextSubprojectId].name : '/'}}</template>
             </el-table-column>
             <el-table-column label="入场时间" prop="startDate"></el-table-column>
           </el-table>
@@ -78,7 +78,7 @@
               name: '资源'
             },
             series: [{
-              name: '已使用',
+              name: '可释放',
               type: 'bar',
               stack: 'total',
               barGap: 1,
@@ -86,7 +86,7 @@
               barMaxWidth: 200,
               data: []
             }, {
-              name: '可释放',
+              name: '已使用',
               type: 'bar',
               stack: 'total',
               barGap: 1,
