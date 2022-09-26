@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>资源分析</title>
+    <link rel="stylesheet" href="../static/css/index.css">
+    <link rel="stylesheet" href="../static/css/element.css">
+  </head>
+  <body>
+    <div id="app" class="app-container">
+      <el-form :inline="true" @submit.native.prevent>
+        <el-row>
+          <el-form-item label="部门">
+            <el-select v-model="params.dept" clearable>
+              <el-option v-for="(val, key) in dictMap['DEPT']" :label="val" :value="key" :key="key"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="小组">
+            <el-select v-model="params.team" clearable>
+              <el-option v-for="(val, key) in dictMap['TEAM']" :label="val" :value="key" :key="key"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="query" icon="el-icon-search">查询</el-button>
+          </el-form-item>
+        </el-row>
+      </el-form>
+      <div id="chart" style="width:100%; height:400px"></div>
+      <el-dialog title="项目人员清单" :visible.sync="dialogVisible" width="80%">
+        <el-table :data="resources" highlight-current-row border style="width:100%">
+          <el-table-column label="项目名称">
+            <template slot-scope="scope">{{projectMap[scope.row.subProjectId].name}}</template>
+          </el-table-column>
+          <el-table-column label="人员姓名" width="200px">
+            <template slot-scope="scope">{{personnelMap[scope.row.personnelId].name}}</template>
+          </el-table-column>
+          <el-table-column label="人员类别" width="200px">
+            <template slot-scope="scope">{{dictMap['PERSONNEL_TYPE'][personnelMap[scope.row.personnelId].type]}}</template>
+          </el-table-column>
+          <el-table-column label="人员级别" width="200px">
+            <template slot-scope="scope">{{dictMap['PERSONNEL_LEVEL'][personnelMap[scope.row.personnelId].level]}}</template>
+          </el-table-column>
+          <el-table-column label="条线">
+            <template slot-scope="scope">{{dictMap['DOMAIN'][projectMap[scope.row.subProjectId].domain]}}</template>
+          </el-table-column>
+          <el-table-column label="当前小组">
+            <template slot-scope="scope">{{dictMap['TEAM'][personnelMap[scope.row.personnelId].team]}}</template>
+          </el-table-column>
+          <el-table-column label="释放时间" prop="endDate"></el-table-column>
+          <el-table-column label="后续项目">
+            <template slot-scope="scope">{{projectMap[scope.row.nextSubprojectId] ? rojectMap[scope.row.nextSubprojectId].name : '/'}}</template>
+          </el-table-column>
+          <el-table-column label="入场时间" prop="startDate"></el-table-column>
+        </el-table>
+      </el-dialog>
+    </div>
+  </body>
+  <script src="../static/js/util.js"></script>
+  <script src="../static/js/vue.js"></script>
+  <script src="../static/js/element.js"></script>
+  <script src="../static/js/axios.js"></script>
+  <script src="../static/js/echarts_3.8.0.js"></script>
+
+  <script>
+    new Vue({
+      el: '#app',
+
+      data: function() {
+        return {
+          dictMap: {}, // 系统字典
+          personnelMap: {}, // 人员字典
+          projectMap: {}, // 子项目id->主项目映射
+          params: {},
+          // --------------图表--------------
+          myChart: undefined,
+          option: {
+            legend: {
+                data: []
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'time'
+            },
+            yAxis: {
+                type: 'category',
+                data: []
+            },
+            series: []
+          },
+          // --------------弹窗--------------
+          dialogVisible: false,
+          projectResourcesMap: {},
+          resources: []
+        }
+      },
+      methods: {
+        async query() {
+          axios.get('/rest/dict/load').then(res => {
+            this.dictMap = res.data
+            axios.get('/rest/project/load').then(res => {
+              res.data.forEach(project =>  {
+                project.subProjects.forEach(subProject =>  {
+                    this.projectMap[subProject.id] = { id: subProject.id, code: project.code, name: project.name, domain: project.domain,
+                    issue: project.issue, onlineDate: project.onlineDate, system: subProject.system }
+                  })
+                })
+                axios.get('/rest/subproject/load').then(res => {
+                console.log('subprojects:' + JSON.stringify(res.data))
+                const subProjectMap = {}
+                const projectNames = []
+                res.data.forEach(subProject => {
+                  const subProjectName = this.projectMap[subProject.id].name + "-" + this.dictMap['SYSTEM'][this.projectMap[subProject.id].system]
+                  projectNames.push(subProjectName)
+                  if (!subProjectMap[subProjectName]) {
+                    subProjectMap[subProjectName] = {}
+                  }
+                  subProject.processes.forEach(process =>  {
+                    if (!subProjectMap[subProjectName][process.phase]) {
+                      subProjectMap[subProjectName][process.phase] = {}
+                    }
+                    subProjectMap[subProjectName][process.phase].reallyStartDate = process.reallyStartDate ? process.reallyStartDate : ''
+                    subProjectMap[subProjectName][process.phase].reallyEndDate = process.reallyEndDate ? process.reallyEndDate : ''
+                    subProjectMap[subProjectName][process.phase].currentProcess = process.currentProcess ? process.currentProcess : 0
+                  })
+                  subProject.resources.forEach(resource => {
+                    if (!this.projectResourcesMap[subProjectName]) {
+                      this.projectResourcesMap[subProjectName] = []
+                    }
+                    this.projectResourcesMap[subProjectName].push(resource)
+                  })
+                })
+                console.log('subProjectMap:' + JSON.stringify(subProjectMap))
+                const projectPhaseNames = []
+                const seriesDataes = []
+                const sortedProjectPhases = Object.keys(this.dictMap['PROJECT_STAGE']).sort()
+                sortedProjectPhases.forEach(phaseCode => {
+                  projectPhaseNames.push(this.dictMap['PROJECT_STAGE'][phaseCode])
+                  const seriesData = { startData: [], endData: [], name: this.dictMap['PROJECT_STAGE'][phaseCode], currentProcess: []}
+                  Object.keys(subProjectMap).forEach(projectName => {
+                    if (subProjectMap[projectName][phaseCode]) {
+                      seriesData.startData.push(subProjectMap[projectName][phaseCode].reallyStartDate)
+                      seriesData.endData.push(subProjectMap[projectName][phaseCode].reallyEndDate)
+                      seriesData.currentProcess.push(subProjectMap[projectName][phaseCode].currentProcess)
+                    } else {
+                      seriesData.startData.push('')
+                      seriesData.endData.push('')
+                    }
+                  })
+                  seriesDataes.push(seriesData)
+                })
+                const serieses = []
+                console.log('seriesDataes:' + JSON.stringify(seriesDataes))
+                seriesDataes.forEach((data, index) => {
+                  serieses.push(
+                    { 
+                      name: '起始日期隐藏线', 
+                      type: 'bar',
+                      stack: '总量',
+                      itemStyle: {
+                        normal: {
+                          color: 'transparent'
+                        }
+                      },
+                      data: data.startData
+                    }
+                  )
+                  serieses.push(
+                    { 
+                      name: data.name, 
+                      type: 'bar',
+                      stack: '总量',
+                      data: data.endData,
+                      label: {
+                        normal: {
+                          show: true,
+                          position: 'inside',
+                          formatter: function(params) {
+                            return params.seriesName + data.currentProcess[projectNames.indexOf(params.name)] + '%'
+                          }
+                        }
+                      }
+                    }
+                  )
+                })
+                console.log('series:' + JSON.stringify(serieses))
+                console.log('projectPhaseNames:' + JSON.stringify(projectPhaseNames))
+                this.option.legend.data = projectPhaseNames
+                this.option.yAxis.data = projectNames
+                this.option.series = serieses
+                this.myChart.setOption(this.option)
+              })
+            })
+          })
+        },
+        loadProject() {
+          axios.get('/rest/project/load').then(res => {
+            res.data.forEach(project =>  {
+              project.subProjects.forEach(subProject =>  {
+                this.projectMap[subProject.id] = { id: subProject.id, code: project.code, name: project.name, domain: project.domain,
+                issue: project.issue, onlineDate: project.onlineDate, system: subProject.system }
+              })
+            })
+            console.log('this.project1:' + JSON.stringify(this.project))
+          })
+        },
+        loadDict() {
+          axios.get('/rest/dict/load').then(res => {
+            this.dictMap = res.data
+          })
+        },
+        loadPersonnel() {
+          axios.get('/rest/personnel/load')
+            .then(res => {
+              res.data.forEach(item =>  {
+                this.personnelMap[item.id] = item
+              })
+          })
+        },
+        openDialog(params) {
+          this.dialogVisible = true
+          this.resources = this.projectResourcesMap[params.name]
+        }
+      },
+      mounted() {
+        this.loadPersonnel()
+        this.query()
+        this.myChart = echarts.init(document.getElementById('chart'))
+        this.myChart.on('click', this.openDialog)
+      }
+    })
+  </script>
+</html>

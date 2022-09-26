@@ -64,8 +64,8 @@ public class PageController {
         return "analysis/resourceRelease";
     }
 
-    @RequestMapping("/analysis/teamAnalysis")
-    public String analysisTeam(Model model) {
-        return "analysis/teamAnalysis";
+    @RequestMapping("/analysis/resourceAnalysis")
+    public String analysisResource(Model model) {
+        return "analysis/resourceAnalysis";
     }
 }
