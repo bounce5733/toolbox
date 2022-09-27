@@ -2,6 +2,7 @@ package com.nbcb.toolbox.project.rest;
 
 import com.nbcb.toolbox.project.Constant;
 import com.nbcb.toolbox.project.domain.Resource;
+import com.nbcb.toolbox.project.domain.SubProject;
 import com.nbcb.toolbox.project.repository.ResourceRepository;
 import org.junit.platform.commons.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,11 @@ public class ResourceRest {
 
     @Autowired
     private ResourceRepository resourceRepository;
+
+    @GetMapping("/load")
+    public ResponseEntity<List<Resource>> load() {
+        return new ResponseEntity<>(resourceRepository.findAll(), HttpStatus.OK);
+    }
 
     @PostMapping("/query/{page}")
     public ResponseEntity<Page<Map<String, Object>>> query(@PathVariable("page") int page, @RequestBody Map<String, String> params) {

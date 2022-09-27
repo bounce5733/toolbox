@@ -64,6 +64,11 @@ public class PageController {
         return "analysis/resourceRelease";
     }
 
+    @RequestMapping("/analysis/devLeverage")
+    public String devLeverage(Model model) {
+        return "analysis/devLeverage";
+    }
+
     @RequestMapping("/analysis/resourceAnalysis")
     public String analysisResource(Model model) {
         return "analysis/resourceAnalysis";
