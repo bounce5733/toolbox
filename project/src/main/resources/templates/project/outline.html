@@ -8,6 +8,7 @@
 </head>
 <body>
   <div id="app" class="app-container">
+    <!--
     <el-row>
       <el-form :inline="true" @submit.native.prevent>
         <el-form-item>
@@ -15,6 +16,7 @@
         </el-form-item>
       </el-form>
     </el-row>
+    -->
     <el-table :data="projects" :span-method="spanMethod" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
       <el-table-column prop="name" label="项目名称" align="center" width="180"></el-table-column>
       <el-table-column prop="issue" label="问题" align="center" width="200"></el-table-column>

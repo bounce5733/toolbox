@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>合同配置</title>
+    <title>小组配置</title>
     <link rel="stylesheet" href="../static/css/index.css">
     <link rel="stylesheet" href="../static/css/element.css">
   </head>
@@ -10,8 +10,13 @@
     <div id="app" class="app-container">
       <el-row>
         <el-form :inline="true" @submit.native.prevent>
-          <el-form-item>
-            <el-input @keyup.enter.native="query" style="width:280px" placeholder="名称" clearable v-model="queryParams"></el-input>
+          <el-form-item label="名称">
+            <el-input @keyup.enter.native="query" style="width:280px" placeholder="名称" clearable v-model="queryParams.name"></el-input>
+          </el-form-item>
+          <el-form-item label="部门">
+            <el-select v-model="queryParams.dept" clearable>
+              <el-option v-for="(val, key) in dictMap['DEPT']" :label="val" :value="key" :key="key"></el-option>
+            </el-select>
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="query">查询</el-button>
@@ -21,18 +26,10 @@
           </el-form-item>
         </el-form>
         <el-table :data="pageinfo.content" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
-          <el-table-column prop="name" label="名称" width="200px"></el-table-column>
-          <el-table-column label="供应商">
-            <template slot-scope="scope">{{dictMap['SUPPLIER'][scope.row.company]}}</template>
+          <el-table-column prop="name" label="名称" ></el-table-column>
+          <el-table-column label="部门">
+            <template slot-scope="scope">{{dictMap['DEPT'][scope.row.dept]}}</template>
           </el-table-column>
-          <el-table-column label="类型" width="200px">
-            <template slot-scope="scope">{{dictMap['CONTRACT_TYPE'][scope.row.type]}}</template>
-          </el-table-column>
-          <el-table-column label="状态" width="200px">
-            <template slot-scope="scope">{{dictMap['CONTRACT_STATUS'][scope.row.status]}}</template>
-          </el-table-column>
-          <el-table-column prop="startDate" label="开始日期" width="150px"></el-table-column>
-          <el-table-column prop="endDate" label="终止日期" width="150px"></el-table-column>
           <el-table-column align="center" label="操作" width="150">
             <template slot-scope="scope">
               <el-button-group>
@@ -42,13 +39,8 @@
             </template>
           </el-table-column>
         </el-table>
-        <div class="pagination-container">
-          <el-pagination background layout="prev, pager, next, total" @current-change="handlePageChange"
-                         :current-page="pageinfo.pageable.pageNumber" :page-size="pageinfo.pageable.pageSize"
-                         :total="pageinfo.totalElements"></el-pagination>
-        </div>
       </el-row>
-      <el-dialog title="编辑合同" :visible.sync="formVisible">
+      <el-dialog :title="formType + '小组'" :visible.sync="formVisible">
         <el-form :model="model" ref="form" :rules="formRules" label-width="100px">
           <el-row>
             <el-col :span="12">
@@ -57,38 +49,10 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="供应商" prop="company">
-                <el-select v-model="model.company" clearable>
-                  <el-option v-for="(val, key) in dictMap['SUPPLIER']" :label="val" :value="key" :key="key"></el-option>
+              <el-form-item label="部门" prop="dept">
+                <el-select v-model="model.dept">
+                  <el-option v-for="(val, key) in dictMap['DEPT']" :label="val" :value="key" :key="key"></el-option>
                 </el-select>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row>
-            <el-col :span="12">
-              <el-form-item label="类型" prop="type">
-                <el-select v-model="model.type">
-                  <el-option v-for="(val, key) in dictMap['CONTRACT_TYPE']" :label="val" :value="key" :key="key"></el-option>
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="状态" prop="status">
-                <el-select v-model="model.status">
-                  <el-option v-for="(val, key) in dictMap['CONTRACT_STATUS']" :label="val" :value="key" :key="key"></el-option>
-                </el-select>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row>
-            <el-col :span="12">
-              <el-form-item label="开始日期" prop="endDate">
-                <el-date-picker type="date" v-model="model.startDate" value-format="yyyy/MM/dd" style="width:200px"></el-date-picker>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="终止日期" prop="endDate">
-                <el-date-picker type="date" v-model="model.endDate" value-format="yyyy/MM/dd" style="width:200px"></el-date-picker>
               </el-form-item>
             </el-col>
           </el-row>
@@ -111,7 +75,8 @@
         return {
           dictMap: {}, // 系统字典
           formVisible: false,
-          queryParams: '',
+          formType: '新增',
+          queryParams: { name: '', dept: '' },
           pageinfo: {
             pageable: {
               pageNumber: 1
@@ -123,27 +88,15 @@
               { required: true, trigger: 'blue', message: '名称不能为空'},
               { max: 256, trigger: 'blur', message: '最大长度255个字符' }
             ],
-            company: [
-              { required: true, trigger: 'blue', message: '供应商不能为空'}
-            ],
-            type: [
-              { required: true, trigger: 'blue', message: '合同类型不能为空'}
-            ],
-            status: [
-              { required: true, trigger: 'blue', message: '合同状态不能为空'}
-            ],
-            startDate: [
-              { required: true, trigger: 'blue', message: '开始日期不能为空'}
-            ],
-            endDate: [
-              { required: true, trigger: 'blue', message: '终止日期不能为空'}
+            dept: [
+              { required: true, trigger: 'blue', message: '部门不能为空'}
             ]
           }
         }
       },
       methods: {
         query: function() {
-          axios.get('/rest/contract/query/' + (this.pageinfo.pageable.pageNumber) + '?params=' + this.queryParams)
+          axios.get('/rest/team/query/' + (this.pageinfo.pageable.pageNumber) + '?name=' + this.queryParams.name + '&dept=' + this.queryParams.dept)
             .then(res => {
               this.pageinfo = res.data
               this.pageinfo.pageable.pageNumber += 1
@@ -156,10 +109,12 @@
         },
         openAdd: function() {
           this.model = {}
+          this.formType = '新增'
           this.formVisible = true
         },
         openEdit: function(record) {
           this.model = { ...record }
+          this.formType = '编辑'
           this.formVisible = true
         },
         cancelForm: function() {
@@ -170,7 +125,7 @@
         save: function() {
           this.$refs.form.validate((valid) => {
             if (valid) {
-              axios.post("/rest/contract", this.model).then(res => {
+              axios.post("/rest/team", this.model).then(res => {
                 this.$notify({
                   title: '成功',
                   message: '保存成功',
@@ -183,8 +138,8 @@
           })
         },
         remove: function(id) {
-          this.$confirm('确定删除该合同', '提示', { type: 'warning' }).then(() => {
-            axios.delete("/rest/contract/" + id).then(res => {
+          this.$confirm('确定删除该小组', '提示', { type: 'warning' }).then(() => {
+            axios.delete("/rest/team/" + id).then(res => {
               if (res.data === DATA_INTEGRITY_ERROR_TIP) {
                 this.$notify({
                   title: '警告',

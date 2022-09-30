@@ -30,10 +30,10 @@
             <template slot-scope="scope">{{dictMap['PERSONNEL_LEVEL'][scope.row.level]}}</template>
           </el-table-column>
           <el-table-column label="所属部门" width="120px">
-            <template slot-scope="scope">{{dictMap['DEPT'][scope.row.dept]}}</template>
+            <template slot-scope="scope">{{dictMap['DEPT'][scope.row.team.dept]}}</template>
           </el-table-column>
           <el-table-column label="所属小组" width="100px">
-            <template slot-scope="scope">{{dictMap['TEAM'][scope.row.team]}}</template>
+            <template slot-scope="scope">{{scope.row.team.name}}</template>
           </el-table-column>
           <el-table-column prop="phone" label="手机号" width="120px"></el-table-column>
           <el-table-column label="人员岗位" width="100px">
@@ -67,12 +67,12 @@
           <el-row>
             <el-col :span="12">
               <el-form-item label="人员编码" prop="code">
-                <el-input v-model="model.code"></el-input>
+                <el-input v-model="model.code" style="width: 200px"></el-input>
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="人员姓名" prop="name">
-                <el-input v-model="model.name"></el-input>
+                <el-input v-model="model.name" style="width: 200px"></el-input>
               </el-form-item>
             </el-col>
           </el-row>
@@ -94,29 +94,25 @@
           </el-row>
           <el-row>
             <el-col :span="12">
-              <el-form-item label="所属部门" prop="dept">
-                <el-select v-model="model.dept">
-                  <el-option v-for="(val, key) in dictMap['DEPT']" :label="val" :value="key" :key="key"></el-option>
-                </el-select>
+              <el-form-item label="手机号" prop="phone">
+                <el-input v-model="model.phone" oninput="value=value.replace(/[^\d]/g, '')" style="width: 200px"></el-input>
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="所属小组" prop="team">
-                <el-select v-model="model.team">
-                  <el-option v-for="(val, key) in dictMap['TEAM']" :label="val" :value="key" :key="key"></el-option>
-                </el-select>
+              <el-form-item label="所属小组" prop="teamId">
+                <el-cascader v-model="model.team.id" expand-trigger="hover" :props="codeSelProps" :options="deptTeams" placeholder="请选择"></el-cascader>
               </el-form-item>
             </el-col>
           </el-row>
           <el-row>
             <el-col :span="12">
               <el-form-item label="开始日期" prop="startDate">
-                <el-date-picker type="date" v-model="model.startDate" value-format="yyyy/MM/dd"></el-date-picker>
+                <el-date-picker type="date" v-model="model.startDate" value-format="yyyy/MM/dd" style="width:200px"></el-date-picker>
               </el-form-item>
             </el-col>
             <el-col :span="12" v-if="model.type !== '1'">
               <el-form-item label="结束日期" prop="endDate">
-                <el-date-picker type="date" v-model="model.endDate" value-format="yyyy/MM/dd"></el-date-picker>
+                <el-date-picker type="date" v-model="model.endDate" value-format="yyyy/MM/dd" style="width:200px"></el-date-picker>
               </el-form-item>
             </el-col>
           </el-row>
@@ -157,13 +153,6 @@
               </el-form-item>
             </el-col>
           </el-row>
-          <el-row>
-            <el-col :span="12">
-              <el-form-item label="手机号" prop="phone">
-                <el-input v-model="model.phone" oninput="value=value.replace(/[^\d]/g, '')"></el-input>
-              </el-form-item>
-            </el-col>
-          </el-row>
         </el-form>
         <div slot="footer" class="dialog-footer">
           <el-button @click.native="cancelForm">取消</el-button>
@@ -180,7 +169,19 @@
     new Vue({
       el: '#app',
       data: function() {
+        const validateTeam = (rule, value, callback) => {
+          if (!this.model.team.id) {
+            return callback(new Error('小组不能为空'))
+          }
+          callback()
+        }
         return {
+          codeSelProps: {
+            label: 'name',
+            value: 'id',
+            children: 'children'
+          },
+          deptTeams: [], // 部门呢小组数据
           dictMap: {}, // 系统字典
           personnelMap: {}, // 人员字典
           formVisible: false,
@@ -190,7 +191,7 @@
               pageNumber: 1
             }
           },
-          model: {},
+          model: { team: {}},
           formRules: {
             code: [
               { required: true, trigger: 'blue', message: '编码不能为空'},
@@ -217,8 +218,8 @@
               { max: 11, trigger: 'blur', message: '手机号长度不对'},
               { min: 11, trigger: 'blur', message: '手机号长度不对'}
             ],
-            team: [
-              { required: true, trigger: 'blue', message: '所属小组不能为空'}
+            teamId : [
+              { required: true, trigger: 'blue', validator: validateTeam }
             ]
           }
         }
@@ -231,9 +232,22 @@
               this.pageinfo.pageable.pageNumber += 1
           })
         },
-        loadDict: function() {
+        loadDeptTeams() {
           axios.get('/rest/dict/load').then(res => {
             this.dictMap = res.data
+            axios.get('/rest/team/load').then(res => {
+              this.deptTeams = []
+              const deptTeamMap = {}
+              res.data.forEach(team => {
+                if (!deptTeamMap[team.dept]) {
+                  deptTeamMap[team.dept] = []
+                }
+                deptTeamMap[team.dept].push({id: team.id, name: team.name})
+              })
+              Object.keys(deptTeamMap).forEach(deptCode => {
+                this.deptTeams.push({id: deptCode, name: this.dictMap['DEPT'][deptCode], children: deptTeamMap[deptCode]})
+              })
+            })
           })
         },
         loadPersonnel: function() {
@@ -245,7 +259,7 @@
           })
         },
         openAdd: function() {
-          this.model = {}
+          this.model = {  team: {}}
           this.formVisible = true
         },
         openEdit: function(record) {
@@ -254,12 +268,12 @@
         },
         cancelForm: function() {
           this.$refs.form.resetFields()
-          this.model = {}
           this.formVisible = false
         },
         save: function() {
           this.$refs.form.validate((valid) => {
             if (valid) {
+              this.model.team.id = this.model.team.id[1]
               axios.post("/rest/personnel", this.model).then(res => {
                 this.$notify({
                   title: '成功',
@@ -298,7 +312,7 @@
         }
       },
       mounted() {
-        this.loadDict()
+        this.loadDeptTeams()
         this.loadPersonnel()
         this.query()
       }

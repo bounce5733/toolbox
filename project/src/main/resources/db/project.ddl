@@ -1,4 +1,4 @@
-CREATE TABLE team (id int auto_increment PRIMARY KEY, name text NOT NULL);
+CREATE TABLE team (id int auto_increment PRIMARY KEY, name text NOT NULL, dept varchar(32));
 
 CREATE TABLE contract (id int auto_increment PRIMARY KEY, name text NOT NULL, type varchar(32),
     start_date char(10), end_date char(10), company varchar(32), status varchar(32));
@@ -17,16 +17,16 @@ CREATE TABLE process (id int auto_increment PRIMARY KEY, subproject_id int NOT N
     FOREIGN KEY (subproject_id) REFERENCES subproject(id));
 
 CREATE TABLE personnel (id int auto_increment PRIMARY KEY, code varchar(32) NOT NULL, name text NOT NULL,
-    company varchar(32), level varchar(32), type varchar(32), phone text, dept varchar(32),
-    position varchar(32), charge int, status varchar(32), start_date char(10), end_date char(10));
+    company varchar(32), level varchar(32), type varchar(32), phone text, dept varchar(32), team_id int,
+    position varchar(32), charge int, status varchar(32), start_date char(10), end_date char(10),
+    FOREIGN KEY (team_id) REFERENCES team(id));
 
 CREATE TABLE resource (id int auto_increment PRIMARY KEY, subproject_id int, personnel_id int,
     current_ration double, next_subproject_id int, prev_subproject_id int, start_date char(10), end_date char(10),
     FOREIGN KEY (personnel_id) REFERENCES personnel(id),
     FOREIGN KEY (subproject_id) REFERENCES subproject(id),
     FOREIGN KEY (next_subproject_id) REFERENCES subproject(id),
-    FOREIGN KEY (prev_subproject_id) REFERENCES subproject(id)
-    );
+    FOREIGN KEY (prev_subproject_id) REFERENCES subproject(id));
 
 CREATE TABLE risk (id int auto_increment PRIMARY KEY, subproject_id int NOT NULL, responsible_personnel_id int,
     measure text, type varchar(32), desc text,

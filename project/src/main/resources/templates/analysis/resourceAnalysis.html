@@ -16,9 +16,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="小组">
-            <el-select v-model="params.team" clearable>
-              <el-option v-for="(val, key) in dictMap['TEAM']" :label="val" :value="key" :key="key"></el-option>
-            </el-select>
+            <el-cascader v-model="params.team" expand-trigger="hover" :props="codeSelProps" :options="deptTeams" placeholder="请选择" clearable></el-cascader>
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="query" icon="el-icon-search">查询</el-button>
@@ -45,10 +43,10 @@
             <template slot-scope="scope">{{dictMap['DOMAIN'][projectMap[scope.row.subProjectId].domain]}}</template>
           </el-table-column>
           <el-table-column label="部门">
-            <template slot-scope="scope">{{dictMap['DEPT'][personnelMap[scope.row.personnelId].dept]}}</template>
+            <template slot-scope="scope">{{dictMap['DEPT'][personnelMap[scope.row.personnelId].team.dept]}}</template>
           </el-table-column>
           <el-table-column label="小组">
-            <template slot-scope="scope">{{dictMap['TEAM'][personnelMap[scope.row.personnelId].team]}}</template>
+            <template slot-scope="scope">{{personnelMap[scope.row.personnelId].team.name}}</template>
           </el-table-column>
           <el-table-column label="进入时间" prop="startDate" width="120px"></el-table-column>
           <el-table-column label="释放时间" prop="endDate" width="120px"></el-table-column>
@@ -71,6 +69,12 @@
 
       data: function() {
         return {
+          codeSelProps: {
+            label: 'name',
+            value: 'id',
+            children: 'children'
+          },
+          deptTeams: [], // 部门呢小组数据
           dictMap: {}, // 系统字典
           personnelMap: {}, // 人员字典
           projectMap: {}, // 子项目id->主项目映射
@@ -118,132 +122,145 @@
         query() {
           axios.get('/rest/dict/load').then(res => {
             this.dictMap = res.data
-            axios.get('/rest/project/load').then(res => {
-              res.data.forEach(project =>  {
-                project.subProjects.forEach(subProject =>  {
-                  this.projectMap[subProject.id] = { id: subProject.id, code: project.code, name: project.name, domain: project.domain,
-                  issue: project.issue, onlineDate: project.onlineDate, system: subProject.system }
-                })
+            axios.get('/rest/team/load').then(res => {
+              this.deptTeams = []
+              const deptTeamMap = {}
+              res.data.forEach(team => {
+                if (!deptTeamMap[team.dept]) {
+                  deptTeamMap[team.dept] = []
+                }
+                deptTeamMap[team.dept].push({id: team.id, name: team.name})
               })
-              axios.get('/rest/personnel/load').then(res => {
+              Object.keys(deptTeamMap).forEach(deptCode => {
+                this.deptTeams.push({id: deptCode, name: this.dictMap['DEPT'][deptCode], children: deptTeamMap[deptCode]})
+              })
+              axios.get('/rest/project/load').then(res => {
+                res.data.forEach(project =>  {
+                  project.subProjects.forEach(subProject =>  {
+                    this.projectMap[subProject.id] = { id: subProject.id, code: project.code, name: project.name, domain: project.domain,
+                    issue: project.issue, onlineDate: project.onlineDate, system: subProject.system }
+                  })
+                })
+                axios.get('/rest/personnel/load').then(res => {
                   res.data.forEach(item =>  {
                     this.personnelMap[item.id] = item
                   })
-                axios.get('/rest/subproject/load').then(res => {
-                  this.projectResourcesMap = {}
-                  const subProjectMap = {}
-                  const projectNames = []
-                  res.data.forEach(subProject => {
-                    // 过滤出查询条件数据
-                    let pass = true
-                    let teamMatchResources = []
-                    if (this.params.team  && this.params.team.trim().length > 0) {
-                      pass = false
-                      subProject.resources.forEach(resource => {
-                        if (this.personnelMap[resource.personnelId].team == this.params.team) {
-                          console.log('人员：' + this.personnelMap[resource.personnelId].name)
-                          console.log('小组：' + this.dictMap['TEAM'][this.personnelMap[resource.personnelId].team])
-                          teamMatchResources.push(resource)
-                        }
-                      })
-                    }
-                    if (teamMatchResources.length > 0) {
-                      pass = true
-                      subProject.resources = teamMatchResources
-                    }
-                    let deptMatchResources = []
-                    if (this.params.dept && this.params.dept.trim().length > 0) {
-                      pass = false
-                      subProject.resources.forEach(resource => {
-                        if (this.personnelMap[resource.personnelId].dept == this.params.dept) {
-                          deptMatchResources.push(resource)
-                        }
-                      })
-                    }
-                    if (deptMatchResources.length > 0) {
-                      pass = true
-                      subProject.resources = deptMatchResources
-                    }
-                    console.log('subproject info:' + JSON.stringify(subProject))
-                    if (pass) {
-                      const subProjectName = this.projectMap[subProject.id].name + "-" + this.dictMap['SYSTEM'][this.projectMap[subProject.id].system]
-                      projectNames.push(subProjectName)
-                      if (!subProjectMap[subProjectName]) {
-                        subProjectMap[subProjectName] = {}
+                  axios.get('/rest/subproject/load').then(res => {
+                    this.projectResourcesMap = {}
+                    const subProjectMap = {}
+                    const projectNames = []
+                    res.data.forEach(subProject => {
+                      // 过滤出查询条件数据
+                      let pass = true
+                      let teamMatchResources = []
+                      if (this.params.team && this.params.team.length) {
+                        pass = false
+                        subProject.resources.forEach(resource => {
+                          if (this.personnelMap[resource.personnelId].team.id == this.params.team[1]) {
+                            console.log('人员：' + this.personnelMap[resource.personnelId].name)
+                            console.log('小组：' + this.personnelMap[resource.personnelId].team.name)
+                            teamMatchResources.push(resource)
+                          }
+                        })
                       }
-                      subProject.processes.forEach(process =>  {
-                        if (!subProjectMap[subProjectName][process.phase]) {
-                          subProjectMap[subProjectName][process.phase] = {}
+                      if (teamMatchResources.length > 0) {
+                        pass = true
+                        subProject.resources = teamMatchResources
+                      }
+                      let deptMatchResources = []
+                      if (this.params.dept && this.params.dept.trim().length > 0) {
+                        pass = false
+                        subProject.resources.forEach(resource => {
+                          if (this.personnelMap[resource.personnelId].team.dept == this.params.dept) {
+                            deptMatchResources.push(resource)
+                          }
+                        })
+                      }
+                      if (deptMatchResources.length > 0) {
+                        pass = true
+                        subProject.resources = deptMatchResources
+                      }
+                      console.log('subproject info:' + JSON.stringify(subProject))
+                      if (pass) {
+                        const subProjectName = this.projectMap[subProject.id].name + "-" + this.dictMap['SYSTEM'][this.projectMap[subProject.id].system]
+                        projectNames.push(subProjectName)
+                        if (!subProjectMap[subProjectName]) {
+                          subProjectMap[subProjectName] = {}
                         }
-                        subProjectMap[subProjectName][process.phase].reallyStartDate = process.reallyStartDate ? process.reallyStartDate : ''
-                        subProjectMap[subProjectName][process.phase].reallyEndDate = process.reallyEndDate ? process.reallyEndDate : ''
-                        subProjectMap[subProjectName][process.phase].currentProcess = process.currentProcess ? process.currentProcess : 0
-                      })
-                      subProject.resources.forEach(resource => {
-                        if (!this.projectResourcesMap[subProjectName]) {
-                          this.projectResourcesMap[subProjectName] = []
-                        }
-                        console.log('resource:' + JSON.stringify(resource))
-                        this.projectResourcesMap[subProjectName].push(resource)
-                      })
-                    }
-                  })
-                  const projectPhaseNames = []
-                  const seriesDataes = []
-                  const sortedProjectPhases = Object.keys(this.dictMap['PROJECT_STAGE']).sort()
-                  sortedProjectPhases.forEach(phaseCode => {
-                    projectPhaseNames.push(this.dictMap['PROJECT_STAGE'][phaseCode])
-                    const seriesData = { startData: [], endData: [], name: this.dictMap['PROJECT_STAGE'][phaseCode], currentProcess: []}
-                    Object.keys(subProjectMap).forEach(projectName => {
-                      if (subProjectMap[projectName][phaseCode]) {
-                        seriesData.startData.push(subProjectMap[projectName][phaseCode].reallyStartDate)
-                        seriesData.endData.push(subProjectMap[projectName][phaseCode].reallyEndDate)
-                        seriesData.currentProcess.push(subProjectMap[projectName][phaseCode].currentProcess)
-                      } else {
-                        seriesData.startData.push('')
-                        seriesData.endData.push('')
-
+                        subProject.processes.forEach(process =>  {
+                          if (!subProjectMap[subProjectName][process.phase]) {
+                            subProjectMap[subProjectName][process.phase] = {}
+                          }
+                          subProjectMap[subProjectName][process.phase].reallyStartDate = process.reallyStartDate ? process.reallyStartDate : ''
+                          subProjectMap[subProjectName][process.phase].reallyEndDate = process.reallyEndDate ? process.reallyEndDate : ''
+                          subProjectMap[subProjectName][process.phase].currentProcess = process.currentProcess ? process.currentProcess : 0
+                        })
+                        subProject.resources.forEach(resource => {
+                          if (!this.projectResourcesMap[subProjectName]) {
+                            this.projectResourcesMap[subProjectName] = []
+                          }
+                          console.log('resource:' + JSON.stringify(resource))
+                          this.projectResourcesMap[subProjectName].push(resource)
+                        })
                       }
                     })
-                    seriesDataes.push(seriesData)
-                  })
-                  const serieses = []
-                  seriesDataes.forEach((data, index) => {
-                    serieses.push(
-                      { 
-                        name: '起始日期隐藏线', 
-                        type: 'bar',
-                        stack: '总量',
-                        itemStyle: {
-                          normal: {
-                            color: 'transparent'
-                          }
-                        },
-                        data: data.startData
-                      }
-                    )
-                    serieses.push(
-                      { 
-                        name: data.name, 
-                        type: 'bar',
-                        stack: '总量',
-                        data: data.endData,
-                        label: {
-                          normal: {
-                            show: true,
-                            position: 'inside',
-                            formatter: function(params) {
-                              return params.seriesName + data.currentProcess[projectNames.indexOf(params.name)] + '%'
+                    const projectPhaseNames = []
+                    const seriesDataes = []
+                    const sortedProjectPhases = Object.keys(this.dictMap['PROJECT_STAGE']).sort()
+                    sortedProjectPhases.forEach(phaseCode => {
+                      projectPhaseNames.push(this.dictMap['PROJECT_STAGE'][phaseCode])
+                      const seriesData = { startData: [], endData: [], name: this.dictMap['PROJECT_STAGE'][phaseCode], currentProcess: []}
+                      Object.keys(subProjectMap).forEach(projectName => {
+                        if (subProjectMap[projectName][phaseCode]) {
+                          seriesData.startData.push(subProjectMap[projectName][phaseCode].reallyStartDate)
+                          seriesData.endData.push(subProjectMap[projectName][phaseCode].reallyEndDate)
+                          seriesData.currentProcess.push(subProjectMap[projectName][phaseCode].currentProcess)
+                        } else {
+                          seriesData.startData.push('')
+                          seriesData.endData.push('')
+
+                        }
+                      })
+                      seriesDataes.push(seriesData)
+                    })
+                    const serieses = []
+                    seriesDataes.forEach((data, index) => {
+                      serieses.push(
+                        { 
+                          name: '起始日期隐藏线', 
+                          type: 'bar',
+                          stack: '总量',
+                          itemStyle: {
+                            normal: {
+                              color: 'transparent'
+                            }
+                          },
+                          data: data.startData
+                        }
+                      )
+                      serieses.push(
+                        { 
+                          name: data.name, 
+                          type: 'bar',
+                          stack: '总量',
+                          data: data.endData,
+                          label: {
+                            normal: {
+                              show: true,
+                              position: 'inside',
+                              formatter: function(params) {
+                                return params.seriesName + data.currentProcess[projectNames.indexOf(params.name)] + '%'
+                              }
                             }
                           }
                         }
-                      }
-                    )
+                      )
+                    })
+                    this.option.legend.data = projectPhaseNames
+                    this.option.yAxis.data = projectNames
+                    this.option.series = serieses
+                    this.myChart.setOption(this.option)
                   })
-                  this.option.legend.data = projectPhaseNames
-                  this.option.yAxis.data = projectNames
-                  this.option.series = serieses
-                  this.myChart.setOption(this.option)
                 })
               })
             })

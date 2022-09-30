@@ -40,7 +40,7 @@ public class ResourceRest {
     public ResponseEntity<Page<Map<String, Object>>> query(@PathVariable("page") int page, @RequestBody Map<String, String> params) {
         Pageable pageParam = PageRequest.of(page - 1, Constant.PAGE_SIZE);
         String dept = StringUtils.isBlank(params.get("dept")) ? null : params.get("dept");
-        String team = StringUtils.isBlank(params.get("team")) ? null : params.get("team");
+        Integer team = StringUtils.isBlank(params.get("team")) ? null : Integer.valueOf(params.get("team"));
         String personnelName = StringUtils.isBlank(params.get("personnelName")) ? null : params.get("personnelName");
         String endMonth = StringUtils.isBlank(params.get("endMonth")) ? null : params.get("endMonth");
         String domain = StringUtils.isBlank(params.get("domain")) ? null : params.get("domain");

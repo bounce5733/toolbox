@@ -48,6 +48,7 @@
           dictMap: {}, // 系统字典
           personnelMap: {}, // 人员字典
           projectMap: {}, // 子项目id->主项目映射
+          teamMap: {}, // 小组字典
           params: { dimension: '0' },
           // --------------表格--------------
           tableCols: [], // 表格列数据
@@ -98,156 +99,162 @@
         query() {
           axios.get('/rest/dict/load').then(res => {
             this.dictMap = res.data
-            axios.get('/rest/personnel/load').then(res => {
-              res.data.forEach(item =>  {
-                this.personnelMap[item.id] = item
+            axios.get('/rest/team/load').then(res => {
+              this.teamMap = {}
+              res.data.forEach(team => {
+                this.teamMap[team.id] = team
               })
-              axios.get('/rest/project/load').then(res => {
-                res.data.forEach(project =>  {
-                  project.subProjects.forEach(subProject =>  {
-                    this.projectMap[subProject.id] = { id: subProject.id, code: project.code, name: project.name, domain: project.domain,
-                    issue: project.issue, onlineDate: project.onlineDate, system: subProject.system }
-                  })
+              axios.get('/rest/personnel/load').then(res => {
+                res.data.forEach(item =>  {
+                  this.personnelMap[item.id] = item
                 })
-                axios.get('/rest/resource/load').then(res => {
-                  console.log('resources:' + JSON.stringify(res.data))
-                  // ------------ 表格数据域 ------------
-                  this.tableCols = []
-                  this.tableDatas = []
-                  let firstRowKey = ''
-                  if (this.params.dimension === '0') {
-                    firstRowKey = '小组'
-                  }
-                  if (this.params.dimension === '1') {
-                    firstRowKey = '部门'
-                  }
-                  if (this.params.dimension === '2') {
-                    firstRowKey = '条线'
-                  }
-                  this.tableCols.push(firstRowKey)
-                  // ------------ 图表数据域 ------------
-                  const dateSet = new Set() // 记录所有小组出现的时间
-                  const chartTmpData = {} // 图表数据中间容器
-                  const chartData = {} // 图表数据容器
-                  const serieses = []
-                  let sortedNames = []
-                  let dataMapKey = ''
-                  const dataMap = {}
-                  res.data.forEach(resource => {
-                    const person = this.personnelMap[resource.personnelId]
-                    if (this.params.dimension === '0') {
-                      dataMapKey = person.team
-                      this.option.title.text = '小组研发杠杆'
-                    }
-                    if (this.params.dimension === '1') {
-                      dataMapKey = person.dept
-                      this.option.title.text = '部门研发杠杆'
-                    }
-                    if (this.params.dimension === '2') {
-                      dataMapKey = this.projectMap[resource.subProjectId].domain
-                      this.option.title.text = '条线研发杠杆'
-                    }
-                    const startDate = resource.startDate.substr(0, 7) // 截取年月
-                    let isDatePass = true // 日期是否符合判断
-                    if (this.params.trendStart) {
-                      if (startDate < this.params.trendStart) {
-                        isDatePass = false
-                      }
-                    }
-                    if (this.params.trendEnd) {
-                      if (startDate > this.params.trendEnd) {
-                        isDatePass = false
-                      }
-                    }
-                    if (isDatePass) {
-                      if (!dataMap[dataMapKey]) {
-                        dataMap[dataMapKey] = {}
-                      }
-                      if (!dataMap[dataMapKey][startDate]) {
-                        dataMap[dataMapKey][startDate] = {}
-                      }
-                      dataMap[dataMapKey][startDate][person.type] = dataMap[dataMapKey][startDate][person.type] ? dataMap[dataMapKey][startDate][person.type] + 1 : 1
-                    }
-                  })
-                  console.log('dataMap:' + JSON.stringify(dataMap))
-                  Object.keys(dataMap).forEach(key => {
-                    if (!chartTmpData[key]) {
-                      chartTmpData[key] = {}
-                    }
-                    const dates = Object.keys(dataMap[key]).sort()
-                    dates.forEach(date => {
-                      dateSet.add(date)
-                      let rate = 0
-                      if (dataMap[key][date]['1'] !== undefined && dataMap[key][date]['2'] !== undefined) {
-                        rate = dataMap[key][date]['2'] / dataMap[key][date]['1']
-                      }
-                      chartTmpData[key][date] = rate
+                axios.get('/rest/project/load').then(res => {
+                  res.data.forEach(project =>  {
+                    project.subProjects.forEach(subProject =>  {
+                      this.projectMap[subProject.id] = { id: subProject.id, code: project.code, name: project.name, domain: project.domain,
+                      issue: project.issue, onlineDate: project.onlineDate, system: subProject.system }
                     })
                   })
-                  const sortDateArr = Array.from(dateSet).sort()
-                  const sortedTmpData = Object.keys(chartTmpData).sort()
-                  sortedTmpData.forEach(key => {
-                    const teamDates = Object.keys(chartTmpData[key]).sort
-                    const vals = []
+                  axios.get('/rest/resource/load').then(res => {
+                    console.log('resources:' + JSON.stringify(res.data))
+                    // ------------ 表格数据域 ------------
+                    this.tableCols = []
+                    this.tableDatas = []
+                    let firstRowKey = ''
+                    if (this.params.dimension === '0') {
+                      firstRowKey = '小组'
+                    }
+                    if (this.params.dimension === '1') {
+                      firstRowKey = '部门'
+                    }
+                    if (this.params.dimension === '2') {
+                      firstRowKey = '条线'
+                    }
+                    this.tableCols.push(firstRowKey)
+                    // ------------ 图表数据域 ------------
+                    const dateSet = new Set() // 记录所有小组出现的时间
+                    const chartTmpData = {} // 图表数据中间容器
+                    const chartData = {} // 图表数据容器
+                    const serieses = []
+                    let sortedNames = []
+                    let dataMapKey = ''
+                    const dataMap = {}
+                    res.data.forEach(resource => {
+                      const person = this.personnelMap[resource.personnelId]
+                      if (this.params.dimension === '0') {
+                        dataMapKey = person.team.id
+                        this.option.title.text = '小组研发杠杆'
+                      }
+                      if (this.params.dimension === '1') {
+                        dataMapKey = person.team.dept
+                        this.option.title.text = '部门研发杠杆'
+                      }
+                      if (this.params.dimension === '2') {
+                        dataMapKey = this.projectMap[resource.subProjectId].domain
+                        this.option.title.text = '条线研发杠杆'
+                      }
+                      const startDate = resource.startDate.substr(0, 7) // 截取年月
+                      let isDatePass = true // 日期是否符合判断
+                      if (this.params.trendStart) {
+                        if (startDate < this.params.trendStart) {
+                          isDatePass = false
+                        }
+                      }
+                      if (this.params.trendEnd) {
+                        if (startDate > this.params.trendEnd) {
+                          isDatePass = false
+                        }
+                      }
+                      if (isDatePass) {
+                        if (!dataMap[dataMapKey]) {
+                          dataMap[dataMapKey] = {}
+                        }
+                        if (!dataMap[dataMapKey][startDate]) {
+                          dataMap[dataMapKey][startDate] = {}
+                        }
+                        dataMap[dataMapKey][startDate][person.type] = dataMap[dataMapKey][startDate][person.type] ? dataMap[dataMapKey][startDate][person.type] + 1 : 1
+                      }
+                    })
+                    console.log('dataMap:' + JSON.stringify(dataMap))
+                    Object.keys(dataMap).forEach(key => {
+                      if (!chartTmpData[key]) {
+                        chartTmpData[key] = {}
+                      }
+                      const dates = Object.keys(dataMap[key]).sort()
+                      dates.forEach(date => {
+                        dateSet.add(date)
+                        let rate = 0
+                        if (dataMap[key][date]['1'] !== undefined && dataMap[key][date]['2'] !== undefined) {
+                          rate = dataMap[key][date]['2'] / dataMap[key][date]['1']
+                        }
+                        chartTmpData[key][date] = rate
+                      })
+                    })
+                    const sortDateArr = Array.from(dateSet).sort()
+                    const sortedTmpData = Object.keys(chartTmpData).sort()
+                    sortedTmpData.forEach(key => {
+                      const teamDates = Object.keys(chartTmpData[key]).sort
+                      const vals = []
+                      sortDateArr.forEach(date => {
+                        if (chartTmpData[key][date]) {
+                          vals.push(chartTmpData[key][date])
+                        } else {
+                          vals.push(0)
+                        }
+                      })
+                      chartData[key] = vals
+                    })
+                    console.log('chartData:' + JSON.stringify(chartData))
+                    sortedTmpData.forEach(key => {
+                      let dimensionName = ''
+                      if (this.params.dimension === '0') {
+                        dimensionName = this.teamMap[key].name
+                      }
+                      if (this.params.dimension === '1') {
+                        dimensionName = this.dictMap['DEPT'][key]
+                      }
+                      if (this.params.dimension === '2') {
+                        dimensionName = this.dictMap['DOMAIN'][key]
+                      }
+                      const series = {
+                        name: dimensionName,
+                        type: 'line',
+                        data: chartData[key]
+                      }
+                      serieses.push(series)
+                      const tableData = {}
+                      tableData[firstRowKey] = dimensionName
+                      sortDateArr.forEach((date, index) => {
+                        tableData[date] = chartData[key][index]
+                      })
+                      this.tableDatas.push(tableData)
+                    })
                     sortDateArr.forEach(date => {
-                      if (chartTmpData[key][date]) {
-                        vals.push(chartTmpData[key][date])
-                      } else {
-                        vals.push(0)
+                      this.tableCols.push(date)
+                    })
+                    console.log('sortedTmpData:' + JSON.stringify(sortedTmpData))
+                    console.log('sortDateArr:' + JSON.stringify(sortDateArr))
+                    console.log('serieses:' + JSON.stringify(serieses))
+                    console.log('this.tableDatas:' + JSON.stringify(this.tableDatas))
+                    console.log('this.tableCols:' + JSON.stringify(this.tableCols))
+                    sortedTmpData.forEach(key => {
+                      let dimensionName = ''
+                      if (this.params.dimension === '0') {
+                        dimensionName = this.teamMap[key].name
                       }
+                      if (this.params.dimension === '1') {
+                        dimensionName = this.dictMap['DEPT'][key]
+                      }
+                      if (this.params.dimension === '2') {
+                        dimensionName = this.dictMap['DOMAIN'][key]
+                      }
+                      sortedNames.push(dimensionName)
                     })
-                    chartData[key] = vals
+                    this.option.legend.data = sortedNames
+                    this.option.xAxis.data = sortDateArr
+                    this.option.series = serieses
+                    this.myChart.setOption(this.option, true)
                   })
-                  console.log('chartData:' + JSON.stringify(chartData))
-                  sortedTmpData.forEach(key => {
-                    let dimensionName = ''
-                    if (this.params.dimension === '0') {
-                      dimensionName = this.dictMap['TEAM'][key]
-                    }
-                    if (this.params.dimension === '1') {
-                      dimensionName = this.dictMap['DEPT'][key]
-                    }
-                    if (this.params.dimension === '2') {
-                      dimensionName = this.dictMap['DOMAIN'][key]
-                    }
-                    const series = {
-                      name: dimensionName,
-                      type: 'line',
-                      data: chartData[key]
-                    }
-                    serieses.push(series)
-                    const tableData = {}
-                    tableData[firstRowKey] = dimensionName
-                    sortDateArr.forEach((date, index) => {
-                      tableData[date] = chartData[key][index]
-                    })
-                    this.tableDatas.push(tableData)
-                  })
-                  sortDateArr.forEach(date => {
-                    this.tableCols.push(date)
-                  })
-                  console.log('sortedTmpData:' + JSON.stringify(sortedTmpData))
-                  console.log('sortDateArr:' + JSON.stringify(sortDateArr))
-                  console.log('serieses:' + JSON.stringify(serieses))
-                  console.log('this.tableDatas:' + JSON.stringify(this.tableDatas))
-                  console.log('this.tableCols:' + JSON.stringify(this.tableCols))
-                  sortedTmpData.forEach(key => {
-                    let dimensionName = ''
-                    if (this.params.dimension === '0') {
-                      dimensionName = this.dictMap['TEAM'][key]
-                    }
-                    if (this.params.dimension === '1') {
-                      dimensionName = this.dictMap['DEPT'][key]
-                    }
-                    if (this.params.dimension === '2') {
-                      dimensionName = this.dictMap['DOMAIN'][key]
-                    }
-                    sortedNames.push(dimensionName)
-                  })
-                  this.option.legend.data = sortedNames
-                  this.option.xAxis.data = sortDateArr
-                  this.option.series = serieses
-                  this.myChart.setOption(this.option, true)
                 })
               })
             })

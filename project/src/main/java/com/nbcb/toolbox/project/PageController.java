@@ -39,6 +39,12 @@ public class PageController {
         return "resource/contract";
     }
 
+    @RequestMapping("/resource/team")
+    public String resourceTeam(Model model) {
+        return "resource/team";
+    }
+
+
     @RequestMapping("/project/create")
     public String projectCreate(Model model) {
         return "project/create";

@@ -16,9 +16,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="小组">
-            <el-select v-model="params.team" clearable>
-              <el-option v-for="(val, key) in dictMap['TEAM']" :label="val" :value="key" :key="key"></el-option>
-            </el-select>
+            <el-cascader v-model="params.team" expand-trigger="hover" :props="codeSelProps" :options="deptTeams" placeholder="请选择" clearable></el-cascader>
           </el-form-item>
           <el-form-item label="条线">
             <el-select v-model="params.domain" clearable>
@@ -70,7 +68,13 @@
       el: '#app',
       data: function() {
         return {
+          codeSelProps: {
+            label: 'name',
+            value: 'id',
+            children: 'children'
+          },
           dictMap: {}, // 系统字典
+          deptTeams: [], // 部门呢小组数据
           personnelMap: {}, // 人员字典
           projectMap: {}, // 子项目id->主项目映射
           nextSubProjectMap: { 1: '是', 0: '否' }, // 后续下面选择框数据
@@ -84,6 +88,7 @@
       },
       methods: {
         async query() {
+          this.params.team = this.params.team ? this.params.team[1] : undefined
           this.loadProject().then(axios.post('/rest/resource/query/' + this.pageinfo.pageable.pageNumber, this.params)
             .then(res => {
               this.pageinfo = res.data
@@ -94,9 +99,22 @@
           this.pageinfo.pageable.pageNumber = pageNumber
           this.query()
         },
-        loadDict() {
+        loadDeptTeams() {
           axios.get('/rest/dict/load').then(res => {
             this.dictMap = res.data
+            axios.get('/rest/team/load').then(res => {
+              this.deptTeams = []
+              const deptTeamMap = {}
+              res.data.forEach(team => {
+                if (!deptTeamMap[team.dept]) {
+                  deptTeamMap[team.dept] = []
+                }
+                deptTeamMap[team.dept].push({id: team.id, name: team.name})
+              })
+              Object.keys(deptTeamMap).forEach(deptCode => {
+                this.deptTeams.push({id: deptCode, name: this.dictMap['DEPT'][deptCode], children: deptTeamMap[deptCode]})
+              })
+            })
           })
         },
         loadPersonnel() {
@@ -119,7 +137,7 @@
         }
       },
       mounted() {
-        this.loadDict()
+        this.loadDeptTeams()
         this.loadPersonnel()
         this.query()
       }

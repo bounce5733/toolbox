@@ -40,11 +40,9 @@ public class Personnel {
 
     private String phone;
 
-    @Column(length = 32)
-    private String team;
-
-    @Column(length = 32)
-    private String dept;
+    @OneToOne(cascade = CascadeType.DETACH)
+    @JoinColumn(name = "team_id", referencedColumnName = "id")
+    private Team team;
 
     @Column(length = 32)
     private String position;
