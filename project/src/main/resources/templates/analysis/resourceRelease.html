@@ -43,7 +43,7 @@
           </el-form-item>
         </el-row>
       </el-form>
-      <el-table :data="pageinfo.content" highlight-current-row border style="width:100%">
+      <el-table :data="pageinfo.content" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
         <el-table-column label="人员姓名" width="200px" prop="PERSONNEL_NAME"> </el-table-column>
         <el-table-column label="人员类别" width="200px" prop="PERSONNEL_TYPE"></el-table-column>
         <el-table-column label="人员级别" width="200px" prop="PERSONNEL_LEVEL"></el-table-column>

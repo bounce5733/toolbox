@@ -15,12 +15,13 @@
               <el-button type="primary" @click="openAddDicType">新增类型</el-button>
             </el-form-item>
           </el-form>
-          <el-table :data="dicTypes" @current-change="dicTypeChange" highlight-current-row border height="620" style="width:100%">
+          <el-table :data="dicTypes" @current-change="dicTypeChange" highlight-current-row border height="620" style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
             <el-table-column prop="code" label="编码"></el-table-column>
             <el-table-column prop="name" label="名称"></el-table-column>
-            <el-table-column align="center" label="操作" width="100">
+            <el-table-column align="center" label="操作" width="150">
               <template slot-scope="scope">
                 <el-button-group>
+                  <el-button type="primary" @click="openEditDicType(scope.row)" size="small">编辑</el-button>
                   <el-button type="danger" @click="removeDicType(scope.row.code)" size="small">删除</el-button>
                 </el-button-group>
               </template>
@@ -33,12 +34,13 @@
               <el-button type="primary" :disabled="dicType.code === undefined" @click="openAddDict">新增字典</el-button>
             </el-form-item>
           </el-form>
-          <el-table :data="dicts" highlight-current-row border height="620" style="width:100%">
+          <el-table :data="dicts" highlight-current-row border height="620" style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
             <el-table-column prop="code" label="代码" width="260"></el-table-column>
             <el-table-column prop="name" label="名称" width="260"></el-table-column>
-            <el-table-column align="center" label="操作" width="100">
+            <el-table-column align="center" label="操作" width="150">
               <template slot-scope="scope">
                 <el-button-group>
+                  <el-button type="primary" size="small" @click="openEditDict(scope.row)">编辑</el-button>
                   <el-button type="danger" size="small" @click="removeDict(scope.row.id)">删除</el-button>
                 </el-button-group>
               </template>
@@ -46,12 +48,12 @@
           </el-table>
         </el-col>
       </el-row>
-      <el-dialog title="新增类型" width="50%" :visible.sync="dicTypeVisible">
+      <el-dialog :title="formType + '类型'" width="50%" :visible.sync="dicTypeVisible">
         <el-form :model="dicType" ref="dicTypeForm" :rules="dicTypeRules" label-width="100px">
             <el-row>
               <el-col :span="12">
                 <el-form-item label="编码" prop="code">
-                  <el-input v-model="dicType.code"></el-input>
+                  <el-input v-model="dicType.code" :disabled="formType === '编辑' ? true : false"></el-input>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
@@ -66,12 +68,12 @@
           <el-button type="primary" @click.native="saveDicType">保存</el-button>
         </div>
       </el-dialog>
-      <el-dialog title="新增字典" width="50%" :visible.sync="dictVisible">
+      <el-dialog :title="formType + '字典'" width="50%" :visible.sync="dictVisible">
         <el-form :model="dict" ref="dictForm" :rules="dictRules" label-width="100px">
           <el-row>
             <el-col :span="12">
               <el-form-item label="编码" prop="code">
-                <el-input v-model="dict.code"></el-input>
+                <el-input v-model="dict.code" :disabled="formType === '编辑' ? true : false"></el-input>
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -97,10 +99,13 @@
       data: function() {
         // 验证字典类型编码
         const validateTypeCode = (rule, value, callback) => {
+          if (this.formType !== '新增') {
+            callback()
+          }
           if (this.dicType.code === undefined || this.dicType.code.trim().length === 0) {
             return callback(new Error('字典类型编码不能为空'))
           }
-          // 校验唯一
+           // 校验唯一
           let isUnion = true
           const codeVal = this.dicType.code.trim()
           this.dicTypes.forEach(item => {
@@ -114,6 +119,7 @@
           callback()
         }
         return {
+          formType: '新增', // 表单类型，用于dialog标题与校验判断
           dicTypeVisible: false,
           dicTypes: [],
           dicType: {},
@@ -150,6 +156,12 @@
         },
         openAddDicType: function() {
           this.dicType = {}
+          this.formType = '新增'
+          this.dicTypeVisible = true
+        },
+        openEditDicType: function(dictType) {
+          this.dicType = { ...dictType }
+          this.formType = '编辑'
           this.dicTypeVisible = true
         },
         cancelDicTypeForm: function() {
@@ -196,6 +208,12 @@
         },
         openAddDict: function() {
           this.dict = { type: this.dicType.code }
+          this.formType = '新增'
+          this.dictVisible = true
+        },
+        openEditDict: function(dict) {
+          this.dict = { ...dict }
+          this.formType = '编辑'
           this.dictVisible = true
         },
         cancelDictForm: function() {

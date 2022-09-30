@@ -17,7 +17,7 @@
         <el-button type="primary" @click="query">查询</el-button>
       </el-form-item>
     </el-form>
-    <el-table :data="pageinfo.content" highlight-current-row @row-dblclick="openDetail" border style="width:100%">
+    <el-table :data="pageinfo.content" highlight-current-row @row-dblclick="openDetail" border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
       <el-table-column label="项目编码" width="200px">
         <template slot-scope="scope">{{projectMap[scope.row.id].code}}</template>
       </el-table-column>
@@ -82,7 +82,7 @@
         </el-descriptions>
       </el-tab-pane>
       <el-tab-pane name="processInfo" label="项目进度">
-        <el-table :data="processes" border>
+        <el-table :data="processes" border :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
           <el-table-column label="阶段">
             <template slot-scope="scope">{{dictMap['PROJECT_STAGE'][scope.row.phase]}}</template>
           </el-table-column>
@@ -108,7 +108,7 @@
         </el-table>
       </el-tab-pane>
       <el-tab-pane name="resourceManage" label="资源管理">
-        <el-table :data="resources" border>
+        <el-table :data="resources" border :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
           <el-table-column label="前序项目">
             <template slot-scope="scope">{{scope.row.prevSubprojectId ? projectMap[scope.row.prevSubprojectId].name  + '-' + dictMap['SYSTEM'][projectMap[scope.row.prevSubprojectId].system] : '/'}}</template>
           </el-table-column>
@@ -144,7 +144,7 @@
         </el-table>
       </el-tab-pane>
       <el-tab-pane name="riskManage" label="风险管理">
-        <el-table :data="risks" border>
+        <el-table :data="risks" border :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
           <el-table-column label="类别" width="160px">
             <template slot-scope="scope">{{dictMap['RISK_TYPE'][scope.row.type]}}</template>
           </el-table-column>
@@ -344,12 +344,6 @@
             ],
             planEndDate: [
               { required: true, trigger: 'blue', message: '计划结束不能为空'}
-            ],
-            planManDays: [
-              { required: true, trigger: 'blue', message: '计划工作量不能为空'}
-            ],
-            investRate: [
-              { required: true, trigger: 'blue', message: '投入占比不能为空'}
             ]
           },
           // ------------项目资源------------

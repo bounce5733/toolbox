@@ -20,7 +20,7 @@
             <el-button type="primary" @click="openAdd">新增</el-button>
           </el-form-item>
         </el-form>
-        <el-table :data="pageinfo.content" highlight-current-row border style="width:100%">
+        <el-table :data="pageinfo.content" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
           <el-table-column prop="name" label="名称" width="200px"></el-table-column>
           <el-table-column label="供应商">
             <template slot-scope="scope">{{dictMap['SUPPLIER'][scope.row.company]}}</template>

@@ -8,7 +8,14 @@
 </head>
 <body>
   <div id="app" class="app-container">
-    <el-table :data="projects" :span-method="spanMethod" highlight-current-row border style="width:100%">
+    <el-row>
+      <el-form :inline="true" @submit.native.prevent>
+        <el-form-item>
+          <el-button type="primary" @click="exportExcel">导出</el-button>
+        </el-form-item>
+      </el-form>
+    </el-row>
+    <el-table :data="projects" :span-method="spanMethod" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
       <el-table-column prop="name" label="项目名称" align="center" width="180"></el-table-column>
       <el-table-column prop="issue" label="问题" align="center" width="200"></el-table-column>
       <el-table-column prop="domain" label="板块" align="center" width="180">
@@ -16,8 +23,8 @@
       </el-table-column>
       <el-table-column prop="onlineDate" label="上线时间" align="center" width="180"></el-table-column>
       <el-table-column v-for="(system, sindex) in systems" :key="sindex" :label="dictMap['SYSTEM'][system]" align="center">
-        <el-table-column v-for="(rheader, rkey) in resourceHeader" :key="rkey" :label="rheader" align="center">
-            <template slot-scope="scope"><span>{{scope.row[system + '_' + rkey]}}</span></template>
+        <el-table-column v-for="(rheader, rkey) in resourceHeader" :key="rkey" :label="rheader" align="center" width="120px">
+          <template slot-scope="scope"><span>{{scope.row[system + '_' + rkey]}}</span></template>
         </el-table-column>
       </el-table-column>
     </el-table>
@@ -67,13 +74,14 @@
                       subProjectRow[index][subproject.system + '_' + 'currentRation'] = resource.currentRation
                       subProjectRow[index][subproject.system + '_' + 'nextSubproject'] = this.projectMap[resource.nextSubprojectId] ? this.projectMap[resource.nextSubprojectId].name : '/'
                       subProjectRow[index][subproject.system + '_' + 'endDate'] = resource.endDate
-                      subProjectRow[index][subproject.system + '_' + 'contract'] = this.dictMap['CONTRACT_STATUS'][subproject.contract.status]
+                      subProjectRow[index][subproject.system + '_' + 'contract'] = this.dictMap['CONTRACT_STATUS'][subproject.contract.status] ? this.dictMap['CONTRACT_STATUS'][subproject.contract.status] : '/'
                     })
                   }
                 })
                 projectRow['subprojects'] = subProjectRow
                 projectRows.push(projectRow)
               })
+              console.log('projectRows:' + JSON.stringify(projectRows))
               const spanrowArr = []
               projectRows.forEach(projectRow => {
                 for (const rownum in projectRow.subprojects) {
@@ -154,6 +162,15 @@
           if (spanVal) {
             return this.rowspan[rowIndex + '' + columnIndex]
           }
+        },
+        exportExcel() {
+          const tempForm = document.createElement('form')
+          tempForm.id = 'downloadForm'
+          tempForm.action = '/rest/project/excel'
+          tempForm.method = 'get'
+          document.body.appendChild(tempForm)
+          tempForm.submit()
+          document.body.removeChild(tempForm)
         }
       },
       mounted() {

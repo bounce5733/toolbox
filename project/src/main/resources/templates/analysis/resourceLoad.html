@@ -10,7 +10,7 @@
     <div id="app">
         <div id="chart" style="width:100%; height:400px"></div>
         <el-dialog title="释放人员清单" :visible.sync="dialogVisible" width="80%">
-          <el-table :data="releaseResources" highlight-current-row border style="width:100%">
+          <el-table :data="releaseResources" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
             <el-table-column label="项目名称">
               <template slot-scope="scope">{{projectMap[scope.row.subProjectId].name}}</template>
             </el-table-column>
@@ -57,10 +57,26 @@
           // --------------图表--------------
           myChart: undefined,
           option: {
+            title: {
+              text: '资源负载情况',
+            },
             tooltip: {
               trigger: 'axis',
               axisPointer: {
                 type: 'shadow'
+              }
+            },
+            toolbox: {
+              show: true,
+              orient: 'vertical',
+              left: 'right',
+              top: 'center',
+              feature: {
+                mark: { show: true },
+                dataView: { show: true, readOnly: false },
+                magicType: { show: true, type: ['line', 'bar', 'stack'] },
+                restore: { show: true },
+                saveAsImage: { show: true }
               }
             },
             grid: {
@@ -84,6 +100,17 @@
               barGap: 1,
               barMinWidth: 40,
               barMaxWidth: 200,
+              lable: {
+                show: true,
+                align: 'left',
+                position: 'inside',
+                verticalAlign: 'middle',
+                formatter: '{c}  {name|{a}}',
+                fontSize: 16,
+                rich: {
+                  name: {}
+                }
+              },
               data: []
             }, {
               name: '可释放',

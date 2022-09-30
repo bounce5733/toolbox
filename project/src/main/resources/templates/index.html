@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>项目管理</title>
+    <title>互金资源管理系统</title>
     <link rel="stylesheet" href="../static/css/index.css">
     <link rel="stylesheet" href="../static/css/element.css">
   </head>
@@ -16,49 +16,43 @@
               <span slot="title">统计分析</span>
             </template>
             <el-menu-item-group>
-              <el-menu-item index="1-1" @click="openPage('../analysis/resourceRelease')">资源释放</el-menu-item>
-              <el-menu-item index="1-2" @click="openPage('../analysis/resourceLoad')">资源负载</el-menu-item>
-              <el-menu-item index="1-3" @click="openPage('../analysis/resourceAnalysis')">资源分析</el-menu-item>
-              <el-menu-item index="1-4" @click="openPage('../analysis/devLeverage')">研发杠杆</el-menu-item>
+              <el-menu-item index="1-1" @click="openPage('../analysis/resourceRelease', '资源释放')">资源释放</el-menu-item>
+              <el-menu-item index="1-2" @click="openPage('../analysis/resourceLoad', '资源负载')">资源负载</el-menu-item>
+              <el-menu-item index="1-3" @click="openPage('../analysis/resourceAnalysis', '资源分析')">资源分析</el-menu-item>
+              <el-menu-item index="1-4" @click="openPage('../analysis/devLeverage', '研发杠杆')">研发杠杆</el-menu-item>
             </el-menu-item-group>
           </el-submenu>
           <el-submenu index="2">
             <template slot="title">
-              <i class="el-icon-video-camera-solid"></i>
+              <i class="el-icon-s-help"></i>
               <span slot="title">项目管理</span>
             </template>
             <el-menu-item-group>
-              <el-menu-item index="2-1" @click="openPage('../project/create')">项目新建</el-menu-item>
-              <el-menu-item index="2-2" @click="openPage('../project/manage')">项目维护</el-menu-item>
-              <el-menu-item index="2-3" @click="openPage('../project/outline')">项目概览</el-menu-item>
+              <el-menu-item index="2-1" @click="openPage('../project/create', '项目新建')">项目新建</el-menu-item>
+              <el-menu-item index="2-2" @click="openPage('../project/manage', '项目维护')">项目维护</el-menu-item>
+              <el-menu-item index="2-3" @click="openPage('../project/outline', '项目概览')">项目概览</el-menu-item>
             </el-menu-item-group>
           </el-submenu>
           <el-submenu index="3">
             <template slot="title">
-              <i class="el-icon-setting"></i>
+              <i class="el-icon-s-tools"></i>
               <span slot="title">资源配置</span>
             </template>
             <el-menu-item-group>
-              <el-menu-item index="3-1" @click="openPage('../resource/personnel')">人员配置</el-menu-item>
-              <el-menu-item index="3-2" @click="openPage('../resource/contract')">合同配置</el-menu-item>
-              <el-menu-item index="3-3" @click="openPage('../resource/dict')">字典配置</el-menu-item>
+              <el-menu-item index="3-1" @click="openPage('../resource/personnel', '人员配置')">人员配置</el-menu-item>
+              <el-menu-item index="3-2" @click="openPage('../resource/contract', '合同配置')">合同配置</el-menu-item>
+              <el-menu-item index="3-3" @click="openPage('../resource/dict', '字典配置')">字典配置</el-menu-item>
             </el-menu-item-group>
           </el-submenu>
         </el-menu>
       </el-aside>
       <el-container>
-        <el-header style="text-align: right; font-size: 12px">
-          <el-dropdown>
-            <i class="el-icon-setting" style="margin-right: 15px"></i>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item>查看</el-dropdown-item>
-              <el-dropdown-item>新增</el-dropdown-item>
-              <el-dropdown-item>删除</el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
-          <span>王小虎</span>
+        <el-header>
+          <el-breadcrumb class="breadcrumb" separator-class="el-icon-arrow-right">
+            <el-breadcrumb-item><a @click="goHome">首页</a></el-breadcrumb-item>
+            <el-breadcrumb-item v-if="curPageName !== ''">{{curPageName}}</el-breadcrumb-item>
+          </el-breadcrumb>
         </el-header>
-
         <el-main>
           <iframe :src="pageUrl" width="100%" height="100%" frameborder="0"></iframe>
         </el-main>
@@ -73,21 +67,30 @@
       el: '#app',
       data: function() {
         return {
-          pageUrl: './welcome'
+          pageUrl: './welcome',
+          curPageName: ''
         }
       },
       methods: {
-        openPage: function(url) {
+        openPage(url, pageName) {
           this.pageUrl = url
+          this.curPageName = pageName
+        },
+        goHome() {
+          this.pageUrl = './welcome'
+          this.curPageName = ''
         }
       }
     })
   </script>
   <style>
     .el-header {
-      background-color: #B3C0D1;
-      color: #333;
-      line-height: 60px;
+      border: 1px solid #eee;
+    }
+    .breadcrumb {
+      float: left;
+      line-height: 58px;
+      padding: 0 10px;
     }
     .el-aside {
       color: #333;

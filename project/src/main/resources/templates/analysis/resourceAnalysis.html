@@ -27,7 +27,7 @@
       </el-form>
       <div id="chart" style="width:100%; height:600px"></div>
       <el-dialog title="人员清单" :visible.sync="dialogVisible" width="80%">
-        <el-table :data="resources" highlight-current-row border style="width:100%">
+        <el-table :data="resources" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
           <el-table-column label="前序项目">
             <template slot-scope="scope">{{scope.row.prevSubprojectId ? projectMap[scope.row.prevSubprojectId].name  + '-' + dictMap['SYSTEM'][projectMap[scope.row.prevSubprojectId].system] : '/'}}</template>
           </el-table-column>
@@ -86,6 +86,18 @@
                 right: '4%',
                 bottom: '3%',
                 containLabel: true
+            },
+            toolbox: {
+              show: true,
+              orient: 'vertical',
+              left: 'right',
+              top: 'center',
+              feature: {
+                mark: { show: true },
+                dataView: { show: true, readOnly: false },
+                restore: { show: true },
+                saveAsImage: { show: true }
+              }
             },
             xAxis: {
                 type: 'time'

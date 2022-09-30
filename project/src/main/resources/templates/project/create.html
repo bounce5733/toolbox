@@ -20,7 +20,7 @@
           <el-button type="primary" @click="openAdd" icon="el-icon-plus">新增</el-button>
         </el-form-item>
       </el-form>
-      <el-table :data="pageinfo.content" highlight-current-row border style="width:100%">
+      <el-table :data="pageinfo.content" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
         <el-table-column type="expand">
           <template slot-scope="scope">
             <el-table :data="scope.row.subProjects" size="small" stripe highlight-current-row border style="width:100%">
@@ -87,7 +87,7 @@
                        :total="pageinfo.totalElements"></el-pagination>
       </div>
     </el-row>
-    <el-dialog title="编辑项目" :visible.sync="formVisible">
+    <el-dialog title="新增项目" :visible.sync="formVisible">
       <el-form :model="model" ref="form" :rules="formRules" label-width="100px">
         <el-row>
           <el-col :span="12">
@@ -111,7 +111,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="上线日期" prop="onlineDate">
-              <el-date-picker type="date" v-model="model.onlineDate" value-format="yyyy/MM/dd"></el-date-picker>
+              <el-date-picker type="date" v-model="model.onlineDate" value-format="yyyy/MM/dd" style="width:200px"></el-date-picker>
             </el-form-item>
           </el-col>
         </el-row>
