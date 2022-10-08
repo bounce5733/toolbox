@@ -87,7 +87,7 @@
             },
             grid: {
                 left: '3%',
-                right: '4%',
+                right: '6%',
                 bottom: '3%',
                 containLabel: true
             },
@@ -207,6 +207,7 @@
                     const projectPhaseNames = []
                     const seriesDataes = []
                     const sortedProjectPhases = Object.keys(this.dictMap['PROJECT_STAGE']).sort()
+                    const projectLastEndateMap = {}
                     sortedProjectPhases.forEach(phaseCode => {
                       projectPhaseNames.push(this.dictMap['PROJECT_STAGE'][phaseCode])
                       const seriesData = { startData: [], endData: [], name: this.dictMap['PROJECT_STAGE'][phaseCode], currentProcess: []}
@@ -215,15 +216,33 @@
                           seriesData.startData.push(subProjectMap[projectName][phaseCode].reallyStartDate)
                           seriesData.endData.push(subProjectMap[projectName][phaseCode].reallyEndDate)
                           seriesData.currentProcess.push(subProjectMap[projectName][phaseCode].currentProcess)
+                          if (subProjectMap[projectName][phaseCode].reallyEndDate) {
+                            projectLastEndateMap[projectName] = subProjectMap[projectName][phaseCode].reallyEndDate
+                          }
                         } else {
                           seriesData.startData.push('')
                           seriesData.endData.push('')
-
                         }
                       })
                       seriesDataes.push(seriesData)
                     })
+                    const personnelCountMap = {}
+                    const lastEndDateArr = []
+                    projectNames.forEach(projectName => {
+                      lastEndDateArr.push(projectLastEndateMap[projectName] ? projectLastEndateMap[projectName] : '')
+                      let innerPersonnelCount = 0
+                      let outerPersonnelCount = 0
+                      this.projectResourcesMap[projectName].forEach(resource => {
+                        if (this.personnelMap[resource.personnelId + ''].type === '1') {
+                          innerPersonnelCount ++
+                        } else {
+                          outerPersonnelCount ++
+                        }
+                      })
+                      personnelCountMap[projectName] =  '\n行员' + innerPersonnelCount + '人' + '\n外包' + outerPersonnelCount + '人'
+                    })
                     const serieses = []
+
                     seriesDataes.forEach((data, index) => {
                       serieses.push(
                         { 
@@ -249,12 +268,36 @@
                               show: true,
                               position: 'inside',
                               formatter: function(params) {
+                                console.log('params:' + JSON.stringify(personnelCountMap[params.name]))
                                 return params.seriesName + data.currentProcess[projectNames.indexOf(params.name)] + '%'
                               }
                             }
                           }
                         }
                       )
+                    })
+                    console.log('lastEndDateArr:' + JSON.stringify(lastEndDateArr))
+                    serieses.push({
+                      name: '统计',
+                      type: 'line',
+                      symbolSize: 10,
+                      symbol: "circle",
+                      itemStyle: {
+                        normal: {
+                          color: 'transparent'
+                        }
+                      },
+                      data: lastEndDateArr,
+                      label: {
+                        normal: {
+                          show: true,
+                          color: 'black',
+                          position: 'right',
+                          formatter: function(params) {
+                            return personnelCountMap[params.name]
+                          }
+                        }
+                      }
                     })
                     this.option.legend.data = projectPhaseNames
                     this.option.yAxis.data = projectNames
