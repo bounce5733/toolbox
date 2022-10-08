@@ -1,6 +1,5 @@
 package com.nbcb.toolbox.project;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nbcb.toolbox.project.service.ProjectService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -8,6 +7,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
  * ServiceTest
@@ -25,7 +27,10 @@ public class ServiceTest {
     private ProjectService projectService;
 
     @Test
-    public void exportExcel() throws JsonProcessingException {
-        projectService.exportExcel();
+    public void exportExcel() throws IOException {
+        String filename = "/Users/jiangyonghua/" + ProjectService.PROJECT_EXCEL_FILE_NAME
+                + ProjectService.PROJECT_EXCEL_FILE_EXT;
+        FileOutputStream fos = new FileOutputStream(filename);
+        projectService.exportExcel(fos);
     }
 }

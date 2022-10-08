@@ -8,7 +8,6 @@
 </head>
 <body>
   <div id="app" class="app-container">
-    <!--
     <el-row>
       <el-form :inline="true" @submit.native.prevent>
         <el-form-item>
@@ -16,7 +15,6 @@
         </el-form-item>
       </el-form>
     </el-row>
-    -->
     <el-table :data="projects" :span-method="spanMethod" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
       <el-table-column prop="name" label="项目名称" align="center" width="180"></el-table-column>
       <el-table-column prop="issue" label="问题" align="center" width="200"></el-table-column>
@@ -90,18 +88,16 @@
                   const row = Object.assign({}, projectRow.baseinfo)
                   const subrow = Object.assign({}, projectRow.subprojects[rownum])
                   this.systems.forEach(system => {
-                    if (!subrow[system + '_' + 'startDate']) {
-                      subrow[system + '_' + 'startDate'] = '/'
-                      subrow[system + '_' + 'prevSubproject'] = '/'
-                      subrow[system + '_' + 'personnelName'] = '/'
-                      subrow[system + '_' + 'supplierName'] = '/'
-                      subrow[system + '_' + 'personnelType'] = '/'
-                      subrow[system + '_' + 'personnelLevel'] = '/'
-                      subrow[system + '_' + 'currentRation'] = '/'
-                      subrow[system + '_' + 'nextSubproject'] = '/'
-                      subrow[system + '_' + 'endDate'] = '/'
-                      subrow[system + '_' + 'contract'] = '/'
-                    }
+                    subrow[system + '_' + 'startDate'] = '/'
+                    subrow[system + '_' + 'prevSubproject'] = '/'
+                    subrow[system + '_' + 'personnelName'] = '/'
+                    subrow[system + '_' + 'supplierName'] = '/'
+                    subrow[system + '_' + 'personnelType'] = '/'
+                    subrow[system + '_' + 'personnelLevel'] = '/'
+                    subrow[system + '_' + 'currentRation'] = '/'
+                    subrow[system + '_' + 'nextSubproject'] = '/'
+                    subrow[system + '_' + 'endDate'] = '/'
+                    subrow[system + '_' + 'contract'] = '/'
                   })
                   this.projects.push(Object.assign(row, subrow))
                 }
