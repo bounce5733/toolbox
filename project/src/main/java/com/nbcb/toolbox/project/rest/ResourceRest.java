@@ -2,8 +2,9 @@ package com.nbcb.toolbox.project.rest;
 
 import com.nbcb.toolbox.project.Constant;
 import com.nbcb.toolbox.project.domain.Resource;
-import com.nbcb.toolbox.project.domain.SubProject;
+import com.nbcb.toolbox.project.repository.ResourceHisRepository;
 import com.nbcb.toolbox.project.repository.ResourceRepository;
+import com.nbcb.toolbox.project.service.ResourceService;
 import org.junit.platform.commons.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
@@ -31,13 +32,26 @@ public class ResourceRest {
     @Autowired
     private ResourceRepository resourceRepository;
 
+    @Autowired
+    private ResourceService resourceService;
+
+    @Autowired
+    private ResourceHisRepository resourceHisRepository;
+
     @GetMapping("/load")
     public ResponseEntity<List<Resource>> load() {
         return new ResponseEntity<>(resourceRepository.findAll(), HttpStatus.OK);
     }
 
+    @GetMapping("/query")
+    public ResponseEntity<List<Map<String, Object>>> query(@RequestParam(name = "dept", required = false) String dept,
+                                                           @RequestParam(name = "month", required = false) String month) {
+        return new ResponseEntity<>(resourceRepository.findByCustomParams(dept, month), HttpStatus.OK);
+    }
+
     @PostMapping("/query/{page}")
-    public ResponseEntity<Page<Map<String, Object>>> query(@PathVariable("page") int page, @RequestBody Map<String, String> params) {
+    public ResponseEntity<Page<Map<String, Object>>> query(@PathVariable("page") int page,
+                                                           @RequestBody Map<String, String> params) {
         Pageable pageParam = PageRequest.of(page - 1, Constant.PAGE_SIZE);
         String dept = StringUtils.isBlank(params.get("dept")) ? null : params.get("dept");
         Integer team = StringUtils.isBlank(params.get("team")) ? null : Integer.valueOf(params.get("team"));
@@ -46,7 +60,7 @@ public class ResourceRest {
         String domain = StringUtils.isBlank(params.get("domain")) ? null : params.get("domain");
         Integer hasNextSubproject = StringUtils.isBlank(params.get("hasNextSubproject")) ? null :
                 Integer.valueOf(params.get("hasNextSubproject"));
-        Page<Map<String, Object>> pageData = resourceRepository.findResourceByCustomParams(dept, team, personnelName,
+        Page<Map<String, Object>> pageData = resourceRepository.pageFindByCustomParams(dept, team, personnelName,
                 endMonth, domain, hasNextSubproject, pageParam);
         return new ResponseEntity<>(pageData, HttpStatus.OK);
     }
@@ -67,5 +81,21 @@ public class ResourceRest {
     public ResponseEntity<List<Resource>> getResouces(@PathVariable("id") int id) {
         List<Resource> resources = resourceRepository.findAll(Example.of(Resource.builder().subProjectId(id).build()));
         return new ResponseEntity<>(resources, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/release/{id}")
+    public ResponseEntity<Object> release(@PathVariable("id") int id) {
+        resourceService.release(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("/his/query")
+    public ResponseEntity<List<Map<String, Object>>> findResourceHisByCustomParams(
+            @RequestParam(name = "dept", required = false) String dept,
+            @RequestParam(name = "startDate", required = false) String startDate,
+            @RequestParam(name = "endDate", required = false) String endDate,
+            @RequestBody List<String> domains) {
+        return new ResponseEntity<>(resourceHisRepository.findByCustomParams(dept, startDate, endDate, domains),
+                HttpStatus.OK);
     }
 }

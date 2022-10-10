@@ -79,4 +79,9 @@ public class PageController {
     public String analysisResource(Model model) {
         return "analysis/resourceAnalysis";
     }
+
+    @RequestMapping("/analysis/lineAnalysis")
+    public String analysisLine(Model model) {
+        return "analysis/lineAnalysis";
+    }
 }

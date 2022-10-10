@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,9 +52,16 @@ public interface ResourceRepository extends JpaRepository<Resource, Integer> {
                     " AND (CASE :hasNextSubproject WHEN 1 THEN r.next_subproject_id IS NOT NULL ELSE r.next_subproject_id" +
                     " IS NULL END OR :hasNextSubproject IS NULL)",
             nativeQuery = true)
-    Page<Map<String, Object>> findResourceByCustomParams(@Param("dept") String dept, @Param("team") Integer team,
+    Page<Map<String, Object>> pageFindByCustomParams(@Param("dept") String dept, @Param("team") Integer team,
                                                          @Param("personnelName") String personnelName, @Param("endMonth") String endMonth,
                                                          @Param("domain") String domain,
                                                          @Param("hasNextSubproject") Integer hasNextSubproject,
                                                          Pageable pageable);
+
+    @Query(value = "SELECT p.domain, sp.dept, r.personnel_id, s.type" +
+            " FROM resource r JOIN subproject sp ON r.subproject_id = sp.id JOIN project p ON sp.project_id = p.id" +
+            " JOIN personnel s ON r.personnel_id = s.id" +
+            " WHERE (r.start_date <= :month OR :month IS NULL) AND (r.end_date >= :month OR :month IS NULL)" +
+            " AND (sp.dept = :dept OR :dept IS NULL)", nativeQuery = true)
+    List<Map<String, Object>> findByCustomParams(@Param("dept") String dept, @Param("month") String month);
 }

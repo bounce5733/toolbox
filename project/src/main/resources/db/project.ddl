@@ -28,6 +28,9 @@ CREATE TABLE resource (id int auto_increment PRIMARY KEY, subproject_id int, per
     FOREIGN KEY (next_subproject_id) REFERENCES subproject(id),
     FOREIGN KEY (prev_subproject_id) REFERENCES subproject(id));
 
+CREATE TABLE resource_his(id int auto_increment PRIMARY KEY, subproject_id int, personnel_id int, current_ration double,
+    start_date char(10), end_date char(10));
+
 CREATE TABLE risk (id int auto_increment PRIMARY KEY, subproject_id int NOT NULL, responsible_personnel_id int,
     measure text, type varchar(32), desc text,
     FOREIGN KEY (responsible_personnel_id) REFERENCES personnel(id),

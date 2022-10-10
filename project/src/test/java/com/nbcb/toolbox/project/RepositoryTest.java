@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +45,9 @@ public class RepositoryTest {
 
     @Autowired
     private ResourceRepository resourceRepository;
+
+    @Autowired
+    private ResourceHisRepository resourceHisRepository;
 
     @Test
     public void saveDictType() {
@@ -79,12 +83,27 @@ public class RepositoryTest {
     }
 
     @Test
-    public void findResourceByCustomParams() throws JsonProcessingException {
+    public void pageFindByCustomParams() throws JsonProcessingException {
         Pageable pageParam = PageRequest.of(0, Constant.PAGE_SIZE);
-        Page<Map<String, Object>> resources = resourceRepository.findResourceByCustomParams("1", 2,
+        Page<Map<String, Object>> resources = resourceRepository.pageFindByCustomParams("1", 2,
                 null, "2022/09", null, 2, pageParam);
         log.info("resources:{}", new ObjectMapper().writeValueAsString(resources));
 
     }
 
+    @Test
+    public void findResourceByCustomParams() throws JsonProcessingException {
+        List<Map<String, Object>> datalist = resourceRepository.findByCustomParams("2", null);
+        log.info("resources: {}", new ObjectMapper().writeValueAsString(datalist));
+    }
+
+    @Test
+    public void findResourceHisByCustomParams() throws JsonProcessingException {
+        List<String> domains = new ArrayList<>();
+        domains.add("CONSUME_FINANCE");
+        domains.add("111");
+        List<Map<String, Object>> datalist = resourceHisRepository.findByCustomParams(null,
+                "2022/06/14", null, domains);
+        log.info("resources: {}", new ObjectMapper().writeValueAsString(datalist));
+    }
 }

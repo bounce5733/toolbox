@@ -172,6 +172,7 @@
         saveDicType: function() {
           this.$refs.dicTypeForm.validate((valid) => {
             if (valid) {
+              this.dicType.code = this.dicType.code.trim()
               axios.post("/rest/dict/type", this.dicType).then(res => {
                 this.$notify({
                   title: '成功',
@@ -224,6 +225,7 @@
         saveDict: function() {
           this.$refs.dictForm.validate((valid) => {
             if (valid) {
+              this.dict.code = this.dict.code.trim()
               axios.post("/rest/dict", this.dict).then(res => {
                 this.$notify({
                   title: '成功',

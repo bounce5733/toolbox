@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>条线分析</title>
+    <link rel="stylesheet" href="../static/css/index.css">
+    <link rel="stylesheet" href="../static/css/element.css">
+  </head>
+  <body>
+    <div id="app" class="app-container">
+      <el-form :inline="true" @submit.native.prevent>
+        <el-row>
+          <el-form-item label="部门">
+            <el-select v-model="params.dept" clearable @change="query">
+              <el-option v-for="(val, key) in dictMap['DEPT']" :label="val" :value="key" :key="key"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="月份">
+            <el-date-picker type="month" v-model="params.month" value-format="yyyy/MM" @change="query"></el-date-picker>
+          </el-form-item>
+        </el-row>
+      </el-form>
+      <br>
+      <el-row>
+        <el-col :span="12"><div id="innerChart" style="width:100%; height:400px"></div></el-col>
+        <el-col :span="12"><div id="outerChart" style="width:100%; height:400px"></div></el-col>
+      </el-row>
+      <el-table :data="resources" highlight-current-row border style="width:80%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
+        <el-table-column :label="params.dept ? dictMap['DEPT'][params.dept] : '所有部门'" align="center">
+          <el-table-column prop="domain" align="center"></el-table-column>
+          <el-table-column label="行员投入" prop="inner" align="center"></el-table-column>
+          <el-table-column label="外包投入" prop="outer" align="center"></el-table-column>
+        </el-table-column>
+      </el-table>
+      <el-dialog :title="dialogType + '投入趋势'" :visible.sync="dialogVisible" width="80%">
+        <el-form :inline="true" @submit.native.prevent>
+          <el-row>
+            <el-form-item label="部门">
+              <el-select v-model="hisParams.dept" clearable>
+                <el-option v-for="(val, key) in dictMap['DEPT']" :label="val" :value="key" :key="key"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="条线">
+              <el-select v-model="hisParams.domains" multiple clearable>
+                <el-option v-for="(val, key) in dictMap['DOMAIN']" :label="val" :value="key" :key="key"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="日期">
+              <el-date-picker type="date" v-model="hisParams.startDate" value-format="yyyy/MM/dd"></el-date-picker>
+              -
+              <el-date-picker type="date" v-model="hisParams.endDate" value-format="yyyy/MM/dd"></el-date-picker>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="queryTrend" icon="el-icon-search">查询</el-button>
+            </el-form-item>
+          </el-row>
+        </el-form>
+        <br>
+        <div id="trendChart" style="width:100%; height:400px"></div>
+        <el-row type="flex" class="row-bg" justify="center">
+          <el-col :span="22">
+            <el-table :data="hisResources" show-summary :summary-method="getHisSummaries" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
+              <el-table-column prop="domain" align="center"></el-table-column>
+              <el-table-column v-for="(month, index) in hisMonths" :label="month" :key="index" align="center">
+                <template slot-scope="scope">{{scope.row.data[month]}}</template>
+              </el-table-column>
+            </el-table>
+          </el-col>
+        </el-row>
+      </el-dialog>
+    </div>
+  </body>
+  <script src="../static/js/util.js"></script>
+  <script src="../static/js/vue.js"></script>
+  <script src="../static/js/element.js"></script>
+  <script src="../static/js/axios.js"></script>
+  <script src="../static/js/echarts.js"></script>
+
+  <script>
+    new Vue({
+      el: '#app',
+
+      data: function() {
+        return {
+          dictMap: {}, // 系统字典
+          params: {},
+          // --------------图表--------------
+          myInnerChart: undefined,
+          myOuterChart: undefined,
+          innerOption: {
+            title: {
+              text: '行员投入',
+              left: 'center'
+            },
+            toolbox: {
+              show: true,
+              orient: 'vertical',
+              left: 'right',
+              top: 'center',
+              feature: {
+                mark: { show: true },
+                dataView: { show: true, readOnly: false },
+                restore: { show: true },
+                saveAsImage: { show: true }
+              }
+            },
+            tooltip: {
+              trigger: 'item'
+            },
+            series: {
+              name: '行员',
+              type: 'pie',
+              radius: '50%',
+              label: {
+                formatter: '{b}{d}%',
+                position: 'inner'
+              }
+            } 
+          },
+          outerOption: {
+            title: {
+              text: '外包投入',
+              left: 'center'
+            },
+            toolbox: {
+              show: true,
+              orient: 'vertical',
+              left: 'right',
+              top: 'center',
+              feature: {
+                mark: { show: true },
+                dataView: { show: true, readOnly: false },
+                restore: { show: true },
+                saveAsImage: { show: true }
+              }
+            },
+            tooltip: {
+              trigger: 'item'
+            },
+            series: {
+              name: '外包',
+              type: 'pie',
+              radius: '50%',
+              label: {
+                formatter: '{b}{d}%',
+                position: 'inner'
+              }
+            }
+          },
+          // --------------表格--------------
+          resources: [],
+          // --------------弹窗--------------
+          dialogVisible: false,
+          dialogType: '', // 弹窗类型：行员|外包
+          hisParams: {},
+          myTrendChart: undefined,
+          trendOption: {
+            title: {
+              text: '',
+            },
+            tooltip: {
+              trigger: 'axis'
+            },
+            legend: {
+              data: []
+            },
+            grid: {
+              left: '6%',
+              right: '8%',
+              bottom: '3%',
+              containLabel: true
+            },
+            toolbox: {
+              show: true,
+              orient: 'vertical',
+              left: 'right',
+              top: 'center',
+              feature: {
+                mark: { show: true },
+                dataView: { show: true, readOnly: false },
+                restore: { show: true },
+                saveAsImage: { show: true }
+              }
+            },
+            xAxis: {
+              type: 'category',
+              boundaryGap: false,
+              data: []
+            },
+            yAxis: {
+              type: 'value'
+            },
+            series: []
+          },
+          hisResources: [],
+          hisMonths: []
+        }
+      },
+      methods: {
+        load() {
+          axios.get('/rest/dict/load').then(res => {
+            this.dictMap = res.data
+            this.query()
+          })
+        },
+        query() {
+          let url = '/rest/resource/query'
+          if (this.params.dept) {
+            url += '?dept=' + this.params.dept
+          }
+          if (this.params.month) {
+            if (url.indexOf('?') < 0) {
+              url += '?month=' + this.params.month
+            } else {
+              url += '&month=' + this.params.month
+            }
+          }
+          axios.get(url).then(res => {
+            console.log(JSON.stringify(res.data))
+            this.resources = []
+            const innerData = {} // 图表行内人员容器
+            const outerData = {} // 图表外包人员容器
+            const tableData = {} // 表格数据容器
+            res.data.forEach(item => {
+              if (!tableData[item.DOMAIN]) {
+                  tableData[item.DOMAIN] = { inner : 0, outer: 0 }
+                }
+              if (item.TYPE === '1') {
+                innerData[item.DOMAIN] = innerData[item.DOMAIN] ? innerData[item.DOMAIN] + 1 : 1
+                tableData[item.DOMAIN].inner += 1
+              } else {
+                outerData[item.DOMAIN] = outerData[item.DOMAIN] ? outerData[item.DOMAIN] + 1 : 1
+                tableData[item.DOMAIN].outer += 1
+              }
+            })
+            console.log('innerData:' + JSON.stringify(innerData))
+            console.log('outerData:' + JSON.stringify(outerData))
+            console.log('tableData:' + JSON.stringify(tableData))
+            // --------- 组装图表数据
+            const innerChartData = []
+            Object.keys(innerData).forEach(domain => {
+              innerChartData.push({ name: this.dictMap['DOMAIN'][domain], value: innerData[domain]})
+            })
+            const outerChartData = []
+            Object.keys(outerData).forEach(domain => {
+              outerChartData.push({ name: this.dictMap['DOMAIN'][domain], value: outerData[domain]})
+            })
+            this.innerOption.series.data = innerChartData
+            this.outerOption.series.data = outerChartData
+            this.myInnerChart.setOption(this.innerOption)
+            this.myOuterChart.setOption(this.outerOption)
+            // --------- 组装表格数据
+            Object.keys(tableData).forEach(domain => {
+              this.resources.push({ domain: this.dictMap['DOMAIN'][domain], inner: tableData[domain].inner, outer:tableData[domain].outer })
+            })
+            console.log('resources:' + JSON.stringify(this.resources))
+          })
+        },
+        openTrendDialog(params) {
+          this.dialogVisible = true
+          this.dialogType = params.seriesName
+          this.hisParams = { domains: [] },
+          this.queryTrend()
+        },
+        queryTrend() {
+          let url = '/rest/resource/his/query'
+          if (this.hisParams.dept) {
+            url += '?dept=' + this.hisParams.dept
+          }
+          if (this.hisParams.startDate) {
+            if (url.indexOf('?') < 0) {
+              url += '?startDate=' + this.hisParams.startDate
+            } else {
+              url += '&startDate=' + this.hisParams.startDate
+            }
+           
+          }
+          if (this.hisParams.endDate) {
+            if (url.indexOf('?') < 0) {
+              url += '?endDate=' + this.hisParams.endDate
+            } else {
+              url += '&endDate=' + this.hisParams.endDate
+            }
+          }
+          axios.post(url, this.hisParams.domains).then(res => {
+            this.hisResources = []
+            this.hisMonths = []
+            this.myTrendChart = echarts.init(document.getElementById('trendChart'))
+            console.log(JSON.stringify(res.data))
+            const hisDataMap = {} // 按条线->月份统计的数据容器
+            const allMonthSet = new Set()
+            res.data.forEach(item => {
+              let personnelType = this.dialogType === '行员' ? '1' : '2'
+              if (item.PERSONNEL_TYPE === personnelType) {
+                if (item.DOMAIN && item.START_DATE && item.END_DATE) {
+                  const betweenMonths = getBetweenMonth(item.START_DATE, item.END_DATE)
+                  betweenMonths.forEach(month => {
+                    allMonthSet.add(month)
+                    if (!hisDataMap[item.DOMAIN]) {
+                      hisDataMap[item.DOMAIN] = {}
+                    }
+                    hisDataMap[item.DOMAIN][month] = hisDataMap[item.DOMAIN][month] ? hisDataMap[item.DOMAIN][month] + 1 : 1
+                  })
+                }
+              }
+            })
+            console.log('hisDataMap:' + JSON.stringify(hisDataMap))
+            this.hisMonths = Array.from(allMonthSet).sort()
+            console.log('this.hisMonths:' + JSON.stringify(this.hisMonths))
+            const serieses = []
+            const domainNames = []
+            Object.keys(hisDataMap).forEach(domain => {
+              const domainName = this.dictMap['DOMAIN'][domain]
+              // --------- 组装表格数据
+              const row = { domain: domainName, data: {} }
+              domainNames.push(domainName)
+              const yAxisData = []
+              this.hisMonths.forEach(month => {
+                const val = hisDataMap[domain][month] ? hisDataMap[domain][month] : 0
+                yAxisData.push(val)
+                row.data[month] = val
+              })
+              const series = {
+                name: domainName,
+                type: 'line',
+                data: yAxisData
+              }
+              serieses.push(series)
+              this.hisResources.push(row)
+            })
+            console.log('domainNames:' + JSON.stringify(domainNames))
+            console.log('serieses:' + JSON.stringify(serieses))
+            console.log('hisResources:' + JSON.stringify(this.hisResources))
+            const deptName = this.hisParams.dept ? this.dictMap['DEPT'][this.hisParams.dept] : '全部'
+            this.trendOption.title.text = deptName + '部门' + this.dialogType + '趋势'
+            this.trendOption.legend.data = domainNames
+            this.trendOption.xAxis.data = this.hisMonths
+            this.trendOption.series = serieses
+            this.myTrendChart.setOption(this.trendOption, true)
+          })
+        },
+        getHisSummaries(param) {
+          const { columns, data } = param
+          const sums = []
+          columns.forEach((column, index) => {
+            if (index === 0) {
+              sums[index] = '合计'
+              return
+            }
+            sums[index] = 0
+            data.forEach(row => {
+              console.log('row:' + JSON.stringify(row))
+              Object.keys(row.data).forEach(month => {
+                if (month === this.hisMonths[index - 1]) {
+                  sums[index] += row.data[month]
+                }
+              })
+            })
+          })
+          return sums
+        }
+      },
+      mounted() {
+        this.load()
+        this.myInnerChart = echarts.init(document.getElementById('innerChart'))
+        this.myInnerChart.on('click', this.openTrendDialog)
+        this.myOuterChart = echarts.init(document.getElementById('outerChart'))
+        this.myOuterChart.on('click', this.openTrendDialog)
+      }
+    })
+  </script>
+</html>

@@ -130,7 +130,7 @@
           </el-table-column>
           <el-table-column label="进入时间" prop="startDate" width="120px"></el-table-column>
           <el-table-column label="释放时间" prop="endDate" width="120px"></el-table-column>
-          <el-table-column align="center" width="120px">
+          <el-table-column align="center" width="180px">
             <template slot="header" slot-scope="scope">
               <el-button type="primary" @click="openAddResource(model.id)" size="mini" icon="el-icon-plus"></el-button>
             </template>
@@ -138,6 +138,7 @@
               <el-button-group>
                 <el-button type="primary" @click="openEditResource(scope.row)" size="small" icon="el-icon-edit"></el-button>
                 <el-button type="danger" @click="removeResource(scope.row.id)" size="small" icon="el-icon-delete"></el-button>
+                <el-button type="warning" @click="releaseResource(scope.row.id)" size="small" icon="el-icon-s-release"></el-button>
               </el-button-group>
             </template>
           </el-table-column>
@@ -532,6 +533,22 @@
               this.$notify({
                 title: '成功',
                 message: '删除成功',
+                type: 'success'
+              })
+              this.resources.forEach((resource, index) => {
+                if (id === resource.id) {
+                  this.resources.splice(index, 1)
+                }
+              })
+            })
+          }).catch(() => {})
+        },
+        releaseResource(id) {
+          this.$confirm('确定释放该资源', '提示', { type: 'warning' }).then(() => {
+            axios.delete("/rest/resource/release/" + id).then(res => {
+              this.$notify({
+                title: '成功',
+                message: '释放成功',
                 type: 'success'
               })
               this.resources.forEach((resource, index) => {

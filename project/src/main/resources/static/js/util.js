@@ -15,3 +15,26 @@ function dateToStr(date) {
     return date
   }
 }
+
+/**
+ * 获取两个日期之间的月份数组
+ * 
+ * @param {*} start yyyy/MM/dd
+ * @param {*} end yyyy/MM/dd
+ */
+function getBetweenMonth(start, end) {
+  const result = []
+  const s = start.split("/")
+  const e = end.split("/")
+  let min = new Date()
+  let max = new Date()
+  min.setFullYear(s[0], s[1] - 1, 1) // 开始日期
+  max.setFullYear(e[0], e[1] - 1, 1) // 结束日期
+  let curr = min
+  while (curr <= max) {
+    const month = curr.getMonth()
+    result.push(dateToStr(curr).substr(0, 7))
+    curr.setMonth(month + 1)
+  }
+  return result
+}
