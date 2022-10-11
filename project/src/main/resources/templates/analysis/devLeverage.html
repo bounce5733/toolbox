@@ -27,9 +27,13 @@
       </el-form>
       <div id="chart" style="width:100%; height:400px"></div>
       <br>
-      <el-table :data="tableDatas" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
-        <el-table-column v-for="(val, index) in tableCols" :label="val" :prop="val"></el-table-column>
-      </el-table>
+      <el-row type="flex" class="row-bg" justify="center">
+        <el-col :span="22">
+          <el-table :data="tableDatas" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
+            <el-table-column v-for="(val, index) in tableCols" :label="val" :prop="val"></el-table-column>
+          </el-table>
+        </el-col>
+      </el-row>
     </div>
   </body>
   <script src="../static/js/util.js"></script>

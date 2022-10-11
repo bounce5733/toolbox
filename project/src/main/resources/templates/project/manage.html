@@ -64,9 +64,9 @@
         </el-descriptions>
         <br>
         <el-descriptions border title="子项目">
-          <el-descriptions-item label="所属系统">{{dictMap['SYSTEM'][model.system]}}</el-descriptions-item>
-          <el-descriptions-item label="所属部门">{{dictMap['DEPT'][model.dept]}}</el-descriptions-item>
-          <el-descriptions-item label="当前阶段">{{dictMap['PROJECT_STAGE'][model.phase]}}</el-descriptions-item>
+          <el-descriptions-item label="所属系统">{{model.system ? dictMap['SYSTEM'][model.system] : ''}}</el-descriptions-item>
+          <el-descriptions-item label="所属部门">{{model.dept ? dictMap['DEPT'][model.dept] : ''}}</el-descriptions-item>
+          <el-descriptions-item label="当前阶段">{{model.phase ? dictMap['PROJECT_STAGE'][model.phase] : ''}}</el-descriptions-item>
           <el-descriptions-item label="PM">{{personnelMap[model.pm] ? personnelMap[model.pm].name : ''}}</el-descriptions-item>
           <el-descriptions-item label="PMO">{{personnelMap[model.pmo] ? personnelMap[model.pmo].name : ''}}</el-descriptions-item>
           <el-descriptions-item label="QA">{{personnelMap[model.qa] ? personnelMap[model.qa].name : ''}}</el-descriptions-item>

@@ -8,85 +8,84 @@
 </head>
 <body>
   <div id="app" class="app-container">
-    <el-row>
-      <el-form :inline="true" @submit.native.prevent>
-        <el-form-item>
-          <el-input @keyup.enter.native="query" style="width:280px" placeholder="名称" clearable v-model="queryParams"></el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="query" icon="el-icon-search">查询</el-button>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="openAdd" icon="el-icon-plus">新增</el-button>
-        </el-form-item>
-      </el-form>
-      <el-table :data="pageinfo.content" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
-        <el-table-column type="expand">
-          <template slot-scope="scope">
-            <el-table :data="scope.row.subProjects" size="small" stripe highlight-current-row border style="width:100%">
-              <el-table-column label="所属系统">
-                <template slot-scope="iscope">{{dictMap['SYSTEM'][iscope.row.system]}}</template>
-              </el-table-column>
-              <el-table-column label="所属部门">
-                <template slot-scope="iscope">{{dictMap['DEPT'][iscope.row.dept]}}</template>
-              </el-table-column>
-              <el-table-column label="当前阶段">
-                <template slot-scope="iscope">{{dictMap['PROJECT_STAGE'][iscope.row.phase]}}</template>
-              </el-table-column>
-              <el-table-column label="PM">
-              <template slot-scope="iscope">{{personnelMap[iscope.row.pm].name}}</template>
+    <el-form :inline="true" @submit.native.prevent>
+      <el-form-item>
+        <el-input @keyup.enter.native="query" style="width:280px" placeholder="名称" clearable v-model="queryParams"></el-input>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="query" icon="el-icon-search">查询</el-button>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="openAdd" icon="el-icon-plus">新增</el-button>
+      </el-form-item>
+    </el-form>
+    <el-table :data="pageinfo.content" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
+      <el-table-column type="expand">
+        <template slot-scope="scope">
+          <el-table :data="scope.row.subProjects" size="small" stripe highlight-current-row border style="width:100%">
+            <el-table-column label="所属系统">
+              <template slot-scope="iscope">{{dictMap['SYSTEM'][iscope.row.system]}}</template>
             </el-table-column>
-              <el-table-column label="PMO">
-                <template slot-scope="iscope">{{personnelMap[iscope.row.pmo].name}}</template>
-              </el-table-column>
-              <el-table-column label="QA">
-                <template slot-scope="iscope">{{personnelMap[iscope.row.qa].name}}</template>
-              </el-table-column>
-              <el-table-column label="合同信息" align="center" width="150px">
-                <template slot-scope="iscope">
-                  <el-tag @click="openContract(iscope.row.contract)">查看合同</el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column label="是否关闭" align="center" width="150px">
-                <template slot-scope="iscope">
-                  <el-tag v-if="iscope.row.isClose === '0'">开启</el-tag>
-                  <el-tag type="danger" v-else>关闭</el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column align="center" label="操作" width="250">
-                <template slot-scope="scope">
-                  <el-button-group>
-                    <el-button type="primary" @click="openEditSubProject(scope.row)" size="small" icon="el-icon-edit">编辑</el-button>
-                    <el-button type="danger" @click="removeSubProject(scope.row.id)" size="small" icon="el-icon-delete">删除</el-button>
-                  </el-button-group>
-                </template>
-              </el-table-column>
-            </el-table>
-          </template>
-        </el-table-column>
-        <el-table-column prop="code" label="项目编码" width="100px"></el-table-column>
-        <el-table-column prop="name" label="项目名称" width="200px"></el-table-column>
-        <el-table-column label="业务条线" width="200px">
-          <template slot-scope="scope">{{dictMap['DOMAIN'][scope.row.domain]}}</template>
-        </el-table-column>
-        <el-table-column label="上线日期" prop="onlineDate" width="150px"></el-table-column>
-        <el-table-column label="项目问题" prop="issue"></el-table-column>
-        <el-table-column align="center" label="操作" width="250">
-          <template slot-scope="scope">
-            <el-button-group>
-              <el-button type="primary" @click="openAddSubProject(scope.row.id)" icon="el-icon-plus" size="small">子项</el-button>
-              <el-button type="primary" @click="openEdit(scope.row)" size="small" icon="el-icon-edit">编辑</el-button>
-              <el-button type="danger" @click="remove(scope.row.id)" size="small" icon="el-icon-delete">删除</el-button>
-            </el-button-group>
-          </template>
-        </el-table-column>
-      </el-table>
-      <div class="pagination-container">
-        <el-pagination background layout="prev, pager, next, total" @current-change="handlePageChange"
-                       :current-page="pageinfo.pageable.pageNumber" :page-size="pageinfo.pageable.pageSize"
-                       :total="pageinfo.totalElements"></el-pagination>
-      </div>
-    </el-row>
+            <el-table-column label="所属部门">
+              <template slot-scope="iscope">{{dictMap['DEPT'][iscope.row.dept]}}</template>
+            </el-table-column>
+            <el-table-column label="当前阶段">
+              <template slot-scope="iscope">{{dictMap['PROJECT_STAGE'][iscope.row.phase]}}</template>
+            </el-table-column>
+            <el-table-column label="PM">
+            <template slot-scope="iscope">{{personnelMap[iscope.row.pm].name}}</template>
+          </el-table-column>
+            <el-table-column label="PMO">
+              <template slot-scope="iscope">{{personnelMap[iscope.row.pmo].name}}</template>
+            </el-table-column>
+            <el-table-column label="QA">
+              <template slot-scope="iscope">{{personnelMap[iscope.row.qa].name}}</template>
+            </el-table-column>
+            <el-table-column label="合同信息" align="center" width="150px">
+              <template slot-scope="iscope">
+                <el-tag @click="openContract(iscope.row.contract)">查看合同</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="是否关闭" align="center" width="150px">
+              <template slot-scope="iscope">
+                <el-tag v-if="iscope.row.isClose === '0'">开启</el-tag>
+                <el-tag type="danger" v-else>关闭</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column align="center" label="操作" width="250">
+              <template slot-scope="scope">
+                <el-button-group>
+                  <el-button type="primary" @click="openEditSubProject(scope.row)" size="small" icon="el-icon-edit">编辑</el-button>
+                  <el-button type="danger" @click="removeSubProject(scope.row.id)" size="small" icon="el-icon-delete">删除</el-button>
+                </el-button-group>
+              </template>
+            </el-table-column>
+          </el-table>
+        </template>
+      </el-table-column>
+      <el-table-column prop="code" label="项目编码" width="100px"></el-table-column>
+      <el-table-column prop="name" label="项目名称" width="200px"></el-table-column>
+      <el-table-column label="业务条线" width="200px">
+        <template slot-scope="scope">{{dictMap['DOMAIN'][scope.row.domain]}}</template>
+      </el-table-column>
+      <el-table-column label="上线日期" prop="onlineDate" width="150px"></el-table-column>
+      <el-table-column label="项目问题" prop="issue"></el-table-column>
+      <el-table-column align="center" label="操作" width="250">
+        <template slot-scope="scope">
+          <el-button-group>
+            <el-button type="primary" @click="openAddSubProject(scope.row.id)" icon="el-icon-plus" size="small">子项</el-button>
+            <el-button type="primary" @click="openEdit(scope.row)" size="small" icon="el-icon-edit">编辑</el-button>
+            <el-button type="danger" @click="remove(scope.row.id)" size="small" icon="el-icon-delete">删除</el-button>
+          </el-button-group>
+        </template>
+      </el-table-column>
+    </el-table>
+    <div class="pagination-container">
+      <el-pagination background layout="prev, pager, next, total" @current-change="handlePageChange"
+                      :current-page="pageinfo.pageable.pageNumber" :page-size="pageinfo.pageable.pageSize"
+                      :total="pageinfo.totalElements"></el-pagination>
+    </div>
+
     <el-dialog title="新增项目" :visible.sync="formVisible">
       <el-form :model="model" ref="form" :rules="formRules" label-width="100px">
         <el-row>
@@ -193,9 +192,9 @@
     <el-dialog title="合同信息" :visible.sync="contractVisible" width="50%">
       <el-descriptions border>
         <el-descriptions-item label="名称">{{contract.name}}</el-descriptions-item>
-        <el-descriptions-item label="公司">{{dictMap['SUPPLIER'][contract.company]}}</el-descriptions-item>
-        <el-descriptions-item label="类型">{{dictMap['CONTRACT_TYPE'][contract.type]}}</el-descriptions-item>
-        <el-descriptions-item label="状态">{{dictMap['CONTRACT_STATUS'][contract.status]}}</el-descriptions-item>
+        <el-descriptions-item label="公司">{{contract.company ? dictMap['SUPPLIER'][contract.company] : ''}}</el-descriptions-item>
+        <el-descriptions-item label="类型">{{contract.type ? dictMap['CONTRACT_TYPE'][contract.type] : ''}}</el-descriptions-item>
+        <el-descriptions-item label="状态">{{contract.status ? dictMap['CONTRACT_STATUS'][contract.status] : ''}}</el-descriptions-item>
         <el-descriptions-item label="开始日期">{{contract.startDate}}</el-descriptions-item>
         <el-descriptions-item label="结束日期">{{contract.endDate}}</el-descriptions-item>
       </el-descriptions>

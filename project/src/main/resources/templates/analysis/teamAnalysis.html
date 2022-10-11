@@ -25,13 +25,17 @@
         <el-col :span="12"><div id="innerChart" style="width:100%; height:400px"></div></el-col>
         <el-col :span="12"><div id="outerChart" style="width:100%; height:400px"></div></el-col>
       </el-row>
-      <el-table :data="resources" highlight-current-row border style="width:80%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
-        <el-table-column :label="params.dept ? dictMap['DEPT'][params.dept] : '所有部门'" align="center">
-          <el-table-column prop="team" align="center"></el-table-column>
-          <el-table-column label="行员投入" prop="inner" align="center"></el-table-column>
-          <el-table-column label="外包投入" prop="outer" align="center"></el-table-column>
-        </el-table-column>
-      </el-table>
+      <el-row type="flex" class="row-bg" justify="center">
+        <el-col :span="22">
+          <el-table :data="resources" highlight-current-row border :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
+            <el-table-column :label="params.dept ? dictMap['DEPT'][params.dept] : '所有部门'" align="center">
+              <el-table-column prop="team" align="center"></el-table-column>
+              <el-table-column label="行员投入" prop="inner" align="center"></el-table-column>
+              <el-table-column label="外包投入" prop="outer" align="center"></el-table-column>
+            </el-table-column>
+          </el-table>
+        </el-col>
+      </el-row>
       <el-dialog :title="dialogType + '投入趋势'" :visible.sync="dialogVisible" width="80%">
         <el-form :inline="true" @submit.native.prevent>
           <el-row>

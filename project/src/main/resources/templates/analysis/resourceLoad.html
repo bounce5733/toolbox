@@ -14,13 +14,13 @@
             <el-table-column label="项目名称">
               <template slot-scope="scope">{{projectMap[scope.row.subProjectId].name}}</template>
             </el-table-column>
-            <el-table-column label="人员姓名" width="200px">
+            <el-table-column label="人员姓名" width="150px">
               <template slot-scope="scope">{{personnelMap[scope.row.personnelId].name}}</template>
             </el-table-column>
-            <el-table-column label="人员类别" width="200px">
+            <el-table-column label="人员类别" width="120px">
               <template slot-scope="scope">{{dictMap['PERSONNEL_TYPE'][personnelMap[scope.row.personnelId].type]}}</template>
             </el-table-column>
-            <el-table-column label="人员级别" width="200px">
+            <el-table-column label="人员级别" width="120px">
               <template slot-scope="scope">{{dictMap['PERSONNEL_LEVEL'][personnelMap[scope.row.personnelId].level]}}</template>
             </el-table-column>
             <el-table-column label="条线">
@@ -31,7 +31,7 @@
             </el-table-column>
             <el-table-column label="释放时间" prop="endDate"></el-table-column>
             <el-table-column label="后续项目">
-              <template slot-scope="scope">{{projectMap[scope.row.nextSubprojectId] ? rojectMap[scope.row.nextSubprojectId].name : '/'}}</template>
+              <template slot-scope="scope">{{projectMap[scope.row.nextSubprojectId] ? projectMap[scope.row.nextSubprojectId].name : '/'}}</template>
             </el-table-column>
             <el-table-column label="入场时间" prop="startDate"></el-table-column>
           </el-table>
