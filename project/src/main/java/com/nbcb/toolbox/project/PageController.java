@@ -84,4 +84,9 @@ public class PageController {
     public String analysisLine(Model model) {
         return "analysis/lineAnalysis";
     }
+
+    @RequestMapping("/analysis/teamAnalysis")
+    public String analysisTeam(Model model) {
+        return "analysis/teamAnalysis";
+    }
 }

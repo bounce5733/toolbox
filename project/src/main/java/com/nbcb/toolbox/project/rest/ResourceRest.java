@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -94,8 +95,30 @@ public class ResourceRest {
             @RequestParam(name = "dept", required = false) String dept,
             @RequestParam(name = "startDate", required = false) String startDate,
             @RequestParam(name = "endDate", required = false) String endDate,
-            @RequestBody List<String> domains) {
-        return new ResponseEntity<>(resourceHisRepository.findByCustomParams(dept, startDate, endDate, domains),
-                HttpStatus.OK);
+            @RequestParam(name = "queryFlag") String queryFlag,
+            @RequestBody List<Object> selData) {
+        List<Map<String, Object>> hisResources;
+        List<Map<String, Object>> curResources;
+        if (queryFlag.equals("line")) { // 查条线
+            List<String> domains = new ArrayList<>();
+            selData.forEach(data -> {
+                domains.add(String.valueOf(data));
+            });
+            hisResources = resourceHisRepository
+                    .findByCustomParams(dept, startDate, endDate, domains, new ArrayList<>());
+            curResources = resourceRepository
+                    .findByCustomParams(dept, startDate, endDate, domains, new ArrayList<>());
+        } else { // 查小组
+            List<Integer> teams = new ArrayList<>();
+            selData.forEach(data -> {
+                teams.add(Integer.valueOf(String.valueOf(data)));
+            });
+            hisResources = resourceHisRepository
+                    .findByCustomParams(dept, startDate, endDate, new ArrayList<>(), teams);
+            curResources = resourceRepository
+                    .findByCustomParams(dept, startDate, endDate, new ArrayList<>(), teams);
+        }
+        hisResources.addAll(curResources);
+        return new ResponseEntity<>(hisResources, HttpStatus.OK);
     }
 }

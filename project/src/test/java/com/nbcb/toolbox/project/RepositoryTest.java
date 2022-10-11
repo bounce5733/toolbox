@@ -100,10 +100,12 @@ public class RepositoryTest {
     @Test
     public void findResourceHisByCustomParams() throws JsonProcessingException {
         List<String> domains = new ArrayList<>();
-        domains.add("CONSUME_FINANCE");
-        domains.add("111");
+//        domains.add("CONSUME_FINANCE");
+//        domains.add("111");
+        List<Integer> teams = new ArrayList<>();
+        teams.add(2);
         List<Map<String, Object>> datalist = resourceHisRepository.findByCustomParams(null,
-                "2022/06/14", null, domains);
+                "2022/06/14", null, domains, teams);
         log.info("resources: {}", new ObjectMapper().writeValueAsString(datalist));
     }
 }

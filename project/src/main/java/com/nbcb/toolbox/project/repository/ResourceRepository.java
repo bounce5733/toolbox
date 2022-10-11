@@ -53,15 +53,27 @@ public interface ResourceRepository extends JpaRepository<Resource, Integer> {
                     " IS NULL END OR :hasNextSubproject IS NULL)",
             nativeQuery = true)
     Page<Map<String, Object>> pageFindByCustomParams(@Param("dept") String dept, @Param("team") Integer team,
-                                                         @Param("personnelName") String personnelName, @Param("endMonth") String endMonth,
-                                                         @Param("domain") String domain,
-                                                         @Param("hasNextSubproject") Integer hasNextSubproject,
-                                                         Pageable pageable);
+                                                     @Param("personnelName") String personnelName, @Param("endMonth") String endMonth,
+                                                     @Param("domain") String domain,
+                                                     @Param("hasNextSubproject") Integer hasNextSubproject,
+                                                     Pageable pageable);
 
-    @Query(value = "SELECT p.domain, sp.dept, r.personnel_id, s.type" +
+    @Query(value = "SELECT p.domain, sp.dept, r.personnel_id, s.type, s.team_id, r.start_date, r.end_date" +
             " FROM resource r JOIN subproject sp ON r.subproject_id = sp.id JOIN project p ON sp.project_id = p.id" +
             " JOIN personnel s ON r.personnel_id = s.id" +
             " WHERE (r.start_date <= :month OR :month IS NULL) AND (r.end_date >= :month OR :month IS NULL)" +
             " AND (sp.dept = :dept OR :dept IS NULL)", nativeQuery = true)
     List<Map<String, Object>> findByCustomParams(@Param("dept") String dept, @Param("month") String month);
+
+    @Query(value = "SELECT p.domain, sp.dept, r.personnel_id, s.type, s.team_id, r.start_date, r.end_date" +
+            " FROM resource r JOIN subproject sp ON r.subproject_id = sp.id JOIN project p ON sp.project_id = p.id" +
+            " JOIN personnel s ON r.personnel_id = s.id" +
+            " WHERE (sp.dept = :dept OR :dept IS NULL) AND ((r.start_date <= :endDate OR :endDate IS NULL)" +
+            " AND (r.end_date >= :startDate OR :startDate IS NULL))" +
+            " AND (p.domain in :domains OR :domains IS NULL)" +
+            " AND (s.team_id in :teams OR :teams IS NULL)", nativeQuery = true)
+    List<Map<String, Object>> findByCustomParams(@Param("dept") String dept, @Param("startDate") String startDate,
+                                                 @Param("endDate") String endDate,
+                                                 @Param("domains") List<String> domains,
+                                                 @Param("teams") List<Integer> teams);
 }
