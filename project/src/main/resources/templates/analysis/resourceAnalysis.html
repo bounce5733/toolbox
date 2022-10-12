@@ -237,13 +237,15 @@
               lastEndDateArr.push(projectLastEndateMap[projectName] ? projectLastEndateMap[projectName] : '')
               let innerPersonnelCount = 0
               let outerPersonnelCount = 0
-              this.projectResourcesMap[projectName].forEach(resource => {
-                if (this.personnelMap[resource.personnelId + ''].type === '1') {
-                  innerPersonnelCount ++
-                } else {
-                  outerPersonnelCount ++
-                }
-              })
+              if (this.projectResourcesMap[projectName]) {
+                this.projectResourcesMap[projectName].forEach(resource => {
+                  if (this.personnelMap[resource.personnelId + ''].type === '1') {
+                    innerPersonnelCount ++
+                  } else {
+                    outerPersonnelCount ++
+                  }
+                })
+              }
               personnelCountMap[projectName] =  '\n行员' + innerPersonnelCount + '人' + '\n外包' + outerPersonnelCount + '人'
             })
             const serieses = []
