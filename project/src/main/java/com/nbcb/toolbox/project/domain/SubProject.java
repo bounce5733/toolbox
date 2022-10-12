@@ -3,6 +3,7 @@ package com.nbcb.toolbox.project.domain;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -52,14 +53,14 @@ public class SubProject {
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "subproject_id", referencedColumnName = "id")
-    private Set<Process> processes;
+    private List<Process> processes;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "subproject_id", referencedColumnName = "id")
-    private Set<Resource> resources;
+    private List<Resource> resources;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "subproject_id", referencedColumnName = "id")
-    private Set<Risk> risks;
+    private List<Risk> risks;
 
 }

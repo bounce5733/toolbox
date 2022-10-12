@@ -3,6 +3,7 @@ package com.nbcb.toolbox.project.domain;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -40,5 +41,5 @@ public class Project {
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "project_id", referencedColumnName = "id")
-    private Set<SubProject> subProjects;
+    private List<SubProject> subProjects;
 }

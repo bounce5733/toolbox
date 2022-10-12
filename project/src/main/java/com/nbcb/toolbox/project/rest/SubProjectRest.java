@@ -6,7 +6,9 @@ import com.nbcb.toolbox.project.domain.Resource;
 import com.nbcb.toolbox.project.domain.SubProject;
 import com.nbcb.toolbox.project.repository.ResourceRepository;
 import com.nbcb.toolbox.project.repository.SubProjectRepository;
+import com.nbcb.toolbox.project.service.SubProjectService;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.platform.commons.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -17,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * ProjectRest
@@ -36,15 +39,19 @@ public class SubProjectRest {
     @Autowired
     private ResourceRepository subProjectPersonnelRepository;
 
+    @Autowired
+    private SubProjectService subProjectService;
+
     @GetMapping("/load")
     public ResponseEntity<List<SubProject>> load() {
         return new ResponseEntity<>(subProjectRepository.findAll(), HttpStatus.OK);
     }
 
-    @GetMapping("/query/{page}")
-    public ResponseEntity<Page<SubProject>> query(@PathVariable("page") int page) {
+    @PostMapping("/query/{page}")
+    public ResponseEntity<Page<SubProject>> query(@PathVariable("page") int page,
+                                                  @RequestBody Map<String, String> params) {
         Pageable pageParam = PageRequest.of(page - 1, Constant.PAGE_SIZE);
-        return new ResponseEntity<>(subProjectRepository.findAll(pageParam), HttpStatus.OK);
+        return new ResponseEntity<>(subProjectService.query(params, pageParam), HttpStatus.OK);
     }
 
     @PostMapping

@@ -11,10 +11,28 @@
   <el-row>
     <el-form :inline="true" @submit.native.prevent>
       <el-form-item>
-        <el-input @keyup.enter.native="query" style="width:280px" placeholder="名称" clearable v-model="queryParams"></el-input>
+        <el-input @keyup.enter.native="query" placeholder="名称" clearable v-model="params.name"></el-input>
+      </el-form-item>
+      <el-form-item label="系统">
+        <el-select v-model="params.system" clearable>
+          <el-option v-for="(val, key) in dictMap['SYSTEM']" :label="val" :value="key" :key="key"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="部门">
+        <el-select v-model="params.dept" clearable>
+          <el-option v-for="(val, key) in dictMap['DEPT']" :label="val" :value="key" :key="key"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="条线">
+        <el-select v-model="params.domain" clearable>
+          <el-option v-for="(val, key) in dictMap['DOMAIN']" :label="val" :value="key" :key="key"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="状态">
+        <el-switch v-model="params.isClose" active-color="#13ce66" inactive-color="#ff4949" active-value="0" inactive-value="1"></el-switch>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="query">查询</el-button>
+        <el-button type="primary" @click="query" icon="el-icon-search">查询</el-button>
       </el-form-item>
     </el-form>
     <el-table :data="pageinfo.content" highlight-current-row @row-dblclick="openDetail" border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
@@ -323,7 +341,7 @@
           personnelMap: {}, // 人员字典
           projectMap: {}, // 子项目id->主项目映射
           detailVisible: false,
-          queryParams: '',
+          params: { isClose: '0' },
           pageinfo: {
             pageable: {
               pageNumber: 1
@@ -402,7 +420,7 @@
           })
         },
         query: function() {
-          axios.get('/rest/subproject/query/' + (this.pageinfo.pageable.pageNumber)).then(res => {
+          axios.post('/rest/subproject/query/' + (this.pageinfo.pageable.pageNumber), this.params).then(res => {
             this.pageinfo = res.data
             this.pageinfo.pageable.pageNumber += 1
           })
