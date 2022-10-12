@@ -3,7 +3,6 @@ package com.nbcb.toolbox.project.service;
 import com.nbcb.toolbox.project.domain.Dict;
 import com.nbcb.toolbox.project.repository.DicTypeRepository;
 import com.nbcb.toolbox.project.repository.DictRepository;
-import org.junit.jupiter.api.parallel.Isolated;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;

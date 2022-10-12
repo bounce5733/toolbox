@@ -1,14 +1,12 @@
 package com.nbcb.toolbox.project.rest;
 
 import com.nbcb.toolbox.project.Constant;
-import com.nbcb.toolbox.project.domain.Project;
 import com.nbcb.toolbox.project.domain.Resource;
 import com.nbcb.toolbox.project.domain.SubProject;
 import com.nbcb.toolbox.project.repository.ResourceRepository;
 import com.nbcb.toolbox.project.repository.SubProjectRepository;
 import com.nbcb.toolbox.project.service.SubProjectService;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.platform.commons.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;

@@ -3,7 +3,6 @@ package com.nbcb.toolbox.project.domain;
 import lombok.*;
 
 import javax.persistence.*;
-import java.sql.Date;
 
 /**
  * 项目合同

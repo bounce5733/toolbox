@@ -1,7 +1,6 @@
 package com.nbcb.toolbox.project.repository;
 
 import com.nbcb.toolbox.project.domain.Contract;
-import com.nbcb.toolbox.project.domain.Personnel;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
