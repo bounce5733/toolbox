@@ -45,7 +45,7 @@ public class SubProject {
     private Integer qa;
 
     @Column(name = "is_close", length = 1)
-    private String isClose;
+    private String isClose = "0";
 
     @OneToOne(cascade = CascadeType.DETACH)
     @JoinColumn(name = "contract_id", referencedColumnName = "id")

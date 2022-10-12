@@ -8,6 +8,7 @@ CREATE TABLE project (id int auto_increment PRIMARY KEY, code varchar(32) NOT NU
 
 CREATE TABLE subproject (id int auto_increment PRIMARY KEY, project_id int NOT NULL, system varchar(32),
     phase varchar(32) NOT NULL, dept varchar(32), pm int, pmo int, qa int, contract_id int,
+    is_close character(1) default '0',
     FOREIGN KEY (project_id) REFERENCES project(id),
     FOREIGN KEY (contract_id) REFERENCES contract(id));
 
