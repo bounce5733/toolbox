@@ -50,109 +50,96 @@
         }
       },
       methods: {
-        async load() {
-          this.loadDict().then(this.loadPersonnel().then(this.loadProject().then(
-            axios.get('/rest/project/load').then(res => {
-              const projectRows = []
-              res.data.forEach((project, pindex) => {
-                const projectRow = {}
-                projectRow['baseinfo'] = { name: project.name, issue: project.issue, domain: project.domain, onlineDate: project.onlineDate }
-                const subProjectRow = {}
-                project.subProjects.forEach(subproject => {
-                  if (subproject.isClose === '0') {
-                    this.systems.add(subproject.system)
-                    subproject.resources.forEach((resource, index) => {
-                      if (!subProjectRow[index]) {
-                        subProjectRow[index] = {}
-                      }
-                      subProjectRow[index][subproject.system + '_' + 'startDate'] = resource.startDate
-                      subProjectRow[index][subproject.system + '_' + 'prevSubproject'] = this.projectMap[resource.prevSubprojectId] ? this.projectMap[resource.prevSubprojectId].name : '/'
-                      subProjectRow[index][subproject.system + '_' + 'personnelName'] = this.personnelMap[resource.personnelId] ? this.personnelMap[resource.personnelId].name : ''
-                      subProjectRow[index][subproject.system + '_' + 'supplierName'] = this.personnelMap[resource.personnelId] ? this.dictMap['SUPPLIER'][this.personnelMap[resource.personnelId].company] : '/'
-                      subProjectRow[index][subproject.system + '_' + 'personnelType'] = this.personnelMap[resource.personnelId] ? this.dictMap['PERSONNEL_TYPE'][this.personnelMap[resource.personnelId].type] : '/'
-                      subProjectRow[index][subproject.system + '_' + 'personnelLevel'] = this.personnelMap[resource.personnelId] ? this.dictMap['PERSONNEL_LEVEL'][this.personnelMap[resource.personnelId].level] : '/'
-                      subProjectRow[index][subproject.system + '_' + 'currentRation'] = resource.currentRation
-                      subProjectRow[index][subproject.system + '_' + 'nextSubproject'] = this.projectMap[resource.nextSubprojectId] ? this.projectMap[resource.nextSubprojectId].name : '/'
-                      subProjectRow[index][subproject.system + '_' + 'endDate'] = resource.endDate
-                      subProjectRow[index][subproject.system + '_' + 'contract'] = this.dictMap['CONTRACT_STATUS'][subproject.contract.status] ? this.dictMap['CONTRACT_STATUS'][subproject.contract.status] : '/'
-                    })
-                  }
-                })
-                projectRow['subprojects'] = subProjectRow
-                projectRows.push(projectRow)
-              })
-              console.log('projectRows:' + JSON.stringify(projectRows))
-              const spanrowArr = []
-              projectRows.forEach(projectRow => {
-                for (const rownum in projectRow.subprojects) {
-                  const row = Object.assign({}, projectRow.baseinfo)
-                  const subrow = Object.assign({}, projectRow.subprojects[rownum])
-                  this.systems.forEach(system => {
-                    subrow[system + '_' + 'startDate'] = '/'
-                    subrow[system + '_' + 'prevSubproject'] = '/'
-                    subrow[system + '_' + 'personnelName'] = '/'
-                    subrow[system + '_' + 'supplierName'] = '/'
-                    subrow[system + '_' + 'personnelType'] = '/'
-                    subrow[system + '_' + 'personnelLevel'] = '/'
-                    subrow[system + '_' + 'currentRation'] = '/'
-                    subrow[system + '_' + 'nextSubproject'] = '/'
-                    subrow[system + '_' + 'endDate'] = '/'
-                    subrow[system + '_' + 'contract'] = '/'
-                  })
-                  this.projects.push(Object.assign(row, subrow))
-                }
-                spanrowArr.push(Object.keys(projectRow.subprojects).length)
-                console.log('spanrowArr:' + JSON.stringify(spanrowArr))
-              })
-              console.log('this.projects:' + JSON.stringify(this.projects))
-              // 计算跨行数据列
-              const rowspanCols = [0, 1, 2, 3]
-              let contractRowspanIndex = 3
-              const resourceColNum = 10 // 资源列数
-              for (let i = 1; i <= this.systems.size; i++ ) {
-                contractRowspanIndex += resourceColNum
-                rowspanCols.push(contractRowspanIndex)
-              }
-              let spanRownum = 0 // 跨行行标
-              spanrowArr.forEach((rownum, index) => {
-                rowspanCols.forEach(colnum => {
-                  const spankey = spanRownum + '' + colnum
-                  this.rowspan[spankey] = [rownum, 1]
-                  console.log('[spankey]' + spankey + '[val]' + [spanrowArr[index + 1], 1])
-                })
-                for (let i = spanRownum + 1; i < spanRownum + rownum; i ++) {
-                  rowspanCols.forEach(colnum => {
-                    const spankey = i + '' + colnum
-                    this.rowspan[spankey] = [0, 0]
-                  })
-                }
-                spanRownum += rownum
-              })
-              console.log('this.rowspan:' + JSON.stringify(this.rowspan))
+        load() {
+          Promise.all([axios.get('/rest/dict/load'), axios.get('/rest/personnel/load')]).then(values => {
+            this.dictMap = values[0].data
+            values[1].data.forEach(item =>  {
+              this.personnelMap[item.id] = item
             })
-          )))
-          
-        },
-        async loadDict() {
-          axios.get('/rest/dict/load').then(res => {
-            this.dictMap = res.data
-          })
-        },
-        async loadPersonnel() {
-          axios.get('/rest/personnel/load').then(res => {
-              res.data.forEach(item =>  {
-                this.personnelMap[item.id] = item
-              })
-          })
-        },
-        async loadProject() {
-          axios.get('/rest/project/load').then(res => {
+            return axios.get('/rest/project/load')
+          }).then(res => {
             res.data.forEach(project =>  {
               project.subProjects.forEach(subProject =>  {
                 this.projectMap[subProject.id] = { code: project.code, name: project.name, domain: project.domain,
                 issue: project.issue, onlineDate: project.onlineDate, id: project.id }
               })
             })
+            const projectRows = []
+            res.data.forEach((project, pindex) => {
+              const projectRow = {}
+              projectRow['baseinfo'] = { name: project.name, issue: project.issue, domain: project.domain, onlineDate: project.onlineDate }
+              const subProjectRow = {}
+              project.subProjects.forEach(subproject => {
+                if (subproject.isClose === '0') {
+                  this.systems.add(subproject.system)
+                  subproject.resources.forEach((resource, index) => {
+                    if (!subProjectRow[index]) {
+                      subProjectRow[index] = {}
+                    }
+                    subProjectRow[index][subproject.system + '_' + 'startDate'] = resource.startDate
+                    subProjectRow[index][subproject.system + '_' + 'prevSubproject'] = this.projectMap[resource.prevSubprojectId] ? this.projectMap[resource.prevSubprojectId].name : '/'
+                    subProjectRow[index][subproject.system + '_' + 'personnelName'] = this.personnelMap[resource.personnelId] ? this.personnelMap[resource.personnelId].name : ''
+                    subProjectRow[index][subproject.system + '_' + 'supplierName'] = this.personnelMap[resource.personnelId] ? this.dictMap['SUPPLIER'][this.personnelMap[resource.personnelId].company] : '/'
+                    subProjectRow[index][subproject.system + '_' + 'personnelType'] = this.personnelMap[resource.personnelId] ? this.dictMap['PERSONNEL_TYPE'][this.personnelMap[resource.personnelId].type] : '/'
+                    subProjectRow[index][subproject.system + '_' + 'personnelLevel'] = this.personnelMap[resource.personnelId] ? this.dictMap['PERSONNEL_LEVEL'][this.personnelMap[resource.personnelId].level] : '/'
+                    subProjectRow[index][subproject.system + '_' + 'currentRation'] = resource.currentRation
+                    subProjectRow[index][subproject.system + '_' + 'nextSubproject'] = this.projectMap[resource.nextSubprojectId] ? this.projectMap[resource.nextSubprojectId].name : '/'
+                    subProjectRow[index][subproject.system + '_' + 'endDate'] = resource.endDate
+                    subProjectRow[index][subproject.system + '_' + 'contract'] = this.dictMap['CONTRACT_STATUS'][subproject.contract.status] ? this.dictMap['CONTRACT_STATUS'][subproject.contract.status] : '/'
+                  })
+                }
+              })
+              projectRow['subprojects'] = subProjectRow
+              projectRows.push(projectRow)
+            })
+            console.log('projectRows:' + JSON.stringify(projectRows))
+            const spanrowArr = []
+            projectRows.forEach(projectRow => {
+              for (const rownum in projectRow.subprojects) {
+                const row = Object.assign({}, projectRow.baseinfo)
+                const subrow = Object.assign({}, projectRow.subprojects[rownum])
+                this.systems.forEach(system => {
+                  subrow[system + '_' + 'startDate'] = '/'
+                  subrow[system + '_' + 'prevSubproject'] = '/'
+                  subrow[system + '_' + 'personnelName'] = '/'
+                  subrow[system + '_' + 'supplierName'] = '/'
+                  subrow[system + '_' + 'personnelType'] = '/'
+                  subrow[system + '_' + 'personnelLevel'] = '/'
+                  subrow[system + '_' + 'currentRation'] = '/'
+                  subrow[system + '_' + 'nextSubproject'] = '/'
+                  subrow[system + '_' + 'endDate'] = '/'
+                  subrow[system + '_' + 'contract'] = '/'
+                })
+                this.projects.push(Object.assign(row, subrow))
+              }
+              spanrowArr.push(Object.keys(projectRow.subprojects).length)
+              console.log('spanrowArr:' + JSON.stringify(spanrowArr))
+            })
+            console.log('this.projects:' + JSON.stringify(this.projects))
+            // 计算跨行数据列
+            const rowspanCols = [0, 1, 2, 3]
+            let contractRowspanIndex = 3
+            const resourceColNum = 10 // 资源列数
+            for (let i = 1; i <= this.systems.size; i++ ) {
+              contractRowspanIndex += resourceColNum
+              rowspanCols.push(contractRowspanIndex)
+            }
+            let spanRownum = 0 // 跨行行标
+            spanrowArr.forEach((rownum, index) => {
+              rowspanCols.forEach(colnum => {
+                const spankey = spanRownum + '' + colnum
+                this.rowspan[spankey] = [rownum, 1]
+                console.log('[spankey]' + spankey + '[val]' + [spanrowArr[index + 1], 1])
+              })
+              for (let i = spanRownum + 1; i < spanRownum + rownum; i ++) {
+                rowspanCols.forEach(colnum => {
+                  const spankey = i + '' + colnum
+                  this.rowspan[spankey] = [0, 0]
+                })
+              }
+              spanRownum += rownum
+            })
+            console.log('this.rowspan:' + JSON.stringify(this.rowspan))
           })
         },
         spanMethod({ row, column, rowIndex, columnIndex }) {

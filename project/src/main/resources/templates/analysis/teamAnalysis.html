@@ -203,15 +203,13 @@
       },
       methods: {
         load() {
-          axios.get('/rest/dict/load').then(res => {
-            this.dictMap = res.data
-            axios.get('/rest/team/load').then(teamRes => {
-              teamRes.data.forEach(team => {
-                this.teamMap[team.id] = team
-              })
-              this.query()
+          Promise.all([axios.get('/rest/dict/load'),  axios.get('/rest/team/load')]).then(values => {
+            this.dictMap = values[0].data
+
+            values[1].data.forEach(team => {
+              this.teamMap[team.id] = team
             })
-            
+            this.query()
           })
         },
         query() {

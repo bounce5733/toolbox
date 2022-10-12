@@ -142,16 +142,17 @@
         }
       },
       methods: {
+        load() {
+          axios.get('/rest/dict/load').then(res => {
+            this.dictMap = res.data
+            this.query()
+          })
+        },
         query: function() {
           axios.get('/rest/contract/query/' + (this.pageinfo.pageable.pageNumber) + '?params=' + this.queryParams)
             .then(res => {
               this.pageinfo = res.data
               this.pageinfo.pageable.pageNumber += 1
-          })
-        },
-        loadDict: function() {
-          axios.get('/rest/dict/load').then(res => {
-            this.dictMap = res.data
           })
         },
         openAdd: function() {
@@ -208,8 +209,7 @@
         }
       },
       mounted() {
-        this.loadDict()
-        this.query()
+        this.load()
       }
     })
   </script>

@@ -119,194 +119,195 @@
         }
       },
       methods: {
-        query() {
-          axios.get('/rest/dict/load').then(res => {
-            this.dictMap = res.data
-            axios.get('/rest/team/load').then(res => {
-              this.deptTeams = []
-              const deptTeamMap = {}
-              res.data.forEach(team => {
-                if (!deptTeamMap[team.dept]) {
-                  deptTeamMap[team.dept] = []
-                }
-                deptTeamMap[team.dept].push({id: team.id, name: team.name})
-              })
-              Object.keys(deptTeamMap).forEach(deptCode => {
-                this.deptTeams.push({id: deptCode, name: this.dictMap['DEPT'][deptCode], children: deptTeamMap[deptCode]})
-              })
-              axios.get('/rest/project/load').then(res => {
-                res.data.forEach(project =>  {
-                  project.subProjects.forEach(subProject =>  {
-                    this.projectMap[subProject.id] = { id: subProject.id, code: project.code, name: project.name, domain: project.domain,
-                    issue: project.issue, onlineDate: project.onlineDate, system: subProject.system }
-                  })
-                })
-                axios.get('/rest/personnel/load').then(res => {
-                  res.data.forEach(item =>  {
-                    this.personnelMap[item.id] = item
-                  })
-                  axios.get('/rest/subproject/load').then(res => {
-                    this.projectResourcesMap = {}
-                    const subProjectMap = {}
-                    const projectNames = []
-                    res.data.forEach(subProject => {
-                      // 过滤出查询条件数据
-                      let pass = true
-                      let teamMatchResources = []
-                      if (this.params.team && this.params.team.length) {
-                        pass = false
-                        subProject.resources.forEach(resource => {
-                          if (this.personnelMap[resource.personnelId].team.id == this.params.team[1]) {
-                            console.log('人员：' + this.personnelMap[resource.personnelId].name)
-                            console.log('小组：' + this.personnelMap[resource.personnelId].team.name)
-                            teamMatchResources.push(resource)
-                          }
-                        })
-                      }
-                      if (teamMatchResources.length > 0) {
-                        pass = true
-                        subProject.resources = teamMatchResources
-                      }
-                      let deptMatchResources = []
-                      if (this.params.dept && this.params.dept.trim().length > 0) {
-                        pass = false
-                        subProject.resources.forEach(resource => {
-                          if (this.personnelMap[resource.personnelId].team.dept == this.params.dept) {
-                            deptMatchResources.push(resource)
-                          }
-                        })
-                      }
-                      if (deptMatchResources.length > 0) {
-                        pass = true
-                        subProject.resources = deptMatchResources
-                      }
-                      console.log('subproject info:' + JSON.stringify(subProject))
-                      if (pass) {
-                        const subProjectName = this.projectMap[subProject.id].name + "-" + this.dictMap['SYSTEM'][this.projectMap[subProject.id].system]
-                        projectNames.push(subProjectName)
-                        if (!subProjectMap[subProjectName]) {
-                          subProjectMap[subProjectName] = {}
-                        }
-                        subProject.processes.forEach(process =>  {
-                          if (!subProjectMap[subProjectName][process.phase]) {
-                            subProjectMap[subProjectName][process.phase] = {}
-                          }
-                          subProjectMap[subProjectName][process.phase].reallyStartDate = process.reallyStartDate ? process.reallyStartDate : ''
-                          subProjectMap[subProjectName][process.phase].reallyEndDate = process.reallyEndDate ? process.reallyEndDate : ''
-                          subProjectMap[subProjectName][process.phase].currentProcess = process.currentProcess ? process.currentProcess : 0
-                        })
-                        subProject.resources.forEach(resource => {
-                          if (!this.projectResourcesMap[subProjectName]) {
-                            this.projectResourcesMap[subProjectName] = []
-                          }
-                          console.log('resource:' + JSON.stringify(resource))
-                          this.projectResourcesMap[subProjectName].push(resource)
-                        })
-                      }
-                    })
-                    const projectPhaseNames = []
-                    const seriesDataes = []
-                    const sortedProjectPhases = Object.keys(this.dictMap['PROJECT_STAGE']).sort()
-                    const projectLastEndateMap = {}
-                    sortedProjectPhases.forEach(phaseCode => {
-                      projectPhaseNames.push(this.dictMap['PROJECT_STAGE'][phaseCode])
-                      const seriesData = { startData: [], endData: [], name: this.dictMap['PROJECT_STAGE'][phaseCode], currentProcess: []}
-                      Object.keys(subProjectMap).forEach(projectName => {
-                        if (subProjectMap[projectName][phaseCode]) {
-                          seriesData.startData.push(subProjectMap[projectName][phaseCode].reallyStartDate)
-                          seriesData.endData.push(subProjectMap[projectName][phaseCode].reallyEndDate)
-                          seriesData.currentProcess.push(subProjectMap[projectName][phaseCode].currentProcess)
-                          if (subProjectMap[projectName][phaseCode].reallyEndDate) {
-                            projectLastEndateMap[projectName] = subProjectMap[projectName][phaseCode].reallyEndDate
-                          }
-                        } else {
-                          seriesData.startData.push('')
-                          seriesData.endData.push('')
-                        }
-                      })
-                      seriesDataes.push(seriesData)
-                    })
-                    const personnelCountMap = {}
-                    const lastEndDateArr = []
-                    projectNames.forEach(projectName => {
-                      lastEndDateArr.push(projectLastEndateMap[projectName] ? projectLastEndateMap[projectName] : '')
-                      let innerPersonnelCount = 0
-                      let outerPersonnelCount = 0
-                      this.projectResourcesMap[projectName].forEach(resource => {
-                        if (this.personnelMap[resource.personnelId + ''].type === '1') {
-                          innerPersonnelCount ++
-                        } else {
-                          outerPersonnelCount ++
-                        }
-                      })
-                      personnelCountMap[projectName] =  '\n行员' + innerPersonnelCount + '人' + '\n外包' + outerPersonnelCount + '人'
-                    })
-                    const serieses = []
+        load() {
+          Promise.all([axios.get('/rest/dict/load'), axios.get('/rest/personnel/load'), axios.get('/rest/project/load'), axios.get('/rest/team/load')]).then(values => {
+            this.dictMap = values[0].data
 
-                    seriesDataes.forEach((data, index) => {
-                      serieses.push(
-                        { 
-                          name: '起始日期隐藏线', 
-                          type: 'bar',
-                          stack: '总量',
-                          itemStyle: {
-                            normal: {
-                              color: 'transparent'
-                            }
-                          },
-                          data: data.startData
-                        }
-                      )
-                      serieses.push(
-                        { 
-                          name: data.name, 
-                          type: 'bar',
-                          stack: '总量',
-                          data: data.endData,
-                          label: {
-                            normal: {
-                              show: true,
-                              position: 'inside',
-                              formatter: function(params) {
-                                console.log('params:' + JSON.stringify(personnelCountMap[params.name]))
-                                return params.seriesName + data.currentProcess[projectNames.indexOf(params.name)] + '%'
-                              }
-                            }
-                          }
-                        }
-                      )
-                    })
-                    console.log('lastEndDateArr:' + JSON.stringify(lastEndDateArr))
-                    serieses.push({
-                      name: '统计',
-                      type: 'line',
-                      symbolSize: 10,
-                      symbol: "circle",
-                      itemStyle: {
-                        normal: {
-                          color: 'transparent'
-                        }
-                      },
-                      data: lastEndDateArr,
-                      label: {
-                        normal: {
-                          show: true,
-                          color: 'black',
-                          position: 'right',
-                          formatter: function(params) {
-                            return personnelCountMap[params.name]
-                          }
-                        }
-                      }
-                    })
-                    this.option.legend.data = projectPhaseNames
-                    this.option.yAxis.data = projectNames
-                    this.option.series = serieses
-                    this.myChart.setOption(this.option)
-                  })
-                })
+            values[1].data.forEach(item =>  {
+              this.personnelMap[item.id] = item
+            })
+
+            values[2].data.forEach(project =>  {
+              project.subProjects.forEach(subProject =>  {
+                this.projectMap[subProject.id] = { id: subProject.id, code: project.code, name: project.name, domain: project.domain,
+                issue: project.issue, onlineDate: project.onlineDate, system: subProject.system }
               })
             })
+
+            this.deptTeams = []
+            const deptTeamMap = {}
+            values[3].data.forEach(team => {
+              if (!deptTeamMap[team.dept]) {
+                deptTeamMap[team.dept] = []
+              }
+              deptTeamMap[team.dept].push({id: team.id, name: team.name})
+            })
+            Object.keys(deptTeamMap).forEach(deptCode => {
+              this.deptTeams.push({id: deptCode, name: this.dictMap['DEPT'][deptCode], children: deptTeamMap[deptCode]})
+            })
+
+            this.query()
+          })
+        },
+        query() {
+          axios.get('/rest/subproject/load').then(res => {
+            this.projectResourcesMap = {}
+            const subProjectMap = {}
+            const projectNames = []
+            res.data.forEach(subProject => {
+              // 过滤出查询条件数据
+              let pass = true
+              let teamMatchResources = []
+              if (this.params.team && this.params.team.length) {
+                pass = false
+                subProject.resources.forEach(resource => {
+                  if (this.personnelMap[resource.personnelId].team.id == this.params.team[1]) {
+                    console.log('人员：' + this.personnelMap[resource.personnelId].name)
+                    console.log('小组：' + this.personnelMap[resource.personnelId].team.name)
+                    teamMatchResources.push(resource)
+                  }
+                })
+              }
+              if (teamMatchResources.length > 0) {
+                pass = true
+                subProject.resources = teamMatchResources
+              }
+              let deptMatchResources = []
+              if (this.params.dept && this.params.dept.trim().length > 0) {
+                pass = false
+                subProject.resources.forEach(resource => {
+                  if (this.personnelMap[resource.personnelId].team.dept == this.params.dept) {
+                    deptMatchResources.push(resource)
+                  }
+                })
+              }
+              if (deptMatchResources.length > 0) {
+                pass = true
+                subProject.resources = deptMatchResources
+              }
+              console.log('subproject info:' + JSON.stringify(subProject))
+              if (pass) {
+                const subProjectName = this.projectMap[subProject.id].name + "-" + this.dictMap['SYSTEM'][this.projectMap[subProject.id].system]
+                projectNames.push(subProjectName)
+                if (!subProjectMap[subProjectName]) {
+                  subProjectMap[subProjectName] = {}
+                }
+                subProject.processes.forEach(process =>  {
+                  if (!subProjectMap[subProjectName][process.phase]) {
+                    subProjectMap[subProjectName][process.phase] = {}
+                  }
+                  subProjectMap[subProjectName][process.phase].reallyStartDate = process.reallyStartDate ? process.reallyStartDate : ''
+                  subProjectMap[subProjectName][process.phase].reallyEndDate = process.reallyEndDate ? process.reallyEndDate : ''
+                  subProjectMap[subProjectName][process.phase].currentProcess = process.currentProcess ? process.currentProcess : 0
+                })
+                subProject.resources.forEach(resource => {
+                  if (!this.projectResourcesMap[subProjectName]) {
+                    this.projectResourcesMap[subProjectName] = []
+                  }
+                  console.log('resource:' + JSON.stringify(resource))
+                  this.projectResourcesMap[subProjectName].push(resource)
+                })
+              }
+            })
+            const projectPhaseNames = []
+            const seriesDataes = []
+            const sortedProjectPhases = Object.keys(this.dictMap['PROJECT_STAGE']).sort()
+            const projectLastEndateMap = {}
+            sortedProjectPhases.forEach(phaseCode => {
+              projectPhaseNames.push(this.dictMap['PROJECT_STAGE'][phaseCode])
+              const seriesData = { startData: [], endData: [], name: this.dictMap['PROJECT_STAGE'][phaseCode], currentProcess: []}
+              Object.keys(subProjectMap).forEach(projectName => {
+                if (subProjectMap[projectName][phaseCode]) {
+                  seriesData.startData.push(subProjectMap[projectName][phaseCode].reallyStartDate)
+                  seriesData.endData.push(subProjectMap[projectName][phaseCode].reallyEndDate)
+                  seriesData.currentProcess.push(subProjectMap[projectName][phaseCode].currentProcess)
+                  if (subProjectMap[projectName][phaseCode].reallyEndDate) {
+                    projectLastEndateMap[projectName] = subProjectMap[projectName][phaseCode].reallyEndDate
+                  }
+                } else {
+                  seriesData.startData.push('')
+                  seriesData.endData.push('')
+                }
+              })
+              seriesDataes.push(seriesData)
+            })
+            const personnelCountMap = {}
+            const lastEndDateArr = []
+            projectNames.forEach(projectName => {
+              lastEndDateArr.push(projectLastEndateMap[projectName] ? projectLastEndateMap[projectName] : '')
+              let innerPersonnelCount = 0
+              let outerPersonnelCount = 0
+              this.projectResourcesMap[projectName].forEach(resource => {
+                if (this.personnelMap[resource.personnelId + ''].type === '1') {
+                  innerPersonnelCount ++
+                } else {
+                  outerPersonnelCount ++
+                }
+              })
+              personnelCountMap[projectName] =  '\n行员' + innerPersonnelCount + '人' + '\n外包' + outerPersonnelCount + '人'
+            })
+            const serieses = []
+
+            seriesDataes.forEach((data, index) => {
+              serieses.push(
+                { 
+                  name: '起始日期隐藏线', 
+                  type: 'bar',
+                  stack: '总量',
+                  itemStyle: {
+                    normal: {
+                      color: 'transparent'
+                    }
+                  },
+                  data: data.startData
+                }
+              )
+              serieses.push(
+                { 
+                  name: data.name, 
+                  type: 'bar',
+                  stack: '总量',
+                  data: data.endData,
+                  label: {
+                    normal: {
+                      show: true,
+                      position: 'inside',
+                      formatter: function(params) {
+                        console.log('params:' + JSON.stringify(personnelCountMap[params.name]))
+                        return params.seriesName + data.currentProcess[projectNames.indexOf(params.name)] + '%'
+                      }
+                    }
+                  }
+                }
+              )
+            })
+            console.log('lastEndDateArr:' + JSON.stringify(lastEndDateArr))
+            serieses.push({
+              name: '统计',
+              type: 'line',
+              symbolSize: 10,
+              symbol: "circle",
+              itemStyle: {
+                normal: {
+                  color: 'transparent'
+                }
+              },
+              data: lastEndDateArr,
+              label: {
+                normal: {
+                  show: true,
+                  color: 'black',
+                  position: 'right',
+                  formatter: function(params) {
+                    return personnelCountMap[params.name]
+                  }
+                }
+              }
+            })
+            this.option.legend.data = projectPhaseNames
+            this.option.yAxis.data = projectNames
+            this.option.series = serieses
+            this.myChart.setOption(this.option)
           })
         },
         openDialog(params) {
@@ -315,7 +316,7 @@
         }
       },
       mounted() {
-        this.query()
+        this.load()
         this.myChart = echarts.init(document.getElementById('chart'))
         this.myChart.on('click', this.openDialog)
       }

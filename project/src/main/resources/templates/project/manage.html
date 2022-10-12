@@ -386,32 +386,25 @@
         }
       },
       methods: {
+        load() {
+          Promise.all([axios.get('/rest/dict/load'), axios.get('/rest/personnel/load'), axios.get('/rest/project/load')]).then(values => {
+            this.dictMap = values[0].data
+            values[1].data.forEach(item =>  {
+              this.personnelMap[item.id] = item
+            })
+            values[2].data.forEach(project =>  {
+              project.subProjects.forEach(subProject =>  {
+                this.projectMap[subProject.id] = { id: subProject.id, code: project.code, name: project.name, domain: project.domain,
+                issue: project.issue, onlineDate: project.onlineDate, system: subProject.system }
+              })
+            })
+            this.query()
+          })
+        },
         query: function() {
-          axios.get('/rest/project/load').then(res => {
-              res.data.forEach(project =>  {
-                project.subProjects.forEach(subProject =>  {
-                  this.projectMap[subProject.id] = { id: subProject.id, code: project.code, name: project.name, domain: project.domain,
-                  issue: project.issue, onlineDate: project.onlineDate, system: subProject.system }
-                })
-                axios.get('/rest/subproject/query/' + (this.pageinfo.pageable.pageNumber))
-                  .then(res => {
-                    this.pageinfo = res.data
-                    this.pageinfo.pageable.pageNumber += 1
-                })
-              })
-          })
-        },
-        loadDict: function() {
-          axios.get('/rest/dict/load').then(res => {
-            this.dictMap = res.data
-          })
-        },
-        loadPersonnel: function() {
-          axios.get('/rest/personnel/load')
-            .then(res => {
-              res.data.forEach(item =>  {
-                this.personnelMap[item.id] = item
-              })
+          axios.get('/rest/subproject/query/' + (this.pageinfo.pageable.pageNumber)).then(res => {
+            this.pageinfo = res.data
+            this.pageinfo.pageable.pageNumber += 1
           })
         },
         handlePageChange: function(pageNumber) {
@@ -606,9 +599,7 @@
         }
       },
       mounted() {
-        this.loadDict()
-        this.loadPersonnel()
-        this.query()
+        this.load()
       }
     })
   </script>

@@ -225,37 +225,34 @@
         }
       },
       methods: {
-        query: function() {
+        load() {
+          Promise.all([axios.get('/rest/dict/load'), axios.get('/rest/personnel/load'), axios.get('/rest/team/load')]).then(values => {
+            this.dictMap = values[0].data
+
+            values[1].data.forEach(item =>  {
+              this.personnelMap[item.id] = item
+            })
+
+            this.deptTeams = []
+            const deptTeamMap = {}
+            values[2].data.forEach(team => {
+              if (!deptTeamMap[team.dept]) {
+                deptTeamMap[team.dept] = []
+              }
+              deptTeamMap[team.dept].push({id: team.id, name: team.name})
+            })
+            Object.keys(deptTeamMap).forEach(deptCode => {
+              this.deptTeams.push({id: deptCode, name: this.dictMap['DEPT'][deptCode], children: deptTeamMap[deptCode]})
+            })
+
+            this.query()
+          })
+        },
+        query() {
           axios.get('/rest/personnel/query/' + (this.pageinfo.pageable.pageNumber) + '?params=' + this.queryParams)
             .then(res => {
               this.pageinfo = res.data
               this.pageinfo.pageable.pageNumber += 1
-          })
-        },
-        loadDeptTeams() {
-          axios.get('/rest/dict/load').then(res => {
-            this.dictMap = res.data
-            axios.get('/rest/team/load').then(res => {
-              this.deptTeams = []
-              const deptTeamMap = {}
-              res.data.forEach(team => {
-                if (!deptTeamMap[team.dept]) {
-                  deptTeamMap[team.dept] = []
-                }
-                deptTeamMap[team.dept].push({id: team.id, name: team.name})
-              })
-              Object.keys(deptTeamMap).forEach(deptCode => {
-                this.deptTeams.push({id: deptCode, name: this.dictMap['DEPT'][deptCode], children: deptTeamMap[deptCode]})
-              })
-            })
-          })
-        },
-        loadPersonnel: function() {
-          axios.get('/rest/personnel/load')
-            .then(res => {
-              res.data.forEach(item =>  {
-                this.personnelMap[item.id] = item
-              })
           })
         },
         openAdd: function() {
@@ -312,9 +309,7 @@
         }
       },
       mounted() {
-        this.loadDeptTeams()
-        this.loadPersonnel()
-        this.query()
+        this.load()
       }
     })
   </script>

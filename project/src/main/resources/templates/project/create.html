@@ -208,7 +208,7 @@
 <script>
     new Vue({
       el: '#app',
-      data: function() {
+      data() {
         const validateProjectCode = (rule, value, callback) => {
           if (this.model.id) callback() // 编辑不用检查项目编码
           if (value === undefined || value.trim().length === 0) {
@@ -305,48 +305,38 @@
         }
       },
       methods: {
-        query: function() {
-          axios.get('/rest/project/query/' + (this.pageinfo.pageable.pageNumber) + '?params=' + this.queryParams)
-            .then(res => {
-              this.pageinfo = res.data
-              this.pageinfo.pageable.pageNumber += 1
+        load() {
+          Promise.all([axios.get('/rest/dict/load'), axios.get('/rest/personnel/load'), axios.get('/rest/contract/load/')]).then(values => {
+            this.dictMap = values[0].data
+            values[1].data.forEach(item =>  {
+              this.personnelMap[item.id] = item
+            })
+            values[2].data.forEach(item =>  {
+              this.contractMap[item.id] = item
+            })
+            this.query()
           })
         },
-        loadDict: function() {
-          axios.get('/rest/dict/load').then(res => {
-            this.dictMap = res.data
+        query() {
+          axios.get('/rest/project/query/' + (this.pageinfo.pageable.pageNumber) + '?params=' + this.queryParams).then(res => {
+            this.pageinfo = res.data
+            this.pageinfo.pageable.pageNumber += 1
           })
         },
-        loadPersonnel: function() {
-          axios.get('/rest/personnel/load')
-            .then(res => {
-              res.data.forEach(item =>  {
-                this.personnelMap[item.id] = item
-              })
-          })
-        },
-        loadContract: function() {
-          axios.get('/rest/contract/load/')
-            .then(res => {
-              res.data.forEach(item =>  {
-                this.contractMap[item.id] = item
-              })
-          })
-        },
-        openAdd: function() {
+        openAdd() {
           this.model = {}
           this.formVisible = true
         },
-        openEdit: function(record) {
+        openEdit(record) {
           this.model = { ...record }
           this.formVisible = true
         },
-        cancelForm: function() {
+        cancelForm() {
           this.$refs.form.resetFields()
           this.model = {}
           this.formVisible = false
         },
-        save: function() {
+        save() {
           this.$refs.form.validate((valid) => {
             if (valid) {
               axios.post("/rest/project", this.model).then(res => {
@@ -361,7 +351,7 @@
             }
           })
         },
-        remove: function(id) {
+        remove(id) {
           this.$confirm('确定删除该项目及所有子项', '提示', { type: 'warning' }).then(() => {
             axios.delete("/rest/project/" + id).then(res => {
               if (res.data === DATA_INTEGRITY_ERROR_TIP) {
@@ -381,7 +371,7 @@
             })
           }).catch(() => {})
         },
-        handlePageChange: function(pageNumber) {
+        handlePageChange(pageNumber) {
           this.pageinfo.pageable.pageNumber = pageNumber
           this.query()
         },
@@ -439,10 +429,7 @@
         }
       },
       mounted() {
-        this.loadDict()
-        this.loadPersonnel()
-        this.loadContract()
-        this.query()
+        this.load()
       }
     })
   </script>

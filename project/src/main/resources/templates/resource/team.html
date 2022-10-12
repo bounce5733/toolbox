@@ -95,17 +95,21 @@
         }
       },
       methods: {
+        load() {
+          axios.get('/rest/dict/load').then(res => {
+            this.dictMap = res.data
+            this.query()
+          })
+        },
         query: function() {
-          axios.get('/rest/team/query/' + (this.pageinfo.pageable.pageNumber) + '?name=' + this.queryParams.name + '&dept=' + this.queryParams.dept)
-            .then(res => {
+          axios.get('/rest/team/query/' + (this.pageinfo.pageable.pageNumber) + '?name=' + this.queryParams.name + '&dept=' + this.queryParams.dept).then(res => {
               this.pageinfo = res.data
               this.pageinfo.pageable.pageNumber += 1
           })
         },
-        loadDict: function() {
-          axios.get('/rest/dict/load').then(res => {
-            this.dictMap = res.data
-          })
+        handlePageChange: function(pageNumber) {
+          this.pageinfo.pageable.pageNumber = pageNumber
+          this.query()
         },
         openAdd: function() {
           this.model = {}
@@ -156,15 +160,10 @@
               }
             })
           }).catch(() => {})
-        },
-        handlePageChange: function(pageNumber) {
-          this.pageinfo.pageable.pageNumber = pageNumber
-          this.query()
         }
       },
       mounted() {
-        this.loadDict()
-        this.query()
+        this.load()
       }
     })
   </script>

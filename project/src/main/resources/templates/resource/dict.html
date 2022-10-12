@@ -149,7 +149,7 @@
         }
       },
       methods: {
-        loadType: function() {
+        load: function() {
           axios.get("/rest/dict/type").then(res => {
             this.dicTypes = res.data
           })
@@ -261,7 +261,7 @@
         }
       },
       mounted() {
-        this.loadType()
+        this.load()
       }
     })
   </script>

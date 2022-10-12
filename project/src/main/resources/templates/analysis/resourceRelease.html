@@ -87,59 +87,50 @@
         }
       },
       methods: {
-        async query() {
-          this.params.team = this.params.team ? this.params.team[1] : undefined
-          this.loadProject().then(axios.post('/rest/resource/query/' + this.pageinfo.pageable.pageNumber, this.params)
-            .then(res => {
-              this.pageinfo = res.data
-              this.pageinfo.pageable.pageNumber += 1
-          })
-        )},
-        handlePageChange(pageNumber) {
-          this.pageinfo.pageable.pageNumber = pageNumber
-          this.query()
-        },
-        loadDeptTeams() {
-          axios.get('/rest/dict/load').then(res => {
-            this.dictMap = res.data
-            axios.get('/rest/team/load').then(res => {
-              this.deptTeams = []
-              const deptTeamMap = {}
-              res.data.forEach(team => {
-                if (!deptTeamMap[team.dept]) {
-                  deptTeamMap[team.dept] = []
-                }
-                deptTeamMap[team.dept].push({id: team.id, name: team.name})
-              })
-              Object.keys(deptTeamMap).forEach(deptCode => {
-                this.deptTeams.push({id: deptCode, name: this.dictMap['DEPT'][deptCode], children: deptTeamMap[deptCode]})
-              })
+        load() {
+          Promise.all([axios.get('/rest/dict/load'), axios.get('/rest/personnel/load'), axios.get('/rest/project/load'), axios.get('/rest/team/load')]).then(values => {
+            this.dictMap = values[0].data
+
+            values[1].data.forEach(item =>  {
+              this.personnelMap[item.id] = item
             })
-          })
-        },
-        loadPersonnel() {
-          axios.get('/rest/personnel/load')
-            .then(res => {
-              res.data.forEach(item =>  {
-                this.personnelMap[item.id] = item
-              })
-          })
-        },
-        async loadProject() {
-          axios.get('/rest/project/load').then(res => {
-            res.data.forEach(project =>  {
+
+            values[2].data.forEach(project =>  {
               project.subProjects.forEach(subProject =>  {
                 this.projectMap[subProject.id] = { code: project.code, name: project.name, domain: project.domain,
                 issue: project.issue, onlineDate: project.onlineDate, id: project.id }
               })
             })
+
+            this.deptTeams = []
+            const deptTeamMap = {}
+            values[3].data.forEach(team => {
+              if (!deptTeamMap[team.dept]) {
+                deptTeamMap[team.dept] = []
+              }
+              deptTeamMap[team.dept].push({id: team.id, name: team.name})
+            })
+            Object.keys(deptTeamMap).forEach(deptCode => {
+              this.deptTeams.push({id: deptCode, name: this.dictMap['DEPT'][deptCode], children: deptTeamMap[deptCode]})
+            })
+
+            this.query()
           })
+        },
+        query() {
+          this.params.team = this.params.team ? this.params.team[1] : undefined
+          axios.post('/rest/resource/query/' + this.pageinfo.pageable.pageNumber, this.params).then(res => {
+            this.pageinfo = res.data
+            this.pageinfo.pageable.pageNumber += 1
+          })
+        },
+        handlePageChange(pageNumber) {
+          this.pageinfo.pageable.pageNumber = pageNumber
+          this.query()
         }
       },
       mounted() {
-        this.loadDeptTeams()
-        this.loadPersonnel()
-        this.query()
+        this.load()
       }
     })
   </script>

@@ -128,12 +128,18 @@
         }
       },
       methods: {
-        loadProject: function() {
-          axios.get('/rest/project/load/').then(res => {
+        load() {
+          Promise.all([axios.get('/rest/dict/load'), axios.get('/rest/personnel/load'), axios.get('/rest/project/load/')]).then(values => {
+            this.dictMap = values[0].data
+
+            values[1].data.forEach(item =>  {
+              this.personnelMap[item.id] = item
+            })
+
             onlineDate = [] // 项目上线日期
             usedResources =[] // 已使用资源
             releaseResources = [] // 可释放资源
-            res.data.forEach(project =>  {
+            values[2].data.forEach(project =>  {
               project.subProjects.forEach(subProject => {
                 this.projectMap[subProject.id] = { code: project.code, name: project.name, domain: project.domain,
                   issue: project.issue, onlineDate: project.onlineDate, id: project.id }
@@ -166,28 +172,13 @@
             this.myChart.setOption(this.option)
           })
         },
-        loadDict: function() {
-          axios.get('/rest/dict/load').then(res => {
-            this.dictMap = res.data
-          })
-        },
-        loadPersonnel: function() {
-          axios.get('/rest/personnel/load')
-            .then(res => {
-              res.data.forEach(item =>  {
-                this.personnelMap[item.id] = item
-              })
-          })
-        },
         openDialog(params) {
           this.dialogVisible = true
           this.releaseResources = this.dataMap[params.name].releaseResources
         }
       },
       mounted() {
-        this.loadDict()
-        this.loadPersonnel()
-        this.loadProject()
+        this.load()
         this.myChart = echarts.init(document.getElementById('chart'))
         this.myChart.on('click', this.openDialog)
       }
