@@ -96,23 +96,27 @@ public class ResourceRest {
             @RequestParam(name = "startDate", required = false) String startDate,
             @RequestParam(name = "endDate", required = false) String endDate,
             @RequestParam(name = "queryFlag") String queryFlag,
-            @RequestBody List<Object> selData) {
+            @RequestBody(required = false) List<Object> selData) {
         List<Map<String, Object>> hisResources;
         List<Map<String, Object>> curResources;
         if (queryFlag.equals("line")) { // 查条线
             List<String> domains = new ArrayList<>();
-            selData.forEach(data -> {
-                domains.add(String.valueOf(data));
-            });
+            if (null != selData) {
+                selData.forEach(data -> {
+                    domains.add(String.valueOf(data));
+                });
+            }
             hisResources = resourceHisRepository
                     .findByCustomParams(dept, startDate, endDate, domains, new ArrayList<>());
             curResources = resourceRepository
                     .findByCustomParams(dept, startDate, endDate, domains, new ArrayList<>());
         } else { // 查小组
             List<Integer> teams = new ArrayList<>();
-            selData.forEach(data -> {
-                teams.add(Integer.valueOf(String.valueOf(data)));
-            });
+            if (null != selData) {
+                selData.forEach(data -> {
+                    teams.add(Integer.valueOf(String.valueOf(data)));
+                });
+            }
             hisResources = resourceHisRepository
                     .findByCustomParams(dept, startDate, endDate, new ArrayList<>(), teams);
             curResources = resourceRepository

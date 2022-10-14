@@ -10,30 +10,33 @@
     <div id="app" class="app-container">
       <el-form :inline="true" @submit.native.prevent>
         <el-row>
-          <el-form-item label="维度">
-            <el-select v-model="params.dimension" @change="dimensionChange">
-              <el-option v-for="(val, key) in dimensionMap" :label="val" :value="key" :key="key"></el-option>
-            </el-select>
-          </el-form-item>
           <el-form-item label="周期">
-            <el-date-picker type="date" v-model="params.trendStart" value-format="yyyy/MM/dd"></el-date-picker>
+            <el-date-picker type="date" v-model="params.startDate" value-format="yyyy/MM/dd"></el-date-picker>
             &nbsp;-&nbsp;
             <el-date-picker type="date" v-model="params.trendEnd" value-format="yyyy/MM/dd"></el-date-picker>
+          </el-form-item>
+          <el-form-item label="维度">
+            <el-switch v-model="params.dimension"
+              active-value="team" inactive-value="line"
+              active-text="小组" inactive-text="条线"
+              active-color="#13ce66" inactive-color="#409eff"
+              @change="dimensionChange">
+            </el-switch>
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="query" icon="el-icon-search">查询</el-button>
           </el-form-item>
         </el-row>
       </el-form>
-      <div id="chart" style="width:100%; height:400px"></div>
-      <br>
-      <el-row type="flex" class="row-bg" justify="center">
-        <el-col :span="22">
-          <el-table :data="tableDatas" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
-            <el-table-column v-for="(val, index) in tableCols" :label="val" :prop="val"></el-table-column>
+      <el-row v-for="(row, rowindex) in chartDeptids" :keys="rowindex" :gutter="20">
+        <el-col v-for="(deptid, index) in row" :keys="index" :span="12">
+          <div :id="'chart_' + deptid" style="width:100%; height:400px"></div>
+          <el-table :data="deptTableData[deptid].data" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
+            <el-table-column v-for="colName in deptTableData[deptid].cols" :label="colName" :prop="colName"></el-table-column>
           </el-table>
         </el-col>
       </el-row>
+      
     </div>
   </body>
   <script src="../static/js/util.js"></script>
@@ -48,17 +51,15 @@
 
       data: function() {
         return {
-          dimensionMap: {'0': '小组', '1': '部门', '2': '条线'}, // 查询维度
           dictMap: {}, // 系统字典
           personnelMap: {}, // 人员字典
           projectMap: {}, // 子项目id->主项目映射
           teamMap: {}, // 小组字典
-          params: { dimension: '0' },
+          params: { dimension: 'team' },
+          chartDeptids: [], // 图表标志数据
           // --------------表格--------------
-          tableCols: [], // 表格列数据
-          tableDatas: [],
+          deptTableData: {}, // 部门表格数据
           // --------------图表--------------
-          myChart: undefined,
           option: {
             title: {
               text: '',
@@ -101,14 +102,12 @@
       },
       methods: {
         load() {
-          Promise.all([axios.get('/rest/dict/load'), axios.get('/rest/personnel/load'), axios.get('/rest/project/load'), axios.get('/rest/team/load')]).then(values => {
-            this.dictMap = values[0].data
-
-            values[1].data.forEach(item =>  {
+          Promise.all([ axios.get('/rest/personnel/load'), axios.get('/rest/project/load'), axios.get('/rest/team/load')]).then(values => {
+            values[0].data.forEach(item =>  {
               this.personnelMap[item.id] = item
             })
 
-            values[2].data.forEach(project =>  {
+            values[1].data.forEach(project =>  {
               project.subProjects.forEach(subProject =>  {
                 this.projectMap[subProject.id] = { id: subProject.id, code: project.code, name: project.name, domain: project.domain,
                 issue: project.issue, onlineDate: project.onlineDate, system: subProject.system }
@@ -116,162 +115,144 @@
             })
 
             this.teamMap = {}
-            values[3].data.forEach(team => {
+            values[2].data.forEach(team => {
               this.teamMap[team.id] = team
             })
-
+            
             this.query()
           })
         },
         query() {
-          axios.get('/rest/resource/load').then(res => {
+          let url = '/rest/resource/his/query?queryFlag=' + this.params.dimension
+          if (this.params.startDate) {
+            url += '&startDate=' + this.params.startDate
+          }
+          if (this.params.endDate) {
+            url += '&endDate=' + this.params.endDate
+          }
+          axios.post(url).then(res => {
             console.log('resources:' + JSON.stringify(res.data))
-            // ------------ 表格数据域 ------------
-            this.tableCols = []
-            this.tableDatas = []
-            let firstRowKey = ''
-            if (this.params.dimension === '0') {
-              firstRowKey = '小组'
-            }
-            if (this.params.dimension === '1') {
-              firstRowKey = '部门'
-            }
-            if (this.params.dimension === '2') {
-              firstRowKey = '条线'
-            }
-            this.tableCols.push(firstRowKey)
-            // ------------ 图表数据域 ------------
-            const dateSet = new Set() // 记录所有小组出现的时间
-            const chartTmpData = {} // 图表数据中间容器
-            const chartData = {} // 图表数据容器
-            const serieses = []
-            let sortedNames = []
-            let dataMapKey = ''
-            const dataMap = {}
-            res.data.forEach(resource => {
-              const person = this.personnelMap[resource.personnelId]
-              if (this.params.dimension === '0') {
-                dataMapKey = person.team.id
-                this.option.title.text = '小组研发杠杆'
+            const dataMap = {} // 部门 -> 条线/小组 -> 年月归类
+            const dataMonthMap = {} // 部门 -> 所有年月
+            this.deptTableData = {}
+            Object.keys(this.dictMap['DEPT']).forEach(deptid => {
+              dataMap[deptid] = {}
+              dataMonthMap[deptid] = new Set()
+              this.deptTableData[deptid] = { cols: [' '], data: []}
+            })
+            res.data.forEach(item => {
+              const person = this.personnelMap[item.PERSONNEL_ID]
+              let dimension = null
+              if (this.params.dimension === 'line') {
+                dimension = item.DOMAIN
+              } else {
+                dimension = person.team.id
               }
-              if (this.params.dimension === '1') {
-                dataMapKey = person.team.dept
-                this.option.title.text = '部门研发杠杆'
-              }
-              if (this.params.dimension === '2') {
-                dataMapKey = this.projectMap[resource.subProjectId].domain
-                this.option.title.text = '条线研发杠杆'
-              }
-              const startDate = resource.startDate.substr(0, 7) // 截取年月
-              let isDatePass = true // 日期是否符合判断
-              if (this.params.trendStart) {
-                if (startDate < this.params.trendStart) {
-                  isDatePass = false
+              if (dimension !== null) {
+                if (!dataMap[item.DEPT][dimension]) {
+                  dataMap[item.DEPT][dimension] = {}
                 }
-              }
-              if (this.params.trendEnd) {
-                if (startDate > this.params.trendEnd) {
-                  isDatePass = false
-                }
-              }
-              if (isDatePass) {
-                if (!dataMap[dataMapKey]) {
-                  dataMap[dataMapKey] = {}
-                }
-                if (!dataMap[dataMapKey][startDate]) {
-                  dataMap[dataMapKey][startDate] = {}
-                }
-                dataMap[dataMapKey][startDate][person.type] = dataMap[dataMapKey][startDate][person.type] ? dataMap[dataMapKey][startDate][person.type] + 1 : 1
+                const betweenMonths = getBetweenMonth(item.START_DATE, item.END_DATE)
+                betweenMonths.forEach(month => {
+                  dataMonthMap[item.DEPT].add(month)
+                  if (!dataMap[item.DEPT][dimension][month]) {
+                    dataMap[item.DEPT][dimension][month] = {}
+                  }
+                  dataMap[item.DEPT][dimension][month][person.type] = dataMap[item.DEPT][dimension][month][person.type] ? dataMap[item.DEPT][dimension][month][person.type] + 1 : 1
+                })
               }
             })
             console.log('dataMap:' + JSON.stringify(dataMap))
-            Object.keys(dataMap).forEach(key => {
-              if (!chartTmpData[key]) {
-                chartTmpData[key] = {}
+            console.log('dataMonthMap:' + JSON.stringify(dataMonthMap))
+            // -----------计算研发杠杆-----------
+            const leverageDataMap = {} // 研发杠杆容器
+            Object.keys(dataMap).forEach(deptid => {
+              if (!leverageDataMap[deptid]) {
+                leverageDataMap[deptid] = {}
               }
-              const dates = Object.keys(dataMap[key]).sort()
-              dates.forEach(date => {
-                dateSet.add(date)
-                let rate = 0
-                if (dataMap[key][date]['1'] !== undefined && dataMap[key][date]['2'] !== undefined) {
-                  rate = dataMap[key][date]['2'] / dataMap[key][date]['1']
+              Object.keys(dataMap[deptid]).forEach(dimension => {
+                if (!leverageDataMap[deptid][dimension]) {
+                  leverageDataMap[deptid][dimension] = {}
                 }
-                chartTmpData[key][date] = rate
+                const hisMonths = Array.from(dataMonthMap[deptid]).sort()
+                hisMonths.forEach(month => {
+                  let rate = 0
+                  if (dataMap[deptid][dimension][month] && dataMap[deptid][dimension][month]['1'] && dataMap[deptid][dimension][month]['2']) {
+                    rate = (dataMap[deptid][dimension][month]['2'] / dataMap[deptid][dimension][month]['1']).toFixed(2)
+                  }
+                  leverageDataMap[deptid][dimension][month] = rate
+                })
               })
             })
-            const sortDateArr = Array.from(dateSet).sort()
-            const sortedTmpData = Object.keys(chartTmpData).sort()
-            sortedTmpData.forEach(key => {
-              const teamDates = Object.keys(chartTmpData[key]).sort
-              const vals = []
-              sortDateArr.forEach(date => {
-                if (chartTmpData[key][date]) {
-                  vals.push(chartTmpData[key][date])
-                } else {
-                  vals.push(0)
-                }
+            console.log('leverageDataMap:' + JSON.stringify(leverageDataMap))
+            Object.keys(dataMonthMap).forEach(deptid => {
+              const deptName = this.dictMap['DEPT'][deptid]
+              const hisMonths = Array.from(dataMonthMap[deptid]).sort()
+              const dimensions = Array.from(Object.keys(leverageDataMap[deptid])).sort()
+              const legends = []
+              const serieses = []
+              const deptMonthVal = {}
+              dimensions.forEach(dimension => {
+                const tableRowData = {}
+                const dimensionName = this.params.dimension === 'team' ? this.teamMap[dimension].name + '小组' : this.dictMap['DOMAIN'][dimension] + '条线'
+                deptMonthVal[' '] = deptName
+                tableRowData[' '] = dimensionName
+                legends.push(dimensionName)
+                const vals = []
+                hisMonths.forEach(month => {
+                  const val = leverageDataMap[deptid][dimension][month]
+                  vals.push(val)
+                  deptMonthVal[month] = deptMonthVal[month] ? parseFloat(deptMonthVal[month]) + parseFloat(val) : val
+                  tableRowData[month] = val
+                })
+                this.deptTableData[deptid].data.push(tableRowData)
+                serieses.push({
+                  name: dimensionName,
+                  type: 'line',
+                  data: vals
+                })
               })
-              chartData[key] = vals
-            })
-            console.log('chartData:' + JSON.stringify(chartData))
-            sortedTmpData.forEach(key => {
-              let dimensionName = ''
-              if (this.params.dimension === '0') {
-                dimensionName = this.teamMap[key].name
-              }
-              if (this.params.dimension === '1') {
-                dimensionName = this.dictMap['DEPT'][key]
-              }
-              if (this.params.dimension === '2') {
-                dimensionName = this.dictMap['DOMAIN'][key]
-              }
-              const series = {
-                name: dimensionName,
+              this.deptTableData[deptid].data.splice(0, 0, deptMonthVal)
+              const deptVals = []
+              hisMonths.forEach(month => {
+                deptVals.push(deptMonthVal[month])
+                this.deptTableData[deptid].cols.push(month)
+                
+              })
+              legends.splice(0, 0, deptName)
+              serieses.splice(0, 0, {
+                name: deptName,
                 type: 'line',
-                data: chartData[key]
-              }
-              serieses.push(series)
-              const tableData = {}
-              tableData[firstRowKey] = dimensionName
-              sortDateArr.forEach((date, index) => {
-                tableData[date] = chartData[key][index]
+                data: deptVals
               })
-              this.tableDatas.push(tableData)
+              this.option.title.text = deptName + '研发杠杆'
+              this.option.xAxis.data = hisMonths
+              this.option.legend.data = legends
+              this.option.series = serieses
+              echarts.init(document.getElementById('chart_' + deptid)).setOption(this.option, true)
+              console.log('this.deptTableData:' + JSON.stringify(this.deptTableData))
             })
-            sortDateArr.forEach(date => {
-              this.tableCols.push(date)
-            })
-            console.log('sortedTmpData:' + JSON.stringify(sortedTmpData))
-            console.log('sortDateArr:' + JSON.stringify(sortDateArr))
-            console.log('serieses:' + JSON.stringify(serieses))
-            console.log('this.tableDatas:' + JSON.stringify(this.tableDatas))
-            console.log('this.tableCols:' + JSON.stringify(this.tableCols))
-            sortedTmpData.forEach(key => {
-              let dimensionName = ''
-              if (this.params.dimension === '0') {
-                dimensionName = this.teamMap[key].name
-              }
-              if (this.params.dimension === '1') {
-                dimensionName = this.dictMap['DEPT'][key]
-              }
-              if (this.params.dimension === '2') {
-                dimensionName = this.dictMap['DOMAIN'][key]
-              }
-              sortedNames.push(dimensionName)
-            })
-            this.option.legend.data = sortedNames
-            this.option.xAxis.data = sortDateArr
-            this.option.series = serieses
-            this.myChart.setOption(this.option, true)
           })
         },
         dimensionChange() {
           this.query()
         }
       },
+      beforeMount() {
+        axios.get('/rest/dict/load').then(res => {
+          this.dictMap = res.data
+          Object.keys(this.dictMap['DEPT']).forEach((deptid, index) => {
+            this.deptTableData[deptid] = { cols: [' '], data: []}
+            if (index % 2 === 0) {
+              this.chartDeptids.push([deptid])
+            } else {
+              this.chartDeptids[parseInt(index / 2)].push(deptid)
+            }
+          })
+        })
+      },
       mounted() {
         this.load()
-        this.myChart = echarts.init(document.getElementById('chart'))
       }
     })
   </script>
