@@ -1,0 +1,11 @@
+server:
+  port: 8090
+management:
+  health:
+    elasticsearch:
+      enabled: false
+my:
+  elasticsearch:
+    uris: 127.0.0.1:9200
+    username: elastic
+    password: nbcb,123
