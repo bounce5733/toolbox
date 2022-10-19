@@ -73,7 +73,7 @@ public class ProjectRest {
             projectRepository.deleteById(id);
         } catch (DataIntegrityViolationException e) {
             log.error(e.getMessage(), e);
-            return new ResponseEntity<>(Constant.DATA_INTEGRITY_ERROR_TIP, HttpStatus.OK);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.OK);
     }

@@ -21,7 +21,7 @@ public interface ResourceRepository extends JpaRepository<Resource, Integer> {
 
     @Query(value = "SELECT s.name personnel_name, td.name personnel_type, ld.name personnel_level," +
             " p.name project_name, dd.name domain, dept.name dept, t.name team, r.end_date," +
-            " r.next_subproject_id FROM resource r" +
+            " r.next_project_id FROM resource r" +
             " JOIN subproject sp ON r.subproject_id = sp.id" +
             " JOIN personnel s ON r.personnel_id = s.id" +
             " JOIN team t ON s.team_id = t.id" +
@@ -34,8 +34,8 @@ public interface ResourceRepository extends JpaRepository<Resource, Integer> {
             " AND (s.name LIKE CONCAT('%', :personnelName, '%') OR :personnelName IS NULL)" +
             " AND (r.end_date LIKE CONCAT(:endMonth, '%') OR :endMonth IS NULL)" +
             " AND (p.domain = :domain OR :domain IS NULL)" +
-            " AND (CASE :hasNextSubproject WHEN 1 THEN r.next_subproject_id IS NOT NULL ELSE r.next_subproject_id" +
-            " IS NULL END OR :hasNextSubproject IS NULL)",
+            " AND (CASE :hasNextProject WHEN 1 THEN r.next_project_id IS NOT NULL ELSE r.next_project_id" +
+            " IS NULL END OR :hasNextProject IS NULL)",
             countQuery = "SELECT count(*) FROM resource r" +
                     " JOIN subproject sp ON r.subproject_id = sp.id" +
                     " JOIN personnel s ON r.personnel_id = s.id" +
@@ -49,13 +49,13 @@ public interface ResourceRepository extends JpaRepository<Resource, Integer> {
                     " AND (s.name LIKE CONCAT('%', :personnelName, '%') OR :personnelName IS NULL)" +
                     " AND (r.end_date LIKE CONCAT(:endMonth, '%') OR :endMonth IS NULL)" +
                     " AND (p.domain = :domain OR :domain IS NULL)" +
-                    " AND (CASE :hasNextSubproject WHEN 1 THEN r.next_subproject_id IS NOT NULL ELSE r.next_subproject_id" +
-                    " IS NULL END OR :hasNextSubproject IS NULL)",
+                    " AND (CASE :hasNextProject WHEN 1 THEN r.next_project_id IS NOT NULL ELSE r.next_project_id" +
+                    " IS NULL END OR :hasNextProject IS NULL)",
             nativeQuery = true)
     Page<Map<String, Object>> pageFindByCustomParams(@Param("dept") String dept, @Param("team") Integer team,
                                                      @Param("personnelName") String personnelName, @Param("endMonth") String endMonth,
                                                      @Param("domain") String domain,
-                                                     @Param("hasNextSubproject") Integer hasNextSubproject,
+                                                     @Param("hasNextProject") Integer hasNextProject,
                                                      Pageable pageable);
 
     @Query(value = "SELECT p.domain, sp.dept, r.personnel_id, s.type, s.team_id, r.start_date, r.end_date" +

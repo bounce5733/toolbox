@@ -27,7 +27,7 @@
       <el-dialog title="人员清单" :visible.sync="dialogVisible" width="80%">
         <el-table :data="resources" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
           <el-table-column label="前序项目">
-            <template slot-scope="scope">{{scope.row.prevSubprojectId ? projectMap[scope.row.prevSubprojectId].name  + '-' + dictMap['SYSTEM'][projectMap[scope.row.prevSubprojectId].system] : '/'}}</template>
+            <template slot-scope="scope">{{scope.row.prevProjectId ? projectMap[scope.row.prevProjectId].name  + '-' + dictMap['SYSTEM'][projectMap[scope.row.prevProjectId].system] : '/'}}</template>
           </el-table-column>
           <el-table-column label="姓名" width="120px">
             <template slot-scope="scope">{{personnelMap[scope.row.personnelId].name}}</template>
@@ -40,7 +40,7 @@
           </el-table-column>
           <el-table-column label="占比" prop="currentRation" width="80px"></el-table-column>
           <el-table-column label="条线">
-            <template slot-scope="scope">{{dictMap['DOMAIN'][projectMap[scope.row.subProjectId].domain]}}</template>
+            <template slot-scope="scope">{{dictMap['DOMAIN'][subProjectMap[scope.row.subProjectId].domain]}}</template>
           </el-table-column>
           <el-table-column label="部门">
             <template slot-scope="scope">{{dictMap['DEPT'][personnelMap[scope.row.personnelId].team.dept]}}</template>
@@ -51,7 +51,7 @@
           <el-table-column label="进入时间" prop="startDate" width="120px"></el-table-column>
           <el-table-column label="释放时间" prop="endDate" width="120px"></el-table-column>
           <el-table-column label="后续项目">
-            <template slot-scope="scope">{{projectMap[scope.row.nextSubprojectId] ? projectMap[scope.row.nextSubprojectId].name : '/'}}</template>
+            <template slot-scope="scope">{{projectMap[scope.row.nextProjectId] ? projectMap[scope.row.nextProjectId].name : '/'}}</template>
           </el-table-column>
         </el-table>
       </el-dialog>
@@ -77,7 +77,8 @@
           deptTeams: [], // 部门呢小组数据
           dictMap: {}, // 系统字典
           personnelMap: {}, // 人员字典
-          projectMap: {}, // 子项目id->主项目映射
+          subProjectMap: {}, // 子项目id->主项目映射
+          projectMap: {}, // 项目id->主项目映射
           params: {},
           // --------------图表--------------
           myChart: undefined,
@@ -128,8 +129,9 @@
             })
 
             values[2].data.forEach(project =>  {
+              this.projectMap[project.id] = project
               project.subProjects.forEach(subProject =>  {
-                this.projectMap[subProject.id] = { id: subProject.id, code: project.code, name: project.name, domain: project.domain,
+                this.subProjectMap[subProject.id] = { id: subProject.id, code: project.code, name: project.name, domain: project.domain,
                 issue: project.issue, onlineDate: project.onlineDate, system: subProject.system }
               })
             })
@@ -187,7 +189,7 @@
               }
               console.log('subproject info:' + JSON.stringify(subProject))
               if (pass) {
-                const subProjectName = this.projectMap[subProject.id].name + "-" + this.dictMap['SYSTEM'][this.projectMap[subProject.id].system]
+                const subProjectName = this.subProjectMap[subProject.id].name + "-" + this.dictMap['SYSTEM'][this.subProjectMap[subProject.id].system]
                 projectNames.push(subProjectName)
                 if (!subProjectMap[subProjectName]) {
                   subProjectMap[subProjectName] = {}

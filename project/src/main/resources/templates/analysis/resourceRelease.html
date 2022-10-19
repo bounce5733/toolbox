@@ -27,8 +27,8 @@
             <el-date-picker v-model="params.endMonth" type="month" clearable value-format="yyyy/MM"></el-date-picker>
           </el-form-item>
           <el-form-item label="后续项目">
-            <el-select v-model="params.hasNextSubproject" clearable>
-              <el-option v-for="(val, key) in nextSubProjectMap" :label="val" :value="key" :key="key"></el-option>
+            <el-select v-model="params.hasNextProject" clearable>
+              <el-option v-for="(val, key) in nextProjectMap" :label="val" :value="key" :key="key"></el-option>
             </el-select>
           </el-form-item>
         </el-row>
@@ -50,7 +50,7 @@
         <el-table-column label="当前小组" prop="TEAM"></el-table-column>
         <el-table-column label="释放时间" prop="END_DATE"></el-table-column>
         <el-table-column label="后续项目">
-          <template slot-scope="scope">{{ scope.row.NEXT_SUBPROJECT_ID ? projectMap[scope.row.NEXT_SUBPROJECT_ID].name : '/'}}</template>
+          <template slot-scope="scope">{{ scope.row.NEXT_PROJECT_ID ? projectMap[scope.row.NEXT_PROJECT_ID].name : '/'}}</template>
         </el-table-column>
       </el-table>
       <div class="pagination-container">
@@ -76,8 +76,8 @@
           dictMap: {}, // 系统字典
           deptTeams: [], // 部门呢小组数据
           personnelMap: {}, // 人员字典
-          projectMap: {}, // 子项目id->主项目映射
-          nextSubProjectMap: { 1: '是', 0: '否' }, // 后续下面选择框数据
+          projectMap: {}, // 项目id->主项目映射
+          nextProjectMap: { 1: '是', 0: '否' }, // 后续下面选择框数据
           pageinfo: {
             pageable: {
               pageNumber: 1
@@ -96,10 +96,7 @@
             })
 
             values[2].data.forEach(project =>  {
-              project.subProjects.forEach(subProject =>  {
-                this.projectMap[subProject.id] = { code: project.code, name: project.name, domain: project.domain,
-                issue: project.issue, onlineDate: project.onlineDate, id: project.id }
-              })
+              this.projectMap[project.id] = project
             })
 
             this.deptTeams = []

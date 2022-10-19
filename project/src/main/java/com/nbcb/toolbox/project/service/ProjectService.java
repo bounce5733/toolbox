@@ -61,13 +61,9 @@ public class ProjectService {
         personnelList.forEach(personnel -> {
             personnelMap.put(personnel.getId(), personnel);
         });
-        Map<Integer, Project> projectMap = new HashMap<>(); // 子项目id->主项目映射
+        Map<Integer, Project> projectMap = new HashMap<>(); // 项目id->主项目映射
         List<Project> projectList = projectRepository.findAll();
-        projectList.forEach(project -> {
-            project.getSubProjects().forEach(subProject -> {
-                projectMap.put(subProject.getId(), project);
-            });
-        });
+        projectList.forEach(project -> projectMap.put(project.getId(), project));
         Set<String> systems = new HashSet<>();
         List<Map<String, Object>> projectRows = new ArrayList<>();
         projectList.forEach(project -> {
@@ -80,23 +76,26 @@ public class ProjectService {
             projectRow.put("baseinfo", baseinfo);
             Map<Integer, Object> subProjectRow = new HashMap<>();
             project.getSubProjects().forEach(subProject -> {
-                if (subProject.getIsClose().equals("0")) {
+                if (null != this.context.getDictCache().get("SYSTEM").get(subProject.getSystem())
+                        && subProject.getIsClose().equals("0")) {
                     systems.add(subProject.getSystem());
                     Integer resourceIndex = 0;
                     for (Resource resource : subProject.getResources()) {
                         Map<String, String> resourceMap = new HashMap<>();
                         Personnel personnel = personnelMap.get(resource.getPersonnelId());
                         resourceMap.put(subProject.getSystem() + "_" + "startDate", resource.getStartDate());
-                        resourceMap.put(subProject.getSystem() + "_" + "prevSubproject", projectMap.get(resource.getPrevSubprojectId()) == null ? "/" :
-                                projectMap.get(resource.getPrevSubprojectId()).getName());
+                        resourceMap.put(subProject.getSystem() + "_" + "prevProject", projectMap.get(resource.getPrevProjectId()) == null ? "/" :
+                                projectMap.get(resource.getPrevProjectId()).getName());
                         resourceMap.put(subProject.getSystem() + "_" + "personnelName", personnel.getName());
                         resourceMap.put(subProject.getSystem() + "_" + "supplierName", context.getDictCache().get("SUPPLIER").get(personnel.getCompany())
                                 == null ? "/" : context.getDictCache().get("SUPPLIER").get(personnel.getCompany()));
-                        resourceMap.put(subProject.getSystem() + "_" + "personnelType", personnel.getType());
-                        resourceMap.put(subProject.getSystem() + "_" + "personnelLevel", personnel == null ? "" : personnel.getLevel());
+                        resourceMap.put(subProject.getSystem() + "_" + "personnelType", context.getDictCache().get("PERSONNEL_TYPE").get(personnel.getType())
+                                == null ? "/" : context.getDictCache().get("PERSONNEL_TYPE").get(personnel.getType()));
+                        resourceMap.put(subProject.getSystem() + "_" + "personnelLevel", context.getDictCache().get("PERSONNEL_LEVEL").get(personnel.getLevel())
+                                == null ? "/" : context.getDictCache().get("PERSONNEL_LEVEL").get(personnel.getLevel()));
                         resourceMap.put(subProject.getSystem() + "_" + "currentRation", String.valueOf(resource.getCurrentRation()));
-                        resourceMap.put(subProject.getSystem() + "_" + "nextSubproject", projectMap.get(resource.getNextSubprojectId()) == null ? "/" :
-                                projectMap.get(resource.getNextSubprojectId()).getName());
+                        resourceMap.put(subProject.getSystem() + "_" + "nextProject", projectMap.get(resource.getNextProjectId()) == null ? "/" :
+                                projectMap.get(resource.getNextProjectId()).getName());
                         resourceMap.put(subProject.getSystem() + "_" + "endDate", resource.getEndDate());
                         resourceMap.put(subProject.getSystem() + "_" + "contract", context.getDictCache().get("CONTRACT_STATUS")
                                 .get(subProject.getContract().getStatus()) == null ? "/" : context.getDictCache().get("CONTRACT_STATUS")
@@ -120,13 +119,13 @@ public class ProjectService {
                 systems.forEach(system -> {
                     if (null == subrow.get(system + "_" + "startDate")) {
                         subrow.put(system + "_" + "startDate", "/");
-                        subrow.put(system + "_" + "prevSubproject", "/");
+                        subrow.put(system + "_" + "prevProject", "/");
                         subrow.put(system + "_" + "personnelName", "/");
                         subrow.put(system + "_" + "supplierName", "/");
                         subrow.put(system + "_" + "personnelType", "/");
                         subrow.put(system + "_" + "personnelLevel", "/");
                         subrow.put(system + "_" + "currentRation", "/");
-                        subrow.put(system + "_" + "nextSubproject", "/");
+                        subrow.put(system + "_" + "nextProject", "/");
                         subrow.put(system + "_" + "endDate", "/");
                         subrow.put(system + "_" + "contract", "/");
                     }
@@ -157,6 +156,7 @@ public class ProjectService {
             }
             spanRownum += spanrowArr.get(i);
         }
+        log.info("projects:{}", new ObjectMapper().writeValueAsString(projects));
         this.excel(systems, projects, rowspan, out);
     }
 
@@ -234,7 +234,7 @@ public class ProjectService {
             header.add("加入时间");
             headerKeys.add(systemCode + "startDate");
             header.add("前序项目");
-            headerKeys.add(systemCode + "prevSubproject");
+            headerKeys.add(systemCode + "prevProject");
             header.add("姓名");
             headerKeys.add(systemCode + "personnelName");
             header.add("供应商");
@@ -246,7 +246,7 @@ public class ProjectService {
             header.add("占比");
             headerKeys.add(systemCode + "currentRation");
             header.add("后续项目");
-            headerKeys.add(systemCode + "nextSubproject");
+            headerKeys.add(systemCode + "nextProject");
             header.add("释放时间");
             headerKeys.add(systemCode + "endDate");
             header.add("合同");

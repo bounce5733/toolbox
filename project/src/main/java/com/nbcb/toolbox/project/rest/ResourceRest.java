@@ -59,10 +59,10 @@ public class ResourceRest {
         String personnelName = StringUtils.isBlank(params.get("personnelName")) ? null : params.get("personnelName");
         String endMonth = StringUtils.isBlank(params.get("endMonth")) ? null : params.get("endMonth");
         String domain = StringUtils.isBlank(params.get("domain")) ? null : params.get("domain");
-        Integer hasNextSubproject = StringUtils.isBlank(params.get("hasNextSubproject")) ? null :
-                Integer.valueOf(params.get("hasNextSubproject"));
+        Integer hasNextProject = StringUtils.isBlank(params.get("hasNextProject")) ? null :
+                Integer.valueOf(params.get("hasNextProject"));
         Page<Map<String, Object>> pageData = resourceRepository.pageFindByCustomParams(dept, team, personnelName,
-                endMonth, domain, hasNextSubproject, pageParam);
+                endMonth, domain, hasNextProject, pageParam);
         return new ResponseEntity<>(pageData, HttpStatus.OK);
     }
 

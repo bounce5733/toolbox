@@ -30,11 +30,11 @@ public class Resource {
     @Column(name = "current_ration")
     private Double currentRation;
 
-    @Column(name = "next_subproject_id")
-    private Integer nextSubprojectId;
+    @Column(name = "next_project_id")
+    private Integer nextProjectId;
 
-    @Column(name = "prev_subproject_id")
-    private Integer prevSubprojectId;
+    @Column(name = "prev_project_id")
+    private Integer prevProjectId;
 
     @Column(name = "start_date")
     private String startDate;

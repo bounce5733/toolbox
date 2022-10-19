@@ -53,7 +53,6 @@
         return {
           dictMap: {}, // 系统字典
           personnelMap: {}, // 人员字典
-          projectMap: {}, // 子项目id->主项目映射
           teamMap: {}, // 小组字典
           params: { dimension: 'team' },
           chartDeptids: [], // 图表标志数据
@@ -62,12 +61,15 @@
           // --------------图表--------------
           option: {
             title: {
+              x: 'center',
               text: '',
             },
             tooltip: {
               trigger: 'axis'
             },
             legend: {
+              x: 'right',
+              orient: 'vertical',
               data: []
             },
             grid: {
@@ -102,20 +104,13 @@
       },
       methods: {
         load() {
-          Promise.all([ axios.get('/rest/personnel/load'), axios.get('/rest/project/load'), axios.get('/rest/team/load')]).then(values => {
+          Promise.all([ axios.get('/rest/personnel/load'), axios.get('/rest/team/load')]).then(values => {
             values[0].data.forEach(item =>  {
               this.personnelMap[item.id] = item
             })
 
-            values[1].data.forEach(project =>  {
-              project.subProjects.forEach(subProject =>  {
-                this.projectMap[subProject.id] = { id: subProject.id, code: project.code, name: project.name, domain: project.domain,
-                issue: project.issue, onlineDate: project.onlineDate, system: subProject.system }
-              })
-            })
-
             this.teamMap = {}
-            values[2].data.forEach(team => {
+            values[1].data.forEach(team => {
               this.teamMap[team.id] = team
             })
             
@@ -148,7 +143,9 @@
               } else {
                 dimension = person.team.id
               }
-              if (dimension !== null) {
+
+              if (dimension && item.DEPT) {
+                console.log('dataMap:' + JSON.stringify(dataMap))
                 if (!dataMap[item.DEPT][dimension]) {
                   dataMap[item.DEPT][dimension] = {}
                 }

@@ -23,11 +23,11 @@ CREATE TABLE personnel (id int auto_increment PRIMARY KEY, code varchar(32) NOT 
     FOREIGN KEY (team_id) REFERENCES team(id));
 
 CREATE TABLE resource (id int auto_increment PRIMARY KEY, subproject_id int, personnel_id int,
-    current_ration double, next_subproject_id int, prev_subproject_id int, start_date char(10), end_date char(10),
+    current_ration double, next_project_id int, prev_project_id int, start_date char(10), end_date char(10),
     FOREIGN KEY (personnel_id) REFERENCES personnel(id),
     FOREIGN KEY (subproject_id) REFERENCES subproject(id),
-    FOREIGN KEY (next_subproject_id) REFERENCES subproject(id),
-    FOREIGN KEY (prev_subproject_id) REFERENCES subproject(id));
+    FOREIGN KEY (next_project_id) REFERENCES project(id),
+    FOREIGN KEY (prev_project_id) REFERENCES project(id));
 
 CREATE TABLE resource_his(id int auto_increment PRIMARY KEY, subproject_id int, personnel_id int, current_ration double,
     start_date char(10), end_date char(10));

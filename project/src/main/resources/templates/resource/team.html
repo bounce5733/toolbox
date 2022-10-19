@@ -144,7 +144,8 @@
         remove: function(id) {
           this.$confirm('确定删除该小组', '提示', { type: 'warning' }).then(() => {
             axios.delete("/rest/team/" + id).then(res => {
-              if (res.data === DATA_INTEGRITY_ERROR_TIP) {
+              if (res.data) {
+                console.log(DATA_INTEGRITY_ERROR_TIP + '-->>' + res.data)
                 this.$notify({
                   title: '警告',
                   message: DATA_INTEGRITY_ERROR_TIP,
