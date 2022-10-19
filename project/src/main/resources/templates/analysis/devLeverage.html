@@ -130,6 +130,7 @@
             const dataMap = {} // 部门 -> 条线/小组 -> 年月归类
             const dataMonthMap = {} // 部门 -> 所有年月
             this.deptTableData = {}
+            if (!this.dictMap['DEPT']) return
             Object.keys(this.dictMap['DEPT']).forEach(deptid => {
               dataMap[deptid] = {}
               dataMonthMap[deptid] = new Set()

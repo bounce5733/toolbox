@@ -242,6 +242,7 @@
             console.log('tableData:' + JSON.stringify(tableData))
             // --------- 组装图表数据
             const innerChartData = []
+            if (!this.dictMap['DOMAIN']) return
             Object.keys(innerData).forEach(domain => {
               innerChartData.push({ name: this.dictMap['DOMAIN'][domain], value: innerData[domain]})
             })

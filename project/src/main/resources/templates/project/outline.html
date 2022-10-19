@@ -46,7 +46,7 @@
           rowspan: {}, // 主项目信息跨行数
           rowSpanIndex: 0, // 用于主项目信息跨行数标记
           resourceHeader: { 'startDate': '加入时间', 'prevProject': '前序项目', 'personnelName': '姓名', 'supplierName': '供应商', 'personnelType': '类别',
-          'personnelLevel': '级别', 'currentRation': '占比', 'nextProject': '后续项目', 'endDate': '释放时间', 'contract': '合同' }
+          'personnelLevel': '级别', 'currentRation': '占比', 'nextProject': '后序项目', 'endDate': '释放时间', 'contract': '合同' }
         }
       },
       methods: {
@@ -67,7 +67,7 @@
               projectRow['baseinfo'] = { name: project.name, issue: project.issue, domain: project.domain, onlineDate: project.onlineDate }
               const subProjectRow = {}
               project.subProjects.forEach(subproject => {
-                if (this.dictMap['SYSTEM'][subproject.system] && subproject.isClose === '0') {
+                if (this.dictMap['SYSTEM'] && this.dictMap['SYSTEM'][subproject.system] && subproject.isClose === '0') {
                   this.systems.add(subproject.system)
                   subproject.resources.forEach((resource, index) => {
                     if (!subProjectRow[index]) {

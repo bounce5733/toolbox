@@ -12,7 +12,7 @@ CREATE TABLE subproject (id int auto_increment PRIMARY KEY, project_id int NOT N
     FOREIGN KEY (project_id) REFERENCES project(id),
     FOREIGN KEY (contract_id) REFERENCES contract(id));
 
-CREATE TABLE process (id int auto_increment PRIMARY KEY, subproject_id int NOT NULL, phase varchar(32) NOT NULL,
+CREATE TABLE process (id int auto_increment PRIMARY KEY, subproject_id int, phase varchar(32) NOT NULL,
     plan_start_date char(10), plan_end_date char(10), really_start_date char(10), really_end_date char(10),
     plan_man_days int, invest_rate double, current_process int default 0,
     FOREIGN KEY (subproject_id) REFERENCES subproject(id));
@@ -32,7 +32,7 @@ CREATE TABLE resource (id int auto_increment PRIMARY KEY, subproject_id int, per
 CREATE TABLE resource_his(id int auto_increment PRIMARY KEY, subproject_id int, personnel_id int, current_ration double,
     start_date char(10), end_date char(10));
 
-CREATE TABLE risk (id int auto_increment PRIMARY KEY, subproject_id int NOT NULL, responsible_personnel_id int,
+CREATE TABLE risk (id int auto_increment PRIMARY KEY, subproject_id int, responsible_personnel_id int,
     measure text, type varchar(32), desc text,
     FOREIGN KEY (responsible_personnel_id) REFERENCES personnel(id),
     FOREIGN KEY (subproject_id) REFERENCES subproject(id));

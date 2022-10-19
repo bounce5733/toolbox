@@ -66,6 +66,14 @@ public class ProjectService {
         projectList.forEach(project -> projectMap.put(project.getId(), project));
         Set<String> systems = new HashSet<>();
         List<Map<String, Object>> projectRows = new ArrayList<>();
+        if (null == context.getDictCache().get("DOMAIN") ||
+                null == context.getDictCache().get("SYSTEM") ||
+                null == context.getDictCache().get("SUPPLIER") ||
+                null == context.getDictCache().get("PERSONNEL_TYPE") ||
+                null == context.getDictCache().get("PERSONNEL_LEVEL") ||
+                null == context.getDictCache().get("CONTRACT_STATUS")) {
+            return;
+        }
         projectList.forEach(project -> {
             Map<String, Object> projectRow = new HashMap<>();
             Map<String, String> baseinfo = new HashMap<>();

@@ -1,14 +1,16 @@
 package com.nbcb.toolbox.project.rest;
 
 import com.nbcb.toolbox.project.Constant;
+import com.nbcb.toolbox.project.Context;
 import com.nbcb.toolbox.project.domain.Project;
+import com.nbcb.toolbox.project.domain.Resource;
+import com.nbcb.toolbox.project.domain.SubProject;
 import com.nbcb.toolbox.project.repository.ProjectRepository;
 import com.nbcb.toolbox.project.repository.ResourceRepository;
 import com.nbcb.toolbox.project.repository.SubProjectRepository;
 import com.nbcb.toolbox.project.service.ProjectService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +36,9 @@ import java.util.List;
 public class ProjectRest {
 
     @Autowired
+    private Context context;
+
+    @Autowired
     private ProjectRepository projectRepository;
 
     @Autowired
@@ -41,6 +46,9 @@ public class ProjectRest {
 
     @Autowired
     private ResourceRepository subProjectPersonnelRepository;
+
+    @Autowired
+    private ResourceRepository resourceRepository;
 
     @Autowired
     private ProjectService projectService;
@@ -69,13 +77,38 @@ public class ProjectRest {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> remove(@PathVariable("id") int id) {
-        try {
-            projectRepository.deleteById(id);
-        } catch (DataIntegrityViolationException e) {
-            log.error(e.getMessage(), e);
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.OK);
+        StringBuilder dataIntegrityMsg = new StringBuilder("请先删除");
+        boolean isVaild = true;
+        List<Resource> resources;
+        SubProject subProject;
+        Project project;
+        // 检查资源前序项目引用
+        resources = resourceRepository.findAll(Example.of(Resource.builder().prevProjectId(id).build()));
+        if (resources.size() > 0) {
+            subProject = subProjectRepository.findById(resources.get(0).getSubProjectId()).get();
+            project = projectRepository.findById(subProject.getProjectId()).get();
+            dataIntegrityMsg.append("项目【" + project.getName() + "】系统【" + context.getDictCache().get("SYSTEM")
+                    .get(subProject.getSystem()) + "】中资源前序项目");
+            isVaild = false;
         }
-        return new ResponseEntity<>(HttpStatus.OK);
+        // 检查资源后序项目引用
+        if (isVaild) {
+            resources = resourceRepository.findAll(Example.of(Resource.builder().nextProjectId(id).build()));
+            if (resources.size() > 0) {
+                subProject = subProjectRepository.findById(resources.get(0).getId()).get();
+                project = projectRepository.findById(subProject.getProjectId()).get();
+                dataIntegrityMsg.append("项目【" + project.getName() + "】系统【" + context.getDictCache()
+                        .get("SYSTEM").get(subProject.getSystem()) + "】中资源后序项目");
+                isVaild = false;
+            }
+        }
+        dataIntegrityMsg.append("的引用！");
+        if (isVaild) {
+            projectRepository.deleteById(id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(dataIntegrityMsg, HttpStatus.OK);
+        }
     }
 
     @GetMapping("/excel")

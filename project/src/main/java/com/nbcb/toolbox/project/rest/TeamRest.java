@@ -1,12 +1,14 @@
 package com.nbcb.toolbox.project.rest;
 
 import com.nbcb.toolbox.project.Constant;
+import com.nbcb.toolbox.project.Context;
+import com.nbcb.toolbox.project.domain.Personnel;
 import com.nbcb.toolbox.project.domain.Team;
+import com.nbcb.toolbox.project.repository.PersonnelRepository;
 import com.nbcb.toolbox.project.repository.TeamRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.platform.commons.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/rest/team")
 public class TeamRest {
+
+    @Autowired
+    private Context context;
+
+    @Autowired
+    private PersonnelRepository personnelRepository;
 
     @Autowired
     private TeamRepository teamRepository;
@@ -59,13 +67,22 @@ public class TeamRest {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> remove(@PathVariable("id") int id) {
-        try {
-            teamRepository.deleteById(id);
-        } catch (DataIntegrityViolationException e) {
-            log.error(e.getMessage(), e);
-            return new ResponseEntity<>(e.getRootCause().toString(), HttpStatus.OK);
+        StringBuilder dataIntegrityMsg = new StringBuilder("请先删除");
+        boolean isVaild = true;
+        // 检查人员引用
+        List<Personnel> personnels = personnelRepository.findAll(Example.of(Personnel.builder().team(
+                Team.builder().id(id).build()).build()));
+        if (personnels.size() > 0) {
+            dataIntegrityMsg.append("人员【" + personnels.get(0).getName() + "】");
+            isVaild = false;
         }
-        return new ResponseEntity<>(HttpStatus.OK);
+        dataIntegrityMsg.append("的引用！");
+        if (isVaild) {
+            teamRepository.deleteById(id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(dataIntegrityMsg, HttpStatus.OK);
+        }
     }
 
 }

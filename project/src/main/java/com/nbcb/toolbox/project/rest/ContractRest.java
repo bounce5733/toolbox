@@ -1,11 +1,15 @@
 package com.nbcb.toolbox.project.rest;
 
 import com.nbcb.toolbox.project.Constant;
+import com.nbcb.toolbox.project.Context;
 import com.nbcb.toolbox.project.domain.Contract;
+import com.nbcb.toolbox.project.domain.Project;
+import com.nbcb.toolbox.project.domain.SubProject;
 import com.nbcb.toolbox.project.repository.ContractRepository;
+import com.nbcb.toolbox.project.repository.ProjectRepository;
+import com.nbcb.toolbox.project.repository.SubProjectRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +32,16 @@ import java.util.List;
 public class ContractRest {
 
     @Autowired
+    private Context context;
+
+    @Autowired
     private ContractRepository contractRepository;
+
+    @Autowired
+    private SubProjectRepository subProjectRepository;
+
+    @Autowired
+    private ProjectRepository projectRepository;
 
     @GetMapping("/query/{page}")
     public ResponseEntity<Page<Contract>> query(@PathVariable("page") int page, @RequestParam("params") String params)
@@ -54,13 +67,24 @@ public class ContractRest {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> remove(@PathVariable("id") int id) {
-        try {
-            contractRepository.deleteById(id);
-        } catch (DataIntegrityViolationException e) {
-            log.error(e.getMessage(), e);
-            return new ResponseEntity<>(e.getRootCause().toString(), HttpStatus.OK);
+        StringBuilder dataIntegrityMsg = new StringBuilder("请先删除");
+        boolean isVaild = true;
+        // 检查子项引用
+        List<SubProject> subProjects = subProjectRepository.findAll(Example.of(SubProject.builder()
+                .contract(Contract.builder().id(id).build()).build()));
+        if (subProjects.size() > 0) {
+            Project project = projectRepository.findById(subProjects.get(0).getProjectId()).get();
+            dataIntegrityMsg.append("项目【" + project.getName() + "】系统【" + context.getDictCache().get("SYSTEM")
+                    .get(subProjects.get(0).getSystem()) + "】中合同");
+            isVaild = false;
         }
-        return new ResponseEntity<>(HttpStatus.OK);
+        dataIntegrityMsg.append("的引用！");
+        if (isVaild) {
+            contractRepository.deleteById(id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(dataIntegrityMsg, HttpStatus.OK);
+        }
     }
 
 }

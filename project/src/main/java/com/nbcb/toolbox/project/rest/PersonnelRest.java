@@ -1,11 +1,11 @@
 package com.nbcb.toolbox.project.rest;
 
 import com.nbcb.toolbox.project.Constant;
-import com.nbcb.toolbox.project.domain.Personnel;
-import com.nbcb.toolbox.project.repository.PersonnelRepository;
+import com.nbcb.toolbox.project.Context;
+import com.nbcb.toolbox.project.domain.*;
+import com.nbcb.toolbox.project.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +26,24 @@ import java.util.List;
 @RestController
 @RequestMapping("/rest/personnel")
 public class PersonnelRest {
+
+    @Autowired
+    private Context context;
+
+    @Autowired
+    private ProjectRepository projectRepository;
+
+    @Autowired
+    private SubProjectRepository subProjectRepository;
+
+    @Autowired
+    private ResourceRepository subProjectPersonnelRepository;
+
+    @Autowired
+    private RiskRepository riskRepository;
+
+    @Autowired
+    private ResourceRepository resourceRepository;
 
     @Autowired
     private PersonnelRepository personnelRepository;
@@ -55,13 +73,38 @@ public class PersonnelRest {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> remove(@PathVariable("id") int id) {
-        try {
-            personnelRepository.deleteById(id);
-        } catch (DataIntegrityViolationException e) {
-            log.error(e.getMessage(), e);
-            return new ResponseEntity<>(e.getRootCause().toString(), HttpStatus.OK);
+        StringBuilder dataIntegrityMsg = new StringBuilder("请先删除");
+        boolean isVaild = true;
+        List<Resource> resources;
+        SubProject subProject;
+        Project project;
+        // 检查资源项目人员引用
+        resources = resourceRepository.findAll(Example.of(Resource.builder().personnelId(id).build()));
+        if (resources.size() > 0) {
+            subProject = subProjectRepository.findById(resources.get(0).getSubProjectId()).get();
+            project = projectRepository.findById(subProject.getProjectId()).get();
+            dataIntegrityMsg.append("项目【" + project.getName() + "】系统【" + context.getDictCache().get("SYSTEM")
+                    .get(subProject.getSystem()) + "】中资源项目人员");
+            isVaild = false;
         }
-        return new ResponseEntity<>(HttpStatus.OK);
+        // 检查风险负责人引用
+        if (isVaild) {
+            List<Risk> risks = riskRepository.findAll(Example.of(Risk.builder().responsiblePersonnelId(id).build()));
+            if (risks.size() > 0) {
+                subProject = subProjectRepository.findById(risks.get(0).getSubProjectId()).get();
+                project = projectRepository.findById(subProject.getProjectId()).get();
+                dataIntegrityMsg.append("项目【" + project.getName() + "】系统【" + context.getDictCache().get("SYSTEM")
+                        .get(subProject.getSystem()) + "】中风险负责人");
+                isVaild = false;
+            }
+        }
+        dataIntegrityMsg.append("的引用！");
+        if (isVaild) {
+            personnelRepository.deleteById(id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(dataIntegrityMsg, HttpStatus.OK);
+        }
     }
 
 }

@@ -43,19 +43,22 @@
         <template slot-scope="scope">{{subProjectMap[scope.row.id].name}}</template>
       </el-table-column>
       <el-table-column label="所属系统" width="200px">
-        <template slot-scope="scope">{{dictMap['SYSTEM'][scope.row.system]}}</template>
+        <template slot-scope="scope">{{dictMap['SYSTEM'] ? dictMap['SYSTEM'][scope.row.system] : ''}}</template>
       </el-table-column>
       <el-table-column label="业务条线" width="250px">
-        <template slot-scope="scope">{{dictMap['DOMAIN'][subProjectMap[scope.row.id].domain]}}</template>
+        <template slot-scope="scope">{{dictMap['DOMAIN'] ? dictMap['DOMAIN'][subProjectMap[scope.row.id].domain] :
+          ''}}
+        </template>
       </el-table-column>
       <el-table-column label="上线日期" width="150px">
         <template slot-scope="scope">{{subProjectMap[scope.row.id].onlineDate}}</template>
       </el-table-column>
       <el-table-column label="所属部门" width="200px">
-        <template slot-scope="scope">{{dictMap['DEPT'][scope.row.dept]}}</template>
+        <template slot-scope="scope">{{dictMap['DEPT'] ? dictMap['DEPT'][scope.row.dept] : ''}}</template>
       </el-table-column>
       <el-table-column label="当前阶段" width="150px" align="center">
-        <template slot-scope="scope">{{dictMap['PROJECT_STAGE'][scope.row.phase]}}</template>
+        <template slot-scope="scope">{{dictMap['PROJECT_STAGE'] ? dictMap['PROJECT_STAGE'][scope.row.phase] : ''}}
+        </template>
       </el-table-column>
       <el-table-column label="操作" align="center">
         <template slot-scope="scope">
@@ -76,25 +79,40 @@
         <el-descriptions v-if="subProjectMap[model.id]" border title="主项目">
           <el-descriptions-item label="项目编码">{{subProjectMap[model.id].code}}</el-descriptions-item>
           <el-descriptions-item label="项目名称">{{subProjectMap[model.id].name}}</el-descriptions-item>
-          <el-descriptions-item label="业务条线">{{dictMap['DOMAIN'][subProjectMap[model.id].domain]}}</el-descriptions-item>
+          <el-descriptions-item label="业务条线">{{dictMap['DOMAIN'] ? dictMap['DOMAIN'][subProjectMap[model.id].domain] :
+            ''}}
+          </el-descriptions-item>
           <el-descriptions-item label="上线日期">{{subProjectMap[model.id].onlineDate}}</el-descriptions-item>
           <el-descriptions-item label="项目问题">{{subProjectMap[model.id].issue}}</el-descriptions-item>
         </el-descriptions>
         <br>
         <el-descriptions border title="子项目">
-          <el-descriptions-item label="所属系统">{{model.system ? dictMap['SYSTEM'][model.system] : ''}}</el-descriptions-item>
-          <el-descriptions-item label="所属部门">{{model.dept ? dictMap['DEPT'][model.dept] : ''}}</el-descriptions-item>
-          <el-descriptions-item label="当前阶段">{{model.phase ? dictMap['PROJECT_STAGE'][model.phase] : ''}}</el-descriptions-item>
-          <el-descriptions-item label="PM">{{personnelMap[model.pm] ? personnelMap[model.pm].name : ''}}</el-descriptions-item>
-          <el-descriptions-item label="PMO">{{personnelMap[model.pmo] ? personnelMap[model.pmo].name : ''}}</el-descriptions-item>
-          <el-descriptions-item label="QA">{{personnelMap[model.qa] ? personnelMap[model.qa].name : ''}}</el-descriptions-item>
+          <el-descriptions-item label="所属系统">{{dictMap['SYSTEM'] && model.system ? dictMap['SYSTEM'][model.system] :
+            ''}}
+          </el-descriptions-item>
+          <el-descriptions-item label="所属部门">{{dictMap['DEPT'] && model.dept ? dictMap['DEPT'][model.dept] : ''}}
+          </el-descriptions-item>
+          <el-descriptions-item label="当前阶段">{{dictMap['PROJECT_STAGE'] && model.phase ?
+            dictMap['PROJECT_STAGE'][model.phase] : ''}}
+          </el-descriptions-item>
+          <el-descriptions-item label="PM">{{personnelMap[model.pm] ? personnelMap[model.pm].name : ''}}
+          </el-descriptions-item>
+          <el-descriptions-item label="PMO">{{personnelMap[model.pmo] ? personnelMap[model.pmo].name : ''}}
+          </el-descriptions-item>
+          <el-descriptions-item label="QA">{{personnelMap[model.qa] ? personnelMap[model.qa].name : ''}}
+          </el-descriptions-item>
         </el-descriptions>
         <br>
         <el-descriptions v-if="model.contract" border title="合同信息">
           <el-descriptions-item label="名称">{{model.contract.name}}</el-descriptions-item>
-          <el-descriptions-item label="公司">{{dictMap['SUPPLIER'][model.contract.company]}}</el-descriptions-item>
-          <el-descriptions-item label="类型">{{dictMap['CONTRACT_TYPE'][model.contract.type]}}</el-descriptions-item>
-          <el-descriptions-item label="状态">{{dictMap['CONTRACT_STATUS'][model.contract.status]}}</el-descriptions-item>
+          <el-descriptions-item label="公司">{{dictMap['SUPPLIER'] ? dictMap['SUPPLIER'][model.contract.company] : ''}}
+          </el-descriptions-item>
+          <el-descriptions-item label="类型">{{dictMap['CONTRACT_TYPE'] ? dictMap['CONTRACT_TYPE'][model.contract.type] :
+            ''}}
+          </el-descriptions-item>
+          <el-descriptions-item label="状态">{{dictMap['CONTRACT_STATUS'] ?
+            dictMap['CONTRACT_STATUS'][model.contract.status] : ''}}
+          </el-descriptions-item>
           <el-descriptions-item label="开始日期">{{model.contract.startDate}}</el-descriptions-item>
           <el-descriptions-item label="结束日期">{{model.contract.endDate}}</el-descriptions-item>
         </el-descriptions>
@@ -102,7 +120,8 @@
       <el-tab-pane name="processInfo" label="项目进度">
         <el-table :data="processes" border :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
           <el-table-column label="阶段">
-            <template slot-scope="scope">{{dictMap['PROJECT_STAGE'][scope.row.phase]}}</template>
+            <template slot-scope="scope">{{dictMap['PROJECT_STAGE'] ? dictMap['PROJECT_STAGE'][scope.row.phase] : ''}}
+            </template>
           </el-table-column>
           <el-table-column label="计划开始" width="120px" prop="planStartDate"></el-table-column>
           <el-table-column label="实际开始" width="120px" prop="reallyStartDate"></el-table-column>
@@ -134,17 +153,24 @@
             <template slot-scope="scope">{{personnelMap[scope.row.personnelId].name}}</template>
           </el-table-column>
           <el-table-column label="供应商">
-            <template slot-scope="scope">{{dictMap['SUPPLIER'][personnelMap[scope.row.personnelId].company]}}</template>
+            <template slot-scope="scope">{{dictMap['SUPPLIER'] ?
+              dictMap['SUPPLIER'][personnelMap[scope.row.personnelId].company] : ''}}
+            </template>
           </el-table-column>
           <el-table-column label="类别" width="100px">
-            <template slot-scope="scope">{{dictMap['PERSONNEL_TYPE'][personnelMap[scope.row.personnelId].type]}}</template>
+            <template slot-scope="scope">{{dictMap['PERSONNEL_TYPE'] ?
+              dictMap['PERSONNEL_TYPE'][personnelMap[scope.row.personnelId].type] : ''}}
+            </template>
           </el-table-column>
           <el-table-column label="级别" width="100px">
-            <template slot-scope="scope">{{dictMap['PERSONNEL_LEVEL'][personnelMap[scope.row.personnelId].level]}}</template>
+            <template slot-scope="scope">{{dictMap['PERSONNEL_LEVEL'] ?
+              dictMap['PERSONNEL_LEVEL'][personnelMap[scope.row.personnelId].level] : ''}}
+            </template>
           </el-table-column>
           <el-table-column label="占比" prop="currentRation"></el-table-column>
-          <el-table-column label="后续项目">
-            <template slot-scope="scope">{{scope.row.nextProjectId ? projectMap[scope.row.nextProjectId].name : '/'}}</template>
+          <el-table-column label="后序项目">
+            <template slot-scope="scope">{{scope.row.nextProjectId ? projectMap[scope.row.nextProjectId].name : '/'}}
+            </template>
           </el-table-column>
           <el-table-column label="进入时间" prop="startDate" width="120px"></el-table-column>
           <el-table-column label="释放时间" prop="endDate" width="120px"></el-table-column>
@@ -165,7 +191,7 @@
       <el-tab-pane name="riskManage" label="风险管理">
         <el-table :data="risks" border :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
           <el-table-column label="类别" width="160px">
-            <template slot-scope="scope">{{dictMap['RISK_TYPE'][scope.row.type]}}</template>
+            <template slot-scope="scope">{{dictMap['RISK_TYPE'] ? dictMap['RISK_TYPE'][scope.row.type] : ''}}</template>
           </el-table-column>
           <el-table-column label="责任人" width="160px">
             <template slot-scope="scope">{{personnelMap[scope.row.responsiblePersonnelId].name}}</template>
@@ -173,14 +199,14 @@
           <el-table-column label="措施">
             <template slot-scope="scope">
               <el-tooltip class="item" effect="dark" :content="scope.row.measure" placement="top">
-                <span>{{scope.row.measure.length > 16 ? scope.row.measure.substring(0, 16) + '...' : scope.row.measure }}</span>
+                <span>{{scope.row.measure && scope.row.measure.length > 16 ? scope.row.measure.substring(0, 16) + '...' : scope.row.measure }}</span>
               </el-tooltip>
             </template>
           </el-table-column>
           <el-table-column label="描述">
             <template slot-scope="scope">
               <el-tooltip class="item" effect="dark" :content="scope.row.desc" placement="top">
-                <span>{{scope.row.desc.length > 16 ? scope.row.desc.substring(0, 16) + '...' : scope.row.desc }}</span>
+                <span>{{scope.row.desc && scope.row.desc.length > 16 ? scope.row.desc.substring(0, 16) + '...' : scope.row.desc }}</span>
             </el-tooltip>
             </template>
           </el-table-column>
@@ -272,7 +298,7 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="后续项目" prop="nextProjectId">
+          <el-form-item label="后序项目" prop="nextProjectId">
             <el-select v-model="resource.nextProjectId" clearable placeholder="请选择">
               <el-option
                   v-for="(item, key) in projectMap"

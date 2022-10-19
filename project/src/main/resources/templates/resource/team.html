@@ -28,7 +28,7 @@
         <el-table :data="pageinfo.content" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
           <el-table-column prop="name" label="名称" ></el-table-column>
           <el-table-column label="部门">
-            <template slot-scope="scope">{{dictMap['DEPT'][scope.row.dept]}}</template>
+            <template slot-scope="scope">{{dictMap['DEPT'] ? dictMap['DEPT'][scope.row.dept] : ''}}</template>
           </el-table-column>
           <el-table-column align="center" label="操作" width="150">
             <template slot-scope="scope">
@@ -145,10 +145,9 @@
           this.$confirm('确定删除该小组', '提示', { type: 'warning' }).then(() => {
             axios.delete("/rest/team/" + id).then(res => {
               if (res.data) {
-                console.log(DATA_INTEGRITY_ERROR_TIP + '-->>' + res.data)
                 this.$notify({
                   title: '警告',
-                  message: DATA_INTEGRITY_ERROR_TIP,
+                  message: res.data,
                   type: 'warning'
                 })
               } else {

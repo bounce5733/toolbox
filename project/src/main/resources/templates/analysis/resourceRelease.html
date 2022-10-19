@@ -26,7 +26,7 @@
           <el-form-item label="释放月份">
             <el-date-picker v-model="params.endMonth" type="month" clearable value-format="yyyy/MM"></el-date-picker>
           </el-form-item>
-          <el-form-item label="后续项目">
+          <el-form-item label="后序项目">
             <el-select v-model="params.hasNextProject" clearable>
               <el-option v-for="(val, key) in nextProjectMap" :label="val" :value="key" :key="key"></el-option>
             </el-select>
@@ -49,8 +49,10 @@
         <el-table-column label="条线" prop="DOMAIN"></el-table-column>
         <el-table-column label="当前小组" prop="TEAM"></el-table-column>
         <el-table-column label="释放时间" prop="END_DATE"></el-table-column>
-        <el-table-column label="后续项目">
-          <template slot-scope="scope">{{ scope.row.NEXT_PROJECT_ID ? projectMap[scope.row.NEXT_PROJECT_ID].name : '/'}}</template>
+        <el-table-column label="后序项目">
+          <template slot-scope="scope">{{ scope.row.NEXT_PROJECT_ID ? projectMap[scope.row.NEXT_PROJECT_ID].name :
+            '/'}}
+          </template>
         </el-table-column>
       </el-table>
       <div class="pagination-container">
@@ -107,11 +109,13 @@
               }
               deptTeamMap[team.dept].push({id: team.id, name: team.name})
             })
-            Object.keys(deptTeamMap).forEach(deptCode => {
-              this.deptTeams.push({id: deptCode, name: this.dictMap['DEPT'][deptCode], children: deptTeamMap[deptCode]})
-            })
+            if (this.dictMap['DEPT']) {
+              Object.keys(deptTeamMap).forEach(deptCode => {
+                this.deptTeams.push({id: deptCode, name: this.dictMap['DEPT'][deptCode], children: deptTeamMap[deptCode]})
+              })
 
-            this.query()
+              this.query()
+            }
           })
         },
         query() {

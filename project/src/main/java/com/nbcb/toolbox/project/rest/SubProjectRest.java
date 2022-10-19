@@ -8,7 +8,6 @@ import com.nbcb.toolbox.project.repository.SubProjectRepository;
 import com.nbcb.toolbox.project.service.SubProjectService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -60,12 +59,7 @@ public class SubProjectRest {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> remove(@PathVariable("id") int id) {
-        try {
-            subProjectRepository.deleteById(id);
-        } catch (DataIntegrityViolationException e) {
-            log.error(e.getMessage(), e);
-            return new ResponseEntity<>(e.getRootCause().toString(), HttpStatus.OK);
-        }
+        subProjectRepository.deleteById(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

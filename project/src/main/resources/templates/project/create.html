@@ -24,22 +24,24 @@
         <template slot-scope="scope">
           <el-table :data="scope.row.subProjects" size="small" stripe highlight-current-row border style="width:100%">
             <el-table-column label="所属系统">
-              <template slot-scope="iscope">{{dictMap['SYSTEM'][iscope.row.system]}}</template>
+              <template slot-scope="iscope">{{dictMap['SYSTEM'] ? dictMap['SYSTEM'][iscope.row.system] : ''}}</template>
             </el-table-column>
             <el-table-column label="所属部门">
-              <template slot-scope="iscope">{{dictMap['DEPT'][iscope.row.dept]}}</template>
+              <template slot-scope="iscope">{{dictMap['DEPT'] ? dictMap['DEPT'][iscope.row.dept] : ''}}</template>
             </el-table-column>
             <el-table-column label="当前阶段">
-              <template slot-scope="iscope">{{dictMap['PROJECT_STAGE'][iscope.row.phase]}}</template>
+              <template slot-scope="iscope">{{dictMap['PROJECT_STAGE'] ? dictMap['PROJECT_STAGE'][iscope.row.phase] :
+                ''}}
+              </template>
             </el-table-column>
             <el-table-column label="PM">
-            <template slot-scope="iscope">{{personnelMap[iscope.row.pm].name}}</template>
+            <template slot-scope="iscope">{{personnelMap[iscope.row.pm] ? personnelMap[iscope.row.pm].name : ''}}</template>
           </el-table-column>
             <el-table-column label="PMO">
-              <template slot-scope="iscope">{{personnelMap[iscope.row.pmo].name}}</template>
+              <template slot-scope="iscope">{{personnelMap[iscope.row.pmo] ? personnelMap[iscope.row.pmo].name : ''}}</template>
             </el-table-column>
             <el-table-column label="QA">
-              <template slot-scope="iscope">{{personnelMap[iscope.row.qa].name}}</template>
+              <template slot-scope="iscope">{{personnelMap[iscope.row.qa] ? personnelMap[iscope.row.qa].name : ''}}</template>
             </el-table-column>
             <el-table-column label="合同信息" align="center" width="150px">
               <template slot-scope="iscope">
@@ -66,7 +68,7 @@
       <el-table-column prop="code" label="项目编码" width="100px"></el-table-column>
       <el-table-column prop="name" label="项目名称" width="200px"></el-table-column>
       <el-table-column label="业务条线" width="200px">
-        <template slot-scope="scope">{{dictMap['DOMAIN'][scope.row.domain]}}</template>
+        <template slot-scope="scope">{{dictMap['DOMAIN'] ? dictMap['DOMAIN'][scope.row.domain] : ''}}</template>
       </el-table-column>
       <el-table-column label="上线日期" prop="onlineDate" width="150px"></el-table-column>
       <el-table-column label="项目问题" prop="issue"></el-table-column>
@@ -75,7 +77,7 @@
           <el-button-group>
             <el-button type="primary" @click="openAddSubProject(scope.row.id)" icon="el-icon-plus" size="small">子项</el-button>
             <el-button type="primary" @click="openEdit(scope.row)" size="small" icon="el-icon-edit">编辑</el-button>
-            <el-button type="danger" @click="remove(scope.row.id)" size="small" icon="el-icon-delete">删除</el-button>
+            <el-button @click="remove(scope.row)" icon="el-icon-delete" size="small" type="danger">删除</el-button>
           </el-button-group>
         </template>
       </el-table-column>
@@ -355,14 +357,21 @@
             }
           })
         },
-        remove(id) {
-          this.$confirm('确定删除该项目及所有子项', '提示', { type: 'warning' }).then(() => {
-            axios.delete("/rest/project/" + id).then(res => {
+        remove(project) {
+          if (project.subProjects.length > 0) {
+            this.$notify({
+              title: '警告',
+              message: '请先删除所有子项目',
+              type: 'warning'
+            })
+            return
+          }
+          this.$confirm('确定删除该项目', '提示', { type: 'warning' }).then(() => {
+            axios.delete("/rest/project/" + project.id).then(res => {
               if (res.data) {
-                console.log(DATA_INTEGRITY_ERROR_TIP + '-->>' + res.data)
                 this.$notify({
                   title: '警告',
-                  message: DATA_INTEGRITY_ERROR_TIP,
+                  message: res.data,
                   type: 'warning'
                 })
               } else {
@@ -411,21 +420,12 @@
         removeSubProject(id) {
           this.$confirm('确定删除该子项及所有资源', '提示', { type: 'warning' }).then(() => {
             axios.delete("/rest/subproject/" + id).then(res => {
-              if (res.data) {
-                console.log(DATA_INTEGRITY_ERROR_TIP + '-->>' + res.data)
-                this.$notify({
-                  title: '警告',
-                  message: DATA_INTEGRITY_ERROR_TIP,
-                  type: 'warning'
-                })
-              } else {
-                this.$notify({
-                  title: '成功',
-                  message: '删除成功',
-                  type: 'success'
-                })
-                this.query()
-              }
+              this.$notify({
+                title: '成功',
+                message: '删除成功',
+                type: 'success'
+              })
+              this.query()
             })
           }).catch(() => {})
         },

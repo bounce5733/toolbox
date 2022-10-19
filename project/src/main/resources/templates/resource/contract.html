@@ -23,13 +23,17 @@
         <el-table :data="pageinfo.content" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
           <el-table-column prop="name" label="名称" width="200px"></el-table-column>
           <el-table-column label="供应商">
-            <template slot-scope="scope">{{dictMap['SUPPLIER'][scope.row.company]}}</template>
+            <template slot-scope="scope">{{dictMap['SUPPLIER'] ? dictMap['SUPPLIER'][scope.row.company] : ''}}
+            </template>
           </el-table-column>
           <el-table-column label="类型" width="200px">
-            <template slot-scope="scope">{{dictMap['CONTRACT_TYPE'][scope.row.type]}}</template>
+            <template slot-scope="scope">{{dictMap['CONTRACT_TYPE'] ? dictMap['CONTRACT_TYPE'][scope.row.type] : ''}}
+            </template>
           </el-table-column>
           <el-table-column label="状态" width="200px">
-            <template slot-scope="scope">{{dictMap['CONTRACT_STATUS'][scope.row.status]}}</template>
+            <template slot-scope="scope">{{dictMap['CONTRACT_STATUS'] ? dictMap['CONTRACT_STATUS'][scope.row.status] :
+              ''}}
+            </template>
           </el-table-column>
           <el-table-column prop="startDate" label="开始日期" width="150px"></el-table-column>
           <el-table-column prop="endDate" label="终止日期" width="150px"></el-table-column>
@@ -187,10 +191,9 @@
           this.$confirm('确定删除该合同', '提示', { type: 'warning' }).then(() => {
             axios.delete("/rest/contract/" + id).then(res => {
               if (res.data) {
-                console.log(DATA_INTEGRITY_ERROR_TIP + '-->>' + res.data)
                 this.$notify({
                   title: '警告',
-                  message: DATA_INTEGRITY_ERROR_TIP,
+                  message: res.data,
                   type: 'warning'
                 })
               } else {
