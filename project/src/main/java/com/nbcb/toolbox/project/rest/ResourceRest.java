@@ -90,8 +90,18 @@ public class ResourceRest {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @GetMapping("/his/query")
+    public ResponseEntity<List<Map<String, Object>>> findHisResourceByCustomParams(
+            @RequestParam(name = "dept", required = false) String dept,
+            @RequestParam(name = "startDate", required = false) String startDate,
+            @RequestParam(name = "endDate", required = false) String endDate) {
+        List<Map<String, Object>> hisResources = resourceHisRepository
+                .findByCustomParams(dept, startDate, endDate, new ArrayList<>(), new ArrayList<>());
+        return new ResponseEntity<>(hisResources, HttpStatus.OK);
+    }
+
     @PostMapping("/his/query")
-    public ResponseEntity<List<Map<String, Object>>> findResourceHisByCustomParams(
+    public ResponseEntity<List<Map<String, Object>>> findHisResourceByCustomParams(
             @RequestParam(name = "dept", required = false) String dept,
             @RequestParam(name = "startDate", required = false) String startDate,
             @RequestParam(name = "endDate", required = false) String endDate,

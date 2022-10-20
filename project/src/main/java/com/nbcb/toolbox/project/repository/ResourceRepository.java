@@ -61,8 +61,9 @@ public interface ResourceRepository extends JpaRepository<Resource, Integer> {
     @Query(value = "SELECT p.domain, sp.dept, r.personnel_id, s.type, s.team_id, r.start_date, r.end_date" +
             " FROM resource r JOIN subproject sp ON r.subproject_id = sp.id JOIN project p ON sp.project_id = p.id" +
             " JOIN personnel s ON r.personnel_id = s.id" +
+            " JOIN team t ON s.team_id = t.id" +
             " WHERE (r.start_date <= :month OR :month IS NULL) AND (r.end_date >= :month OR :month IS NULL)" +
-            " AND (sp.dept = :dept OR :dept IS NULL)", nativeQuery = true)
+            " AND (t.dept = :dept OR :dept IS NULL)", nativeQuery = true)
     List<Map<String, Object>> findByCustomParams(@Param("dept") String dept, @Param("month") String month);
 
     @Query(value = "SELECT p.domain, sp.dept, r.personnel_id, s.type, s.team_id, r.start_date, r.end_date" +

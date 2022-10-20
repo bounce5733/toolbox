@@ -13,7 +13,7 @@
           <el-form-item label="周期">
             <el-date-picker type="date" v-model="params.startDate" value-format="yyyy/MM/dd"></el-date-picker>
             &nbsp;-&nbsp;
-            <el-date-picker type="date" v-model="params.trendEnd" value-format="yyyy/MM/dd"></el-date-picker>
+            <el-date-picker type="date" v-model="params.endDate" value-format="yyyy/MM/dd"></el-date-picker>
           </el-form-item>
           <el-form-item label="维度">
             <el-switch v-model="params.dimension"
@@ -138,6 +138,7 @@
             })
             res.data.forEach(item => {
               const person = this.personnelMap[item.PERSONNEL_ID]
+              if (!person) return
               let dimension = null
               if (this.params.dimension === 'line') {
                 dimension = item.DOMAIN
@@ -150,7 +151,9 @@
                 if (!dataMap[item.DEPT][dimension]) {
                   dataMap[item.DEPT][dimension] = {}
                 }
-                const betweenMonths = getBetweenMonth(item.START_DATE, item.END_DATE)
+                const startDate = this.params.startDate ? item.START_DATE > this.params.startDate ? item.START_DATE : this.params.startDate : item.START_DATE
+                const endDate = this.params.endDate ? item.END_DATE > this.params.endDate ? this.params.endDate : item.END_DATE : item.END_DATE
+                const betweenMonths = getBetweenMonth(startDate, endDate)
                 betweenMonths.forEach(month => {
                   dataMonthMap[item.DEPT].add(month)
                   if (!dataMap[item.DEPT][dimension][month]) {

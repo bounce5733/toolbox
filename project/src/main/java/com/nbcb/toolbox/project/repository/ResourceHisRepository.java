@@ -16,8 +16,9 @@ import java.util.Map;
  */
 public interface ResourceHisRepository extends JpaRepository<ResourceHis, Integer> {
 
-    @Query(value = "SELECT sp.dept, rs.personnel_id, rs.start_date, rs.end_date, p.domain, s.type, s.team_id FROM resource_his rs" +
-            " LEFT JOIN subproject sp ON rs.subproject_id = sp.id LEFT JOIN personnel s ON rs.personnel_id = s.id" +
+    @Query(value = "SELECT rs.subproject_id, sp.dept, rs.personnel_id, rs.start_date, rs.end_date, p.domain, s.type, s.team_id" +
+            " FROM resource_his rs LEFT JOIN subproject sp ON rs.subproject_id = sp.id" +
+            " LEFT JOIN personnel s ON rs.personnel_id = s.id" +
             " LEFT JOIN project p ON sp.project_id = p.id" +
             " WHERE (sp.dept = :dept OR :dept IS NULL) AND ((rs.start_date <= :endDate OR :endDate IS NULL)" +
             " AND (rs.end_date >= :startDate OR :startDate IS NULL))" +

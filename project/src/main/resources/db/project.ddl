@@ -18,7 +18,7 @@ CREATE TABLE process (id int auto_increment PRIMARY KEY, subproject_id int, phas
     FOREIGN KEY (subproject_id) REFERENCES subproject(id));
 
 CREATE TABLE personnel (id int auto_increment PRIMARY KEY, code varchar(32) NOT NULL, name text NOT NULL,
-    company varchar(32), level varchar(32), type varchar(32), phone text, dept varchar(32), team_id int,
+    company varchar(32), level varchar(32), type varchar(32), phone text, team_id int,
     position varchar(32), charge int, status varchar(32), start_date char(10), end_date char(10),
     FOREIGN KEY (team_id) REFERENCES team(id));
 

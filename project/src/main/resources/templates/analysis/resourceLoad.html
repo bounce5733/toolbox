@@ -12,36 +12,31 @@
         <el-dialog title="释放人员清单" :visible.sync="dialogVisible" width="80%">
           <el-table :data="releaseResources" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
             <el-table-column label="项目名称">
-              <template slot-scope="scope">{{subProjectMap[scope.row.subProjectId].name}}</template>
+              <template slot-scope="scope">{{subProjectMap[scope.row.SUBPROJECT_ID] ? subProjectMap[scope.row.SUBPROJECT_ID].name : ''}}</template>
             </el-table-column>
             <el-table-column label="人员姓名" width="150px">
-              <template slot-scope="scope">{{personnelMap[scope.row.personnelId].name}}</template>
+              <template slot-scope="scope">{{personnelMap[scope.row.PERSONNEL_ID] ? personnelMap[scope.row.PERSONNEL_ID].name : ''}}</template>
             </el-table-column>
             <el-table-column label="人员类别" width="120px">
-              <template slot-scope="scope">{{dictMap['PERSONNEL_TYPE'] ?
-                dictMap['PERSONNEL_TYPE'][personnelMap[scope.row.personnelId].type] : ''}}
+              <template slot-scope="scope">{{dictMap['PERSONNEL_TYPE'] && dictMap['PERSONNEL_TYPE'][personnelMap[scope.row.PERSONNEL_ID]] ?
+                dictMap['PERSONNEL_TYPE'][personnelMap[scope.row.PERSONNEL_ID].type] : ''}}
               </template>
             </el-table-column>
             <el-table-column label="人员级别" width="120px">
-              <template slot-scope="scope">{{dictMap['PERSONNEL_LEVEL'] ?
-                dictMap['PERSONNEL_LEVEL'][personnelMap[scope.row.personnelId].level] : ''}}
+              <template slot-scope="scope">{{dictMap['PERSONNEL_LEVEL'] && dictMap['PERSONNEL_LEVEL'][personnelMap[scope.row.PERSONNEL_ID]] ?
+                dictMap['PERSONNEL_LEVEL'][personnelMap[scope.row.PERSONNEL_ID].level] : ''}}
               </template>
             </el-table-column>
             <el-table-column label="条线">
-              <template slot-scope="scope">{{dictMap['DOMAIN'] ?
-                dictMap['DOMAIN'][subProjectMap[scope.row.subProjectId].domain] : ''}}
+              <template slot-scope="scope">{{dictMap['DOMAIN'] && dictMap['DOMAIN'][subProjectMap[scope.row.SUBPROJECT_ID]] ?
+                dictMap['DOMAIN'][subProjectMap[scope.row.SUBPROJECT_ID].domain] : ''}}
               </template>
             </el-table-column>
             <el-table-column label="当前小组">
-              <template slot-scope="scope">{{personnelMap[scope.row.personnelId].team.name}}</template>
+              <template slot-scope="scope">{{personnelMap[scope.row.PERSONNEL_ID] ? personnelMap[scope.row.PERSONNEL_ID].team.name : ''}}</template>
             </el-table-column>
-            <el-table-column label="释放时间" prop="endDate"></el-table-column>
-            <el-table-column label="后序项目">
-              <template slot-scope="scope">{{projectMap[scope.row.nextProjectId] ?
-                projectMap[scope.row.nextProjectId].name : '/'}}
-              </template>
-            </el-table-column>
-            <el-table-column label="入场时间" prop="startDate"></el-table-column>
+            <el-table-column label="释放时间" prop="END_DATE"></el-table-column>
+            <el-table-column label="入场时间" prop="START_DATE"></el-table-column>
           </el-table>
         </el-dialog>
     </div>
@@ -183,8 +178,10 @@
           })
         },
         openDialog(params) {
-          this.dialogVisible = true
-          this.releaseResources = this.dataMap[params.name].releaseResources
+          axios.get('/rest/resource/his/query?startDate=' + params.name + '&endDate=' + params.name).then(res => {
+            this.dialogVisible = true
+            this.releaseResources = res.data
+          })
         }
       },
       mounted() {

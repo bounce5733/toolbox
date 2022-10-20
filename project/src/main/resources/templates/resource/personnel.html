@@ -69,17 +69,17 @@
                          :total="pageinfo.totalElements"></el-pagination>
         </div>
       </el-row>
-      <el-dialog title="编辑人员" :visible.sync="formVisible" width="50%">
+      <el-dialog title="编辑人员" :visible.sync="formVisible">
         <el-form :model="model" ref="form" :rules="formRules" label-width="100px">
           <el-row>
             <el-col :span="12">
               <el-form-item label="人员编码" prop="code">
-                <el-input v-model="model.code" style="width: 200px"></el-input>
+                <el-input v-model="model.code"></el-input>
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="人员姓名" prop="name">
-                <el-input v-model="model.name" style="width: 200px"></el-input>
+                <el-input v-model="model.name"></el-input>
               </el-form-item>
             </el-col>
           </el-row>
@@ -102,7 +102,7 @@
           <el-row>
             <el-col :span="12">
               <el-form-item label="手机号" prop="phone">
-                <el-input v-model="model.phone" oninput="value=value.replace(/[^\d]/g, '')" style="width: 200px"></el-input>
+                <el-input v-model="model.phone" oninput="value=value.replace(/[^\d]/g, '')"></el-input>
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -114,12 +114,12 @@
           <el-row>
             <el-col :span="12">
               <el-form-item label="开始日期" prop="startDate">
-                <el-date-picker type="date" v-model="model.startDate" value-format="yyyy/MM/dd" style="width:200px"></el-date-picker>
+                <el-date-picker type="date" v-model="model.startDate" value-format="yyyy/MM/dd"></el-date-picker>
               </el-form-item>
             </el-col>
             <el-col :span="12" v-if="model.type !== '1'">
               <el-form-item label="结束日期" prop="endDate">
-                <el-date-picker type="date" v-model="model.endDate" value-format="yyyy/MM/dd" style="width:200px"></el-date-picker>
+                <el-date-picker type="date" v-model="model.endDate" value-format="yyyy/MM/dd"></el-date-picker>
               </el-form-item>
             </el-col>
           </el-row>
