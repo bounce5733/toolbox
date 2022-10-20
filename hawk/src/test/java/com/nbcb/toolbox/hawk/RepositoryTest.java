@@ -42,6 +42,6 @@ public class RepositoryTest {
 
     @Test
     public void save() {
-        articleRepository.save(Article.builder().id(1).title("测试标题").build());
+        articleRepository.save(Article.builder().id(3).title("集群测试3").build());
     }
 }

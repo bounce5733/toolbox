@@ -6,6 +6,6 @@ management:
       enabled: false
 my:
   elasticsearch:
-    uris: 127.0.0.1:9200
+    uris: 127.0.0.1:9500,127.0.0.1:9600,127.0.0.1:9700
     username: elastic
     password: nbcb,123

@@ -32,7 +32,9 @@ public class ElasticConfig extends AbstractElasticsearchConfiguration {
     @Override
     public RestHighLevelClient elasticsearchClient() {
         final ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-                .connectedTo(uris).withBasicAuth(username, password).build();
+                .connectedTo(uris)
+                .withBasicAuth(username, password)
+                .build();
         return RestClients.create(clientConfiguration).rest();
     }
 }
