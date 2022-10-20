@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>闲置人员</title>
+    <link rel="stylesheet" href="../static/css/index.css">
+    <link rel="stylesheet" href="../static/css/element.css">
+  </head>
+  <body>
+    <div id="app" class="app-container">
+      <el-form :inline="true" @submit.native.prevent>
+        <el-row>
+          <el-form-item label="姓名">
+            <el-input @keyup.enter.native="query" clearable v-model="params.name"></el-input>
+          </el-form-item>
+          <el-form-item>
+          <el-form-item label="岗位">
+            <el-select v-model="params.position" clearable>
+              <el-option v-for="(val, key) in dictMap['PERSONNEL_POSITION']" :label="val" :value="key" :key="key"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="供应商">
+            <el-select v-model="params.company" clearable>
+              <el-option v-for="(val, key) in dictMap['SUPPLIER']" :label="val" :value="key" :key="key"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="部门">
+            <el-select v-model="params.dept" clearable>
+              <el-option v-for="(val, key) in dictMap['DEPT']" :label="val" :value="key" :key="key"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="query" icon="el-icon-search">查询</el-button>
+          </el-form-item>
+        </el-row>
+       
+      </el-form>
+      <el-table :data="pageinfo.content" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
+        <el-table-column prop="CODE" label="人员编码" width="100px"></el-table-column>
+        <el-table-column prop="NAME" label="人员姓名" width="100px"></el-table-column>
+        <el-table-column label="人员类别" width="100px">
+          <template slot-scope="scope">{{ dictMap['PERSONNEL_TYPE'][scope.row.TYPE]}}</template>
+        </el-table-column>
+        <el-table-column label="人员级别" width="100px">
+          <template slot-scope="scope">{{dictMap['PERSONNEL_LEVEL'][scope.row.LEVEL]}}</template>
+        </el-table-column>
+        <el-table-column label="所属部门" width="120px">
+          <template slot-scope="scope">{{dictMap['DEPT'][scope.row.DEPT]}}</template>
+        </el-table-column>
+        <el-table-column label="所属小组" width="100px">
+          <template slot-scope="scope">{{scope.row.TEAM_NAME}}</template>
+        </el-table-column>
+        <el-table-column prop="PHONE" label="手机号" width="120px"></el-table-column>
+        <el-table-column label="人员岗位" width="100px">
+          <template slot-scope="scope">{{dictMap['PERSONNEL_POSITION'][scope.row.POSITION]}}</template>
+        </el-table-column>
+        <el-table-column label="供应商">
+          <template slot-scope="scope">{{dictMap['SUPPLIER'][scope.row.COMPANY]}}</template>
+        </el-table-column>
+        <el-table-column label="负责人" width="100px">
+          <template slot-scope="scope">{{personnelMap[scope.row.CHARGE] ? personnelMap[scope.row.CHARGE].name : ''}}</template>
+        </el-table-column>
+        <el-table-column label="状态" width="100px">
+          <template slot-scope="scope">{{dictMap['PERSONNEL_STATUS'][scope.row.STATUS]}}</template>
+        </el-table-column>
+        <el-table-column label="开始日期" prop="START_DATE" width="120px"></el-table-column>
+        <el-table-column label="结束日期" prop="END_DATE" width="120px"></el-table-column>
+      </el-table>
+      <div class="pagination-container">
+        <el-pagination background layout="prev, pager, next, total" @current-change="handlePageChange"
+                       :current-page="pageinfo.pageable.pageNumber" :page-size="pageinfo.pageable.pageSize"
+                       :total="pageinfo.totalElements"></el-pagination>
+      </div>
+    </div>
+  </body>
+  <script src="../static/js/vue.js"></script>
+  <script src="../static/js/element.js"></script>
+  <script src="../static/js/axios.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data: function() {
+        return {
+          codeSelProps: {
+            label: 'name',
+            value: 'id',
+            children: 'children'
+          },
+          dictMap: {}, // 系统字典
+          personnelMap: {}, // 人员字典
+          pageinfo: {
+            pageable: {
+              pageNumber: 1
+            }
+          },
+          params: {}
+        }
+      },
+      methods: {
+        load() {
+          Promise.all([axios.get('/rest/dict/load'), axios.get('/rest/personnel/load')]).then(values => {
+            this.dictMap = values[0].data
+            values[1].data.forEach(item =>  {
+              this.personnelMap[item.id] = item
+            })
+    
+            this.query()
+          })
+        },
+        query() {
+          axios.post('/rest/personnel/query/idle/' + this.pageinfo.pageable.pageNumber, this.params).then(res => {
+            this.pageinfo = res.data
+            this.pageinfo.pageable.pageNumber += 1
+          })
+        },
+        handlePageChange(pageNumber) {
+          this.pageinfo.pageable.pageNumber = pageNumber
+          this.query()
+        }
+      },
+      mounted() {
+        this.load()
+      }
+    })
+  </script>
+</html>

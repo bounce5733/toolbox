@@ -132,7 +132,7 @@
         <div class="demo-drawer__content">
           <el-form :model="subProject" :rules="subProjectFormRules" ref="subProjectForm" label-width="80px">
             <el-form-item label="所属系统" prop="system">
-              <el-select :disabled="subProject.id ? true : false" v-model="subProject.system">
+              <el-select v-model="subProject.system">
                 <el-option v-for="(val, key) in dictMap['SYSTEM']" :label="val" :value="key" :key="key"></el-option>
               </el-select>
             </el-form-item>
@@ -142,7 +142,7 @@
               </el-select>
             </el-form-item>
             <el-form-item label="PM" prop="pm">
-              <el-select v-model="subProject.pm" placeholder="请选择">
+              <el-select v-model="subProject.pm" filterable placeholder="请选择">
                 <el-option
                     v-for="(item, key) in personnelMap"
                     :key="key"
@@ -152,7 +152,7 @@
               </el-select>
             </el-form-item>
             <el-form-item label="PMO" prop="pmo">
-              <el-select v-model="subProject.pmo" placeholder="请选择">
+              <el-select v-model="subProject.pmo" filterable placeholder="请选择">
                 <el-option
                     v-for="(item, key) in personnelMap"
                     :key="key"
@@ -162,7 +162,7 @@
               </el-select>
             </el-form-item>
             <el-form-item label="QA" prop="qa">
-              <el-select v-model="subProject.qa" placeholder="请选择">
+              <el-select v-model="subProject.qa" filterable placeholder="请选择">
                 <el-option
                     v-for="(item, key) in personnelMap"
                     :key="key"

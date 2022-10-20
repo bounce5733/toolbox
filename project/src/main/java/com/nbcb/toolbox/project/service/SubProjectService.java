@@ -45,12 +45,13 @@ public class SubProjectService {
 
     public Page<SubProject> query(Map<String, String> params, Pageable pageParam) {
         String name = StringUtils.isBlank(params.get("name")) ? null : params.get("name");
+        String pm = StringUtils.isBlank(params.get("pm")) ? null : params.get("pm");
         String dept = StringUtils.isBlank(params.get("dept")) ? null : params.get("dept");
         String domain = StringUtils.isBlank(params.get("domain")) ? null : params.get("domain");
         String system = StringUtils.isBlank(params.get("system")) ? null : params.get("system");
         String isClose = StringUtils.isBlank(params.get("isClose")) ? null : params.get("isClose");
         Page<Map<String, Object>> pagedata = subProjectRepository
-                .pageFindByCustomParams(name, dept, domain, system, isClose, pageParam);
+                .pageFindByCustomParams(name, pm, dept, domain, system, isClose, pageParam);
         List<SubProject> subProjectList = new ArrayList<>();
         pagedata.getContent().forEach(item -> {
             int id = Integer.valueOf(String.valueOf(item.get("ID")));

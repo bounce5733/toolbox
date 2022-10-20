@@ -5,6 +5,7 @@ import com.nbcb.toolbox.project.Context;
 import com.nbcb.toolbox.project.domain.*;
 import com.nbcb.toolbox.project.repository.*;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.platform.commons.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.List;
+import java.util.Map;
 
 /**
  * PersonnelRest
@@ -55,7 +57,7 @@ public class PersonnelRest {
 
     @GetMapping("/query/{page}")
     public ResponseEntity<Page<Personnel>> query(@PathVariable("page") int page,
-                                                         @RequestParam("params") String params)
+                                                 @RequestParam("params") String params)
             throws UnsupportedEncodingException {
         Pageable pageParam = PageRequest.of(page - 1, Constant.PAGE_SIZE);
         ExampleMatcher matcher = ExampleMatcher.matching();
@@ -63,6 +65,18 @@ public class PersonnelRest {
         Example<Personnel> example = Example.of(Personnel.builder().name(URLDecoder.decode(params, Constant.ENCODING))
                 .build(), matcher);
         return new ResponseEntity<>(personnelRepository.findAll(example, pageParam), HttpStatus.OK);
+    }
+
+    @PostMapping("/query/idle/{page}")
+    public ResponseEntity<Page<Map<String, Object>>> queryIdleByCustomParams(@PathVariable("page") int page,
+                                                                             @RequestBody Map<String, String> params) {
+        Pageable pageParam = PageRequest.of(page - 1, Constant.PAGE_SIZE);
+        String name = StringUtils.isBlank(params.get("name")) ? null : params.get("name");
+        String position = StringUtils.isBlank(params.get("position")) ? null : params.get("position");
+        String company = StringUtils.isBlank(params.get("company")) ? null : params.get("company");
+        String dept = StringUtils.isBlank(params.get("dept")) ? null : params.get("dept");
+        return new ResponseEntity<>(personnelRepository
+                .pageFindIdleByCustomParams(name, position, company, dept, pageParam), HttpStatus.OK);
     }
 
     @PostMapping

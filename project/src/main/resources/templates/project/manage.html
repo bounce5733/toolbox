@@ -10,8 +10,18 @@
 <div id="app" class="app-container">
   <el-row>
     <el-form :inline="true" @submit.native.prevent>
-      <el-form-item>
-        <el-input @keyup.enter.native="query" placeholder="名称" clearable v-model="params.name"></el-input>
+      <el-form-item label="名称">
+        <el-input @keyup.enter.native="query" clearable v-model="params.name"></el-input>
+      </el-form-item>
+      <el-form-item label="PM" prop="pm">
+        <el-select v-model="params.pm" clearable filterable placeholder="请选择">
+          <el-option
+              v-for="(item, key) in personnelMap"
+              :key="key"
+              :label="item.name"
+              :value="item.id">
+          </el-option>
+        </el-select>
       </el-form-item>
       <el-form-item label="系统">
         <el-select v-model="params.system" clearable>

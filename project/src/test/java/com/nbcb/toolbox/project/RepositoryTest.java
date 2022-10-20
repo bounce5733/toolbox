@@ -49,6 +49,9 @@ public class RepositoryTest {
     @Autowired
     private ResourceHisRepository resourceHisRepository;
 
+    @Autowired
+    private PersonnelRepository personnelRepository;
+
     @Test
     public void saveDictType() {
         DicType type = new DicType();
@@ -93,14 +96,23 @@ public class RepositoryTest {
 
     @Test
     public void findResourceByCustomParams() throws JsonProcessingException {
-        List<Map<String, Object>> datalist = resourceRepository.findByCustomParams("2", null);
+        List<Map<String, Object>> datalist = resourceRepository.findByCustomParams(null, "2022/10/01",
+                "2022/10/31", new ArrayList<>(), new ArrayList<>());
         log.info("resources: {}", new ObjectMapper().writeValueAsString(datalist));
     }
 
     @Test
     public void pageFindSubprojectByCustomParams() throws JsonProcessingException {
         Pageable pageParam = PageRequest.of(0, Constant.PAGE_SIZE);
-        subProjectRepository.pageFindByCustomParams(null,  null, null, null,
+        subProjectRepository.pageFindByCustomParams(null, null, null, null, null,
                 "0",pageParam);
+    }
+
+    @Test
+    public void pageFindPersonnelIdleByCustomParams() throws JsonProcessingException {
+        Pageable pageParam = PageRequest.of(0, Constant.PAGE_SIZE);
+        Page<Map<String, Object>> result = personnelRepository
+                .pageFindIdleByCustomParams(null, null, null, null, pageParam);
+        log.info("result: {}", new ObjectMapper().writeValueAsString(result));
     }
 }

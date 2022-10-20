@@ -88,4 +88,9 @@ public class PageController {
     public String analysisTeam(Model model) {
         return "analysis/teamAnalysis";
     }
+
+    @RequestMapping("/analysis/idleResources")
+    public String analysisIdleResources(Model model) {
+        return "analysis/idleResources";
+    }
 }

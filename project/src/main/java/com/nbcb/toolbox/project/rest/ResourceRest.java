@@ -46,8 +46,11 @@ public class ResourceRest {
 
     @GetMapping("/query")
     public ResponseEntity<List<Map<String, Object>>> query(@RequestParam(name = "dept", required = false) String dept,
-                                                           @RequestParam(name = "month", required = false) String month) {
-        return new ResponseEntity<>(resourceRepository.findByCustomParams(dept, month), HttpStatus.OK);
+                                                           @RequestParam(name = "startDate", required = false) String startDate,
+                                                           @RequestParam(name = "endDate", required = false) String endDate) {
+
+        return new ResponseEntity<>(resourceRepository.findByCustomParams(dept, startDate, endDate,
+                new ArrayList<>(), new ArrayList<>()), HttpStatus.OK);
     }
 
     @PostMapping("/query/{page}")

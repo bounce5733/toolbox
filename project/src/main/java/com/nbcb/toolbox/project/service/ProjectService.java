@@ -82,33 +82,32 @@ public class ProjectService {
             baseinfo.put("domain", context.getDictCache().get("DOMAIN").get(project.getDomain()));
             baseinfo.put("onlineDate", project.getOnlineDate());
             projectRow.put("baseinfo", baseinfo);
-            Map<Integer, Object> subProjectRow = new HashMap<>();
+            Map<Integer, Map<String, String>> subProjectRow = new HashMap<>();
             project.getSubProjects().forEach(subProject -> {
                 if (null != this.context.getDictCache().get("SYSTEM").get(subProject.getSystem())
                         && subProject.getIsClose().equals("0")) {
                     systems.add(subProject.getSystem());
                     Integer resourceIndex = 0;
                     for (Resource resource : subProject.getResources()) {
-                        Map<String, String> resourceMap = new HashMap<>();
+                        subProjectRow.putIfAbsent(resourceIndex, new HashMap<>());
                         Personnel personnel = personnelMap.get(resource.getPersonnelId());
-                        resourceMap.put(subProject.getSystem() + "_" + "startDate", resource.getStartDate());
-                        resourceMap.put(subProject.getSystem() + "_" + "prevProject", projectMap.get(resource.getPrevProjectId()) == null ? "/" :
+                        subProjectRow.get(resourceIndex).put(subProject.getSystem() + "_" + "startDate", resource.getStartDate());
+                        subProjectRow.get(resourceIndex).put(subProject.getSystem() + "_" + "prevProject", projectMap.get(resource.getPrevProjectId()) == null ? "/" :
                                 projectMap.get(resource.getPrevProjectId()).getName());
-                        resourceMap.put(subProject.getSystem() + "_" + "personnelName", personnel.getName());
-                        resourceMap.put(subProject.getSystem() + "_" + "supplierName", context.getDictCache().get("SUPPLIER").get(personnel.getCompany())
+                        subProjectRow.get(resourceIndex).put(subProject.getSystem() + "_" + "personnelName", personnel.getName());
+                        subProjectRow.get(resourceIndex).put(subProject.getSystem() + "_" + "supplierName", context.getDictCache().get("SUPPLIER").get(personnel.getCompany())
                                 == null ? "/" : context.getDictCache().get("SUPPLIER").get(personnel.getCompany()));
-                        resourceMap.put(subProject.getSystem() + "_" + "personnelType", context.getDictCache().get("PERSONNEL_TYPE").get(personnel.getType())
+                        subProjectRow.get(resourceIndex).put(subProject.getSystem() + "_" + "personnelType", context.getDictCache().get("PERSONNEL_TYPE").get(personnel.getType())
                                 == null ? "/" : context.getDictCache().get("PERSONNEL_TYPE").get(personnel.getType()));
-                        resourceMap.put(subProject.getSystem() + "_" + "personnelLevel", context.getDictCache().get("PERSONNEL_LEVEL").get(personnel.getLevel())
+                        subProjectRow.get(resourceIndex).put(subProject.getSystem() + "_" + "personnelLevel", context.getDictCache().get("PERSONNEL_LEVEL").get(personnel.getLevel())
                                 == null ? "/" : context.getDictCache().get("PERSONNEL_LEVEL").get(personnel.getLevel()));
-                        resourceMap.put(subProject.getSystem() + "_" + "currentRation", String.valueOf(resource.getCurrentRation()));
-                        resourceMap.put(subProject.getSystem() + "_" + "nextProject", projectMap.get(resource.getNextProjectId()) == null ? "/" :
+                        subProjectRow.get(resourceIndex).put(subProject.getSystem() + "_" + "currentRation", String.valueOf(resource.getCurrentRation()));
+                        subProjectRow.get(resourceIndex).put(subProject.getSystem() + "_" + "nextProject", projectMap.get(resource.getNextProjectId()) == null ? "/" :
                                 projectMap.get(resource.getNextProjectId()).getName());
-                        resourceMap.put(subProject.getSystem() + "_" + "endDate", resource.getEndDate());
-                        resourceMap.put(subProject.getSystem() + "_" + "contract", context.getDictCache().get("CONTRACT_STATUS")
+                        subProjectRow.get(resourceIndex).put(subProject.getSystem() + "_" + "endDate", resource.getEndDate());
+                        subProjectRow.get(resourceIndex).put(subProject.getSystem() + "_" + "contract", context.getDictCache().get("CONTRACT_STATUS")
                                 .get(subProject.getContract().getStatus()) == null ? "/" : context.getDictCache().get("CONTRACT_STATUS")
                                 .get(subProject.getContract().getStatus()));
-                        subProjectRow.put(resourceIndex, resourceMap);
                         resourceIndex++;
                     }
                 }
@@ -140,8 +139,10 @@ public class ProjectService {
                 });
                 row.putAll(subrow);
                 projects.add(row);
-                spanrowArr.add(subProjectRow.size());
             });
+            if (subProjectRow.size() > 0) {
+                spanrowArr.add(subProjectRow.size());
+            }
         });
         // 计算跨行数据列
         List<Integer> rowspanCols = new ArrayList<>();

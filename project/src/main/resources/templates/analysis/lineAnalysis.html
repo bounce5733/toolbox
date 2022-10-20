@@ -213,11 +213,14 @@
             url += '?dept=' + this.params.dept
           }
           if (this.params.month) {
+            const startDate = getMonthFirstDay(this.params.month)
+            const endDate = getMonthLastDay(this.params.month)
             if (url.indexOf('?') < 0) {
-              url += '?month=' + this.params.month
+              url += '?startDate=' + startDate
             } else {
-              url += '&month=' + this.params.month
+              url += '&startDate=' + startDate
             }
+            url += '&endDate=' + endDate
           }
           axios.get(url).then(res => {
             console.log(JSON.stringify(res.data))
@@ -264,11 +267,16 @@
         openTrendDialog(params) {
           this.dialogVisible = true
           this.dialogType = params.seriesName
-          this.hisParams = { domains: [] },
+          this.hisParams = { domains: [] }
+          if (this.params.month) {
+            this.$set(this.hisParams, 'startDate', getMonthFirstDay(this.params.month))
+            this.$set(this.hisParams, 'endDate', getMonthLastDay(this.params.month))
+          }
           this.queryTrend()
         },
         queryTrend() {
           let url = '/rest/resource/his/query?queryFlag=line'
+          this.hisParams.dept = this.params.dept
           if (this.hisParams.dept) {
             url += '&dept=' + this.hisParams.dept
           }
