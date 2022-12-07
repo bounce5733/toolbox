@@ -23,20 +23,25 @@
         <el-table :data="pageinfo.content" highlight-current-row border style="width:100%" :header-cell-style="{background: '#F5F7FA',color: '#909399'}">
           <el-table-column prop="code" label="人员编码" width="100px"></el-table-column>
           <el-table-column prop="name" label="人员姓名" width="100px"></el-table-column>
-          <el-table-column label="人员类别" width="100px">
+          <el-table-column label="人员类别" width="80px">
             <template slot-scope="scope">{{dictMap['PERSONNEL_TYPE'] ? dictMap['PERSONNEL_TYPE'][scope.row.type] :
               ''}}
             </template>
           </el-table-column>
-          <el-table-column label="人员级别" width="100px">
+          <el-table-column label="人员级别" width="80px">
             <template slot-scope="scope">{{dictMap['PERSONNEL_LEVEL'] ? dictMap['PERSONNEL_LEVEL'][scope.row.level] :
               ''}}
             </template>
           </el-table-column>
-          <el-table-column label="所属部门" width="120px">
+          <el-table-column label="当前状态" width="80px">
+            <template slot-scope="scope">{{dictMap['PERSONNEL_STATUS'] ? dictMap['PERSONNEL_STATUS'][scope.row.status] :
+              ''}}
+            </template>
+          </el-table-column>
+          <el-table-column label="所属部门">
             <template slot-scope="scope">{{dictMap['DEPT'] ? dictMap['DEPT'][scope.row.team.dept] : ''}}</template>
           </el-table-column>
-          <el-table-column label="所属小组" width="100px">
+          <el-table-column label="所属小组">
             <template slot-scope="scope">{{scope.row.team.name}}</template>
           </el-table-column>
           <el-table-column prop="phone" label="手机号" width="120px"></el-table-column>
@@ -52,9 +57,9 @@
           <el-table-column label="负责人" width="100px">
             <template slot-scope="scope">{{personnelMap[scope.row.charge] ? personnelMap[scope.row.charge].name : ''}}</template>
           </el-table-column>
-          <el-table-column label="开始日期" prop="startDate" width="120px"></el-table-column>
-          <el-table-column label="结束日期" prop="endDate" width="120px"></el-table-column>
-          <el-table-column align="center" label="操作" width="150">
+          <el-table-column label="开始日期" prop="startDate" width="110px"></el-table-column>
+          <el-table-column label="结束日期" prop="endDate" width="110px"></el-table-column>
+          <el-table-column align="center" label="操作" width="140">
             <template slot-scope="scope">
               <el-button-group>
                 <el-button type="primary" @click="openEdit(scope.row)" size="small">编辑</el-button>
@@ -107,7 +112,7 @@
             </el-col>
             <el-col :span="12">
               <el-form-item label="所属小组" prop="teamId">
-                <el-cascader v-model="model.team.id" expand-trigger="hover" :props="codeSelProps" :options="deptTeams" placeholder="请选择"></el-cascader>
+                <el-cascader v-model="formTeamModel" expand-trigger="hover" :props="codeSelProps" :options="deptTeams" placeholder="请选择"></el-cascader>
               </el-form-item>
             </el-col>
           </el-row>
@@ -177,7 +182,7 @@
       el: '#app',
       data: function() {
         const validateTeam = (rule, value, callback) => {
-          if (!this.model.team.id) {
+          if (this.formTeamModel.length === 0) {
             return callback(new Error('小组不能为空'))
           }
           callback()
@@ -188,6 +193,7 @@
             value: 'id',
             children: 'children'
           },
+          teamDeptIdMapping: {}, // 小组部门主键映射表
           deptTeams: [], // 部门呢小组数据
           dictMap: {}, // 系统字典
           personnelMap: {}, // 人员字典
@@ -199,6 +205,7 @@
             }
           },
           model: { team: {}},
+          formTeamModel: [],
           formRules: {
             code: [
               { required: true, trigger: 'blue', message: '编码不能为空'},
@@ -221,7 +228,6 @@
               { required: true, trigger: 'blue', message: '开始日期不能为空'}
             ],
             phone: [
-              { required: true, trigger: 'blur', message: '手机号不能为空'},
               { max: 11, trigger: 'blur', message: '手机号长度不对'},
               { min: 11, trigger: 'blur', message: '手机号长度不对'}
             ],
@@ -244,6 +250,7 @@
             this.deptTeams = []
             const deptTeamMap = {}
             values[2].data.forEach(team => {
+              this.teamDeptIdMapping[team.id] = team.dept
               if (!deptTeamMap[team.dept]) {
                 deptTeamMap[team.dept] = []
               }
@@ -254,6 +261,7 @@
                 this.deptTeams.push({id: deptCode, name: this.dictMap['DEPT'][deptCode], children: deptTeamMap[deptCode]})
               })
             }
+            console.log('deptTeams:' + JSON.stringify(this.deptTeams))
             this.query()
           })
         },
@@ -266,10 +274,12 @@
         },
         openAdd: function() {
           this.model = {  team: {}}
+          this.formTeamModel = []
           this.formVisible = true
         },
         openEdit: function(record) {
           this.model = { ...record }
+          this.formTeamModel = [this.teamDeptIdMapping[this.model.team.id], this.model.team.id]
           this.formVisible = true
         },
         cancelForm: function() {
@@ -279,7 +289,7 @@
         save: function() {
           this.$refs.form.validate((valid) => {
             if (valid) {
-              this.model.team.id = this.model.team.id[1]
+              this.model.team = { id: this.formTeamModel[1] }
               axios.post("/rest/personnel", this.model).then(res => {
                 this.$notify({
                   title: '成功',

@@ -118,6 +118,27 @@
           }
           callback()
         }
+        // 验证字典编码
+        const validateDictCode = (rule, value, callback) => {
+          if (this.formType !== '新增') {
+            callback()
+          }
+          if (this.dict.code === undefined || this.dict.code.trim().length === 0) {
+            return callback(new Error('字典编码不能为空'))
+          }
+           // 校验唯一
+          let isUnion = true
+          const codeVal = this.dict.code.trim()
+          this.dicts.forEach(item => {
+            if (item.code === codeVal) {
+              isUnion = false
+            }
+          })
+          if (!isUnion) {
+            return callback(new Error('字典编码不唯一'))
+          }
+          callback()
+        }
         return {
           formType: '新增', // 表单类型，用于dialog标题与校验判断
           dicTypeVisible: false,
@@ -138,7 +159,7 @@
           dicts: [],
           dictRules: {
             code: [
-              { required: true, trigger: 'blue', message: '字典编码不能为空'},
+              { required: true, trigger: 'blue', validator: validateDictCode},
               { max: 32, trigger: 'blur', message: '最大长度32个字符' }
             ],
             name: [

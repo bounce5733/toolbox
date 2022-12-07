@@ -98,7 +98,7 @@
               name: '资源'
             },
             series: [{
-              name: '已使用',
+              name: '已占用',
               type: 'bar',
               stack: 'total',
               barGap: 1,
@@ -144,17 +144,18 @@
             usedResources =[] // 已使用资源
             releaseResources = [] // 可释放资源
             values[2].data.forEach(project =>  {
+              if (project.onlineDate < dateToStr(new Date())) return // 显示上线时间大于等于当前日期的项目
               this.projectMap[project.id] = project
               project.subProjects.forEach(subProject => {
                 this.subProjectMap[subProject.id] = { code: project.code, name: project.name, domain: project.domain,
                   issue: project.issue, onlineDate: project.onlineDate, id: project.id }
                 subProject.resources.forEach(resource => {
-                  if (resource.endDate <= dateToStr(new Date())) { // 可释放资源
+                  if (resource.endDate <= project.onlineDate) { // 可释放资源为释放时间<=上线日期
                     if (!this.dataMap[project.onlineDate]) {
                       this.dataMap[project.onlineDate] =  { 'usedResources': [], 'releaseResources': [] }
                     }
                     this.dataMap[project.onlineDate].releaseResources.push(resource)
-                  } else { // 已使用资源
+                  } else { // 已占用为>上线日期
                     if (!this.dataMap[project.onlineDate]) {
                       this.dataMap[project.onlineDate] =  { 'usedResources': [], 'releaseResources': [] }
                     }

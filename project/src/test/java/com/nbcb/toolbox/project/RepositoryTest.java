@@ -89,7 +89,8 @@ public class RepositoryTest {
     public void pageFindByCustomParams() throws JsonProcessingException {
         Pageable pageParam = PageRequest.of(0, Constant.PAGE_SIZE);
         Page<Map<String, Object>> resources = resourceRepository.pageFindByCustomParams("1", 2,
-                null, "2022/09", null, 2, pageParam);
+                null, null, null,
+                "2022/09", null, 2, pageParam);
         log.info("resources:{}", new ObjectMapper().writeValueAsString(resources));
 
     }

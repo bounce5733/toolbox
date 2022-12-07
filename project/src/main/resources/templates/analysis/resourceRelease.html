@@ -33,6 +33,16 @@
           </el-form-item>
         </el-row>
         <el-row>
+          <el-form-item label="类别">
+            <el-select v-model="params.personnelType" clearable>
+              <el-option v-for="(val, key) in dictMap['PERSONNEL_TYPE']" :label="val" :value="key" :key="key"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="级别">
+            <el-select v-model="params.personnelLevel" clearable>
+              <el-option v-for="(val, key) in dictMap['PERSONNEL_LEVEL']" :label="val" :value="key" :key="key"></el-option>
+            </el-select>
+          </el-form-item>
           <el-form-item label="姓名">
             <el-input @keyup.enter.native="query" placeholder="请输入" clearable v-model="params.personnelName"></el-input>
           </el-form-item>

@@ -50,6 +50,9 @@ public class PersonnelRest {
     @Autowired
     private PersonnelRepository personnelRepository;
 
+    @Autowired
+    private TeamRepository teamRepository;
+
     @GetMapping("/load")
     public ResponseEntity<List<Personnel>> load() {
         return new ResponseEntity<>(personnelRepository.findAll(), HttpStatus.OK);
@@ -59,7 +62,7 @@ public class PersonnelRest {
     public ResponseEntity<Page<Personnel>> query(@PathVariable("page") int page,
                                                  @RequestParam("params") String params)
             throws UnsupportedEncodingException {
-        Pageable pageParam = PageRequest.of(page - 1, Constant.PAGE_SIZE);
+        Pageable pageParam = PageRequest.of(page - 1, 100);
         ExampleMatcher matcher = ExampleMatcher.matching();
         matcher = matcher.withMatcher("name", ExampleMatcher.GenericPropertyMatchers.contains());
         Example<Personnel> example = Example.of(Personnel.builder().name(URLDecoder.decode(params, Constant.ENCODING))

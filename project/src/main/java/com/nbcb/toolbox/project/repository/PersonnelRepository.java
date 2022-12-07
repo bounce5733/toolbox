@@ -28,11 +28,11 @@ public interface PersonnelRepository extends JpaRepository<Personnel, Integer> {
             " AND (p.company = :company OR :company IS NULL) " +
             " AND (t.dept = :dept OR :dept IS NULL)",
             countQuery = "SELECT count(*) FROM personnel p JOIN team t ON p.team_id = t.id" +
-                    "WHERE p.id NOT IN (SELECT r.personnel_id FROM resource r)" +
-                    "AND (p.name LIKE CONCAT('%', :name, '%') OR :name IS NULL)" +
-                    "AND (p.position = :position OR :position IS NULL)" +
-                    "AND (p.company = :company OR :company IS NULL) " +
-                    "AND (t.dept = :dept OR :dept IS NULL)",
+                    " WHERE p.id NOT IN (SELECT r.personnel_id FROM resource r)" +
+                    " AND (p.name LIKE CONCAT('%', :name, '%') OR :name IS NULL)" +
+                    " AND (p.position = :position OR :position IS NULL)" +
+                    " AND (p.company = :company OR :company IS NULL) " +
+                    " AND (t.dept = :dept OR :dept IS NULL)",
             nativeQuery = true)
     Page<Map<String, Object>> pageFindIdleByCustomParams(@Param("name") String name, @Param("position") String position,
                                                          @Param("company") String company, @Param("dept") String dept,

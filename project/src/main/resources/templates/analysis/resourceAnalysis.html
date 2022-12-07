@@ -232,6 +232,7 @@
                 } else {
                   seriesData.startData.push('')
                   seriesData.endData.push('')
+                  seriesData.currentProcess.push(0)
                 }
               })
               seriesDataes.push(seriesData)
@@ -254,7 +255,7 @@
               personnelCountMap[projectName] =  '\n行员' + innerPersonnelCount + '人' + '\n外包' + outerPersonnelCount + '人'
             })
             const serieses = []
-
+            console.log('seriesDataes:' + JSON.stringify(seriesDataes))
             seriesDataes.forEach((data, index) => {
               serieses.push(
                 { 
@@ -281,6 +282,10 @@
                       position: 'inside',
                       formatter: function(params) {
                         console.log('params:' + JSON.stringify(personnelCountMap[params.name]))
+                        console.log('data.currentProcess:' + JSON.stringify(data.currentProcess))
+                        console.log('projectNames.indexOf(params.name):' + projectNames.indexOf(params.name))
+                        console.log('params.name:' + params.name)
+                        console.log('projectNames' + JSON.stringify(projectNames))
                         return params.seriesName + data.currentProcess[projectNames.indexOf(params.name)] + '%'
                       }
                     }
