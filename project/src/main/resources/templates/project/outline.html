@@ -89,8 +89,7 @@
               projectRow['subprojects'] = subProjectRow
               projectRows.push(projectRow)
             })
-            console.log('projectRows:' + JSON.stringify(projectRows))
-            const spanrowArr = []
+            const rowCrossArr = []
             projectRows.forEach(projectRow => {
               for (const rownum in projectRow.subprojects) {
                 const row = Object.assign({}, projectRow.baseinfo)
@@ -111,40 +110,40 @@
                 })
                 this.projects.push(Object.assign(row, subrow))
               }
-              spanrowArr.push(Object.keys(projectRow.subprojects).length)
-              console.log('spanrowArr:' + JSON.stringify(spanrowArr))
+              if (Object.keys(projectRow.subprojects).length > 0) {
+                rowCrossArr.push(Object.keys(projectRow.subprojects).length) // 跨几行
+              }
             })
-            console.log('this.projects:' + JSON.stringify(this.projects))
             // 计算跨行数据列
-            const rowspanCols = [0, 1, 2, 3]
-            let contractRowspanIndex = 3
+            const colCrossArr = [0, 1, 2, 3] // 跨行列
+            let contractColCrossIndex = 3
             const resourceColNum = 10 // 资源列数
             for (let i = 1; i <= this.systems.size; i++ ) {
-              contractRowspanIndex += resourceColNum
-              rowspanCols.push(contractRowspanIndex)
+              contractColCrossIndex += resourceColNum
+              colCrossArr.push(contractColCrossIndex)
             }
-            let spanRownum = 0 // 跨行行标
-            spanrowArr.forEach((rownum, index) => {
-              rowspanCols.forEach(colnum => {
-                const spankey = spanRownum + '' + colnum
-                this.rowspan[spankey] = [rownum, 1]
-                console.log('[spankey]' + spankey + '[val]' + [spanrowArr[index + 1], 1])
-              })
-              for (let i = spanRownum + 1; i < spanRownum + rownum; i ++) {
-                rowspanCols.forEach(colnum => {
-                  const spankey = i + '' + colnum
-                  this.rowspan[spankey] = [0, 0]
+            let spanRowIndex = 0 // 跨行行标
+            rowCrossArr.forEach((rownum, index) => {
+              if (rownum > 1) {
+                colCrossArr.forEach(colnum => {
+                  const spankey = spanRowIndex + '-' + colnum
+                  this.rowspan[spankey] = [rownum, 1]
                 })
+                for (let i = spanRowIndex + 1; i < spanRowIndex + rownum; i ++) { // 计算隐藏单元格
+                  colCrossArr.forEach(colnum => {
+                    const spankey = i + '-' + colnum
+                    this.rowspan[spankey] = [0, 0]
+                  })
+                }
               }
-              spanRownum += rownum
+              spanRowIndex += rownum
             })
-            console.log('this.rowspan:' + JSON.stringify(this.rowspan))
           })
         },
         spanMethod({ row, column, rowIndex, columnIndex }) {
-          let spanVal = this.rowspan[rowIndex + '' + columnIndex]
+          let spanVal = this.rowspan[rowIndex + '-' + columnIndex]
           if (spanVal) {
-            return this.rowspan[rowIndex + '' + columnIndex]
+            return this.rowspan[rowIndex + '-' + columnIndex]
           }
         },
         exportExcel() {

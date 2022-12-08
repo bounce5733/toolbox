@@ -115,7 +115,7 @@ public class ProjectService {
             projectRow.put("subprojects", subProjectRow);
             projectRows.add(projectRow);
         });
-        List<Integer> spanrowArr = new ArrayList<>();
+        List<Integer> rowCrossArr = new ArrayList<>();
         List<Map<String, String>> projects = new ArrayList<>();
         projectRows.forEach(projectRow -> {
             Map<Integer, Object> subProjectRow = (Map<Integer, Object>) projectRow.get("subprojects");
@@ -141,45 +141,46 @@ public class ProjectService {
                 projects.add(row);
             });
             if (subProjectRow.size() > 0) {
-                spanrowArr.add(subProjectRow.size());
+                rowCrossArr.add(subProjectRow.size());  // 跨几行
             }
         });
         // 计算跨行数据列
-        List<Integer> rowspanCols = new ArrayList<>();
-        rowspanCols.add(0);
-        rowspanCols.add(1);
-        rowspanCols.add(2);
-        rowspanCols.add(3);
-        int contractRowspanIndex = 3;
+        List<Integer> colCrossArr = new ArrayList<>(); // 跨行列
+        colCrossArr.add(0);
+        colCrossArr.add(1);
+        colCrossArr.add(2);
+        colCrossArr.add(3);
+        int contractColCrossIndex = 3;
         for (int i = 1; i <= systems.size(); i++) {
-            contractRowspanIndex += RESOURCE_COL_NUM;
-            rowspanCols.add(contractRowspanIndex);
+            contractColCrossIndex += RESOURCE_COL_NUM;
+            colCrossArr.add(contractColCrossIndex);
         }
-        int spanRownum = 2; // 跨行行标
-        List<List<Integer>> rowspan = new ArrayList<>(); // 主项目信息跨行数
-        for (int i = 0; i < spanrowArr.size(); i++) {
-            for (int j = 0; j < rowspanCols.size(); j++) {
-                Integer[] meregedIndexs = {spanRownum, spanRownum + spanrowArr.get(i) - 1, rowspanCols.get(j),
-                        rowspanCols.get(j)};
-                rowspan.add(Arrays.asList(meregedIndexs));
+        int spanRowIndex = 2; // 跨行行标
+        List<List<Integer>> cellCrossData = new ArrayList<>(); // 主项目信息跨行数
+        for (int i = 0; i < rowCrossArr.size(); i++) {
+            for (int j = 0; j < colCrossArr.size(); j++) {
+                if (rowCrossArr.get(i) > 1) {
+                    Integer[] meregedIndexs = {spanRowIndex, spanRowIndex + rowCrossArr.get(i) - 1, colCrossArr.get(j),
+                            colCrossArr.get(j)};
+                    cellCrossData.add(Arrays.asList(meregedIndexs));
+                }
             }
-            spanRownum += spanrowArr.get(i);
+            spanRowIndex += rowCrossArr.get(i);
         }
-        log.info("projects:{}", new ObjectMapper().writeValueAsString(projects));
-        this.excel(systems, projects, rowspan, out);
+        this.excel(systems, projects, cellCrossData, out);
     }
 
     /**
      * excel文件输出
      *
-     * @param systems  全部数据包含的系统列表
-     * @param projects 项目按资源分布的明细信息
-     * @param rowspan  资源跨行信息
-     * @param out      输出流
+     * @param systems       全部数据包含的系统列表
+     * @param projects      项目按资源分布的明细信息
+     * @param cellCrossData 资源跨行信息
+     * @param out           输出流
      * @throws IOException
      */
     private void excel(Set<String> systems, List<Map<String, String>> projects,
-                       List<List<Integer>> rowspan, OutputStream out) throws IOException {
+                       List<List<Integer>> cellCrossData, OutputStream out) throws IOException {
         // ------------输出excel------------
         XSSFWorkbook wb = new XSSFWorkbook();
         XSSFSheet sheet = wb.createSheet(SHEET_NAME);
@@ -276,7 +277,6 @@ public class ProjectService {
         for (int i = 0; i < projects.size(); i++) {
             XSSFRow row = sheet.createRow(i + 2);
             Map<String, String> rowData = projects.get(i);
-            log.info("rowData:{}", new ObjectMapper().writeValueAsString(rowData));
             int cellIndex = 0;
             for (String key : headerKeys) {
                 XSSFCell cell = row.createCell(cellIndex);
@@ -291,7 +291,7 @@ public class ProjectService {
             sheet.addMergedRegion(new CellRangeAddress(indexs.get(0), indexs.get(1), indexs.get(2), indexs.get(3)));
         });
         // 数据行列合并
-        rowspan.forEach(indexs -> {
+        cellCrossData.forEach(indexs -> {
             sheet.addMergedRegion(new CellRangeAddress(indexs.get(0), indexs.get(1), indexs.get(2), indexs.get(3)));
         });
 
